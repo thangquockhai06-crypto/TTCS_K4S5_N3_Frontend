@@ -277,3 +277,39 @@ export function mockCreatePriceList(data: Partial<IPriceList>): IPriceList {
   saveStoredPriceLists(updated);
   return newPriceList;
 }
+
+export function mockUpdatePriceList(id: string, updates: Partial<IPriceList>): IPriceList {
+  const priceLists = getStoredPriceLists();
+  const index = priceLists.findIndex((pl) => pl.id === id);
+  if (index === -1) {
+    throw new Error(`Không tìm thấy bảng giá có id: ${id}`);
+  }
+
+  const current = priceLists[index];
+  const updatedItem: IPriceList = {
+    ...current,
+    ...updates,
+    name: updates.name ? updates.name.trim() : current.name,
+    code: updates.code ? updates.code.trim().toUpperCase() : current.code,
+    multiplier: updates.multiplier !== undefined ? Number(updates.multiplier) : current.multiplier,
+    description: updates.description !== undefined ? updates.description.trim() : current.description,
+    is_active: updates.is_active !== undefined ? updates.is_active : current.is_active,
+  };
+
+  priceLists[index] = updatedItem;
+  saveStoredPriceLists(priceLists);
+  return updatedItem;
+}
+
+export function mockDeletePriceList(id: string): { message: string } {
+  const priceLists = getStoredPriceLists();
+  const item = priceLists.find((pl) => pl.id === id);
+  if (!item) {
+    throw new Error(`Không tìm thấy bảng giá có id: ${id}`);
+  }
+
+  const filtered = priceLists.filter((pl) => pl.id !== id);
+  saveStoredPriceLists(filtered);
+  return { message: `Đã xóa thành công bảng giá "${item.name}" (${item.code}).` };
+}
+

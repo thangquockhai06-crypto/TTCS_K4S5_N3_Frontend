@@ -22,6 +22,8 @@ import {
   mockDeleteProduct,
   mockToggleProductActive,
   mockCreatePriceList,
+  mockUpdatePriceList,
+  mockDeletePriceList,
 } from '../mock/products.mock';
 
 class Sprint2Service {
@@ -143,6 +145,26 @@ class Sprint2Service {
       // Fallback
     }
     return mockCreatePriceList(priceList);
+  }
+
+  async updatePriceList(id: string, updates: Partial<IPriceList>): Promise<IPriceList> {
+    try {
+      const response = await axiosInstance.put<IPriceList>(`/products/price-lists/${id}`, updates);
+      if (response.data) return response.data;
+    } catch {
+      // Fallback
+    }
+    return mockUpdatePriceList(id, updates);
+  }
+
+  async deletePriceList(id: string): Promise<{ message: string }> {
+    try {
+      const response = await axiosInstance.delete<{ message: string }>(`/products/price-lists/${id}`);
+      if (response.data) return response.data;
+    } catch {
+      // Fallback
+    }
+    return mockDeletePriceList(id);
   }
 
   // S2-06: Organization Tree
