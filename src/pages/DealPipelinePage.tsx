@@ -8,10 +8,12 @@ import { DealStageType, ICustomField } from '../interfaces';
 import { formatCompactCurrency, formatCurrency } from '../utils/formatters';
 import { sprint2Service } from '../services/sprint2Service';
 import { CustomFieldRenderer } from '../components/custom-fields/CustomFieldRenderer';
+import { useToast } from '../context/ToastContext';
 import styles from './DealPipelinePage.module.css';
 
 export const DealPipelinePage: React.FC = () => {
   const { deals, moveDealStage, addDeal } = useCRMData();
+  const { showToast } = useToast();
 
   const [query, setQuery] = useState<string>('');
   const [isNewDealModalOpen, setIsNewDealModalOpen] = useState<boolean>(false);
@@ -99,6 +101,7 @@ export const DealPipelinePage: React.FC = () => {
       custom_fields: dealCustomValues,
     });
 
+    const createdTitle = newDealForm.title.trim();
     setNewDealForm({
       title: '',
       company: '',
@@ -108,6 +111,7 @@ export const DealPipelinePage: React.FC = () => {
     });
     setDealCustomValues({});
     setIsNewDealModalOpen(false);
+    showToast('success', `Đã tạo cơ hội bán hàng "${createdTitle}" thành công!`);
   };
 
   return (
@@ -169,7 +173,13 @@ export const DealPipelinePage: React.FC = () => {
       </Card>
 
       {/* Kanban Board */}
-      <DealPipeline deals={filteredDeals} onMoveDeal={moveDealStage} />
+      <DealPipeline
+        deals={filteredDeals}
+        onMoveDeal={(dealId, newStage) => {
+          moveDealStage(dealId, newStage);
+          showToast('success', 'Đã chuyển giai đoạn cơ hội bán hàng thành công!');
+        }}
+      />
 
       {/* Create New Deal Modal */}
       <Modal

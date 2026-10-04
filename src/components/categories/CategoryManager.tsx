@@ -5,18 +5,17 @@ import {
   ArrowDown,
   Trash2,
   Edit2,
-  AlertCircle,
-  Check,
   X,
 } from 'lucide-react';
 import { ICategory } from '../../interfaces';
 import { sprint2Service } from '../../services/sprint2Service';
+import { useToast } from '../../context/ToastContext';
 
 export const CategoryManager: React.FC = () => {
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<'lead_source' | 'industry'>('lead_source');
   const [categories, setCategories] = useState<ICategory[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Form add/edit
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -26,16 +25,15 @@ export const CategoryManager: React.FC = () => {
 
   const fetchCategories = useCallback(async () => {
     setIsLoading(true);
-    setStatusMsg(null);
     try {
       const data = await sprint2Service.getCategories(activeTab);
       setCategories(data);
     } catch (err: any) {
-      setStatusMsg({ type: 'error', text: 'Không thể tải danh mục.' });
+      showToast('error', 'Không thể tải danh mục.');
     } finally {
       setIsLoading(false);
     }
-  }, [activeTab]);
+  }, [activeTab, showToast]);
 
   useEffect(() => {
     fetchCategories();
@@ -63,7 +61,7 @@ export const CategoryManager: React.FC = () => {
           name,
           code: code.toUpperCase().trim(),
         });
-        setStatusMsg({ type: 'success', text: 'Cập nhật danh mục thành công!' });
+        showToast('success', `Cập nhật danh mục "${name.trim()}" thành công!`);
       } else {
         await sprint2Service.createCategory({
           type: activeTab,
@@ -71,22 +69,19 @@ export const CategoryManager: React.FC = () => {
           code: code.toUpperCase().trim(),
           order_index: categories.length,
         });
-        setStatusMsg({ type: 'success', text: 'Thêm mới danh mục thành công!' });
+        showToast('success', `Thêm mới danh mục "${name.trim()}" thành công!`);
       }
       setIsFormOpen(false);
       fetchCategories();
     } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.response?.data?.detail || 'Lỗi lưu danh mục.' });
+      showToast('error', err.response?.data?.detail || 'Lỗi lưu danh mục.');
     }
   };
 
   // S2-07: Prevent deletion if usage_count > 0
   const handleDelete = async (item: ICategory) => {
     if (item.usage_count > 0) {
-      setStatusMsg({
-        type: 'error',
-        text: `Không thể xóa "${item.name}" vì đang được sử dụng bởi ${item.usage_count} khách hàng / giao dịch.`,
-      });
+      showToast('error', `Không thể xóa "${item.name}" vì đang được sử dụng bởi ${item.usage_count} khách hàng / giao dịch.`);
       return;
     }
 
@@ -94,10 +89,10 @@ export const CategoryManager: React.FC = () => {
 
     try {
       await sprint2Service.deleteCategory(item.id);
-      setStatusMsg({ type: 'success', text: 'Đã xóa danh mục thành công.' });
+      showToast('success', `Đã xóa danh mục "${item.name}" thành công.`);
       fetchCategories();
     } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.response?.data?.detail || 'Lỗi khi xóa danh mục.' });
+      showToast('error', err.response?.data?.detail || 'Lỗi khi xóa danh mục.');
     }
   };
 
@@ -115,22 +110,23 @@ export const CategoryManager: React.FC = () => {
 
     try {
       await sprint2Service.reorderCategories(newCategories.map((c) => c.id));
+      showToast('success', 'Đã cập nhật thứ tự hiển thị danh mục.');
     } catch (err: any) {
-      setStatusMsg({ type: 'error', text: 'Lỗi sắp xếp lại thứ tự.' });
+      showToast('error', 'Lỗi sắp xếp lại thứ tự.');
       fetchCategories();
     }
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div>
-        <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+      <header style={{ marginBottom: '20px' }}>
+        <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-text-primary, #0f172a)', margin: 0, lineHeight: 1.3 }}>
           Danh mục dùng chung hệ thống
-        </h2>
-        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 0' }}>
+        </h1>
+        <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted, #64748b)', marginTop: '4px', lineHeight: 1.5 }}>
           Quản lý nguồn khách hàng (Lead Source) và Ngành nghề kinh doanh (Industry), hỗ trợ kéo thả/sắp xếp thứ tự và kiểm soát ràng buộc dữ liệu
         </p>
-      </div>
+      </header>
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>
@@ -167,25 +163,6 @@ export const CategoryManager: React.FC = () => {
           Lĩnh vực / Ngành nghề (Industries)
         </button>
       </div>
-
-      {statusMsg && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 14px',
-            backgroundColor: statusMsg.type === 'success' ? '#f0fdf4' : '#fef2f2',
-            border: `1px solid ${statusMsg.type === 'success' ? '#bbf7d0' : '#fecaca'}`,
-            borderRadius: '6px',
-            color: statusMsg.type === 'success' ? '#166534' : '#991b1b',
-            fontSize: '0.82rem',
-          }}
-        >
-          {statusMsg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}
-          <span>{statusMsg.text}</span>
-        </div>
-      )}
 
       {/* Table & actions */}
       <div

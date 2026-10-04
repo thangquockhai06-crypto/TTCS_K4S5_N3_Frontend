@@ -1,15 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  AlertCircle,
   Briefcase,
-  CheckCircle2,
   Clock,
   Plus,
   RefreshCw,
   ShieldCheck,
   Users,
-  X,
   FileSpreadsheet,
 } from 'lucide-react';
 import { UserActivationModal } from '../components/users/UserActivationModal';
@@ -28,10 +25,12 @@ import {
   IUserItem,
 } from '../interfaces/user-management.interface';
 import { userService } from '../services/userService';
+import { useToast } from '../context/ToastContext';
 import styles from './UserManagementPage.module.css';
 
 export const UserManagementPage: React.FC = () => {
   const { user: currentAuthUser } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const urlSearch = searchParams.get('search') || '';
@@ -71,12 +70,6 @@ export const UserManagementPage: React.FC = () => {
     tempPassword: string;
   } | null>(null);
 
-  // Toast feedback state
-  const [toast, setToast] = useState<{
-    type: 'success' | 'error';
-    message: string;
-  } | null>(null);
-
   // Stats
   const [stats, setStats] = useState({
     total: 0,
@@ -84,11 +77,6 @@ export const UserManagementPage: React.FC = () => {
     managers: 0,
     pending: 0,
   });
-
-  const showToast = (type: 'success' | 'error', message: string): void => {
-    setToast({ type, message });
-    window.setTimeout(() => setToast(null), 4000);
-  };
 
   const fetchUsers = useCallback(async (): Promise<void> => {
     setIsLoading(true);
@@ -196,31 +184,6 @@ export const UserManagementPage: React.FC = () => {
 
   return (
     <div className={styles.pageContainer}>
-      {/* Toast thông báo */}
-      {toast && (
-        <div
-          className={`${styles.toastBanner} ${
-            toast.type === 'success' ? styles.toastSuccess : styles.toastError
-          }`}
-        >
-          <div className={styles.toastMessage}>
-            {toast.type === 'success' ? (
-              <CheckCircle2 size={18} />
-            ) : (
-              <AlertCircle size={18} />
-            )}
-            <span>{toast.message}</span>
-          </div>
-          <button
-            type="button"
-            className={styles.toastCloseBtn}
-            onClick={() => setToast(null)}
-          >
-            <X size={16} />
-          </button>
-        </div>
-      )}
-
       {/* Tab điều hướng phân hệ */}
       <div
         style={{

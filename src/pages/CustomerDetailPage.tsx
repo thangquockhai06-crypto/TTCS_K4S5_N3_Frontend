@@ -34,6 +34,7 @@ import { useCRMData } from '../context/CRMDataContext';
 import { useAuth } from '../hooks/useAuth';
 import { ActivityType, CustomerStatusType } from '../interfaces';
 import { formatCurrency } from '../utils/formatters';
+import { useToast } from '../context/ToastContext';
 import styles from './CustomerDetailPage.module.css';
 
 type DetailTabType = 'overview' | 'activities' | 'notes' | 'files';
@@ -50,6 +51,7 @@ export const CustomerDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const {
     customers,
     updateCustomerStatus,
@@ -81,6 +83,7 @@ export const CustomerDetailPage: React.FC = () => {
       user?.fullName ?? 'Quản Trị Viên Hệ Thống'
     );
     setNoteInput('');
+    showToast('success', 'Đã thêm ghi chú khách hàng thành công!');
   };
 
   const handleCreateActivity = (e: React.FormEvent<HTMLFormElement>): void => {
@@ -97,6 +100,7 @@ export const CustomerDetailPage: React.FC = () => {
     setActivityForm({ type: 'call', title: '', description: '' });
     setIsActivityModalOpen(false);
     setActiveTab('activities');
+    showToast('success', 'Đã ghi nhận hoạt động chăm sóc khách hàng thành công!');
   };
 
   return (
@@ -117,7 +121,10 @@ export const CustomerDetailPage: React.FC = () => {
             label="Trạng thái"
             value={customer.status}
             options={STATUS_OPTIONS}
-            onChange={(nextStatus) => updateCustomerStatus(customer.id, nextStatus)}
+            onChange={(nextStatus) => {
+              updateCustomerStatus(customer.id, nextStatus);
+              showToast('success', 'Đã cập nhật trạng thái khách hàng!');
+            }}
             ariaLabel="Thay đổi trạng thái khách hàng"
           />
         </div>

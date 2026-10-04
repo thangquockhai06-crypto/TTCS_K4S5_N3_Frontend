@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Check, AlertCircle, Save, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Save, RefreshCw } from 'lucide-react';
 import { userService } from '../services/userService';
 import { useAuth } from '../hooks/useAuth';
 import {
@@ -11,17 +11,17 @@ import {
   UserRoleType,
   UserStatusType,
 } from '../interfaces/user-management.interface';
+import { useToast } from '../context/ToastContext';
 import styles from './UserEditPage.module.css';
 
 export const UserEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user: currentAuthUser } = useAuth();
+  const { showToast } = useToast();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   const [targetUser, setTargetUser] = useState<IUserItem | null>(null);
   const [name, setName] = useState('');
@@ -33,7 +33,7 @@ export const UserEditPage: React.FC = () => {
 
   useEffect(() => {
     if (!id) {
-      setError('Không tìm thấy mã người dùng.');
+      showToast('error', 'Không tìm thấy mã người dùng.');
       setIsLoading(false);
       return;
     }
@@ -43,7 +43,7 @@ export const UserEditPage: React.FC = () => {
       try {
         const u = await userService.getUserById(id);
         if (!u) {
-          setError(`Không tìm thấy người dùng có ID: "${id}".`);
+          showToast('error', `Không tìm thấy người dùng có ID: "${id}".`);
           return;
         }
         setTargetUser(u);
@@ -54,27 +54,25 @@ export const UserEditPage: React.FC = () => {
         setRole(u.roles[0] || 'sales');
         setStatus(u.status);
       } catch (err: any) {
-        setError(err.message || 'Lỗi khi tải thông tin người dùng.');
+        showToast('error', err.message || 'Lỗi khi tải thông tin người dùng.');
       } finally {
         setIsLoading(false);
       }
     };
 
     loadUser();
-  }, [id]);
+  }, [id, showToast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!id || !targetUser) return;
 
     if (!name.trim()) {
-      setError('Vui lòng nhập họ và tên người dùng.');
+      showToast('warning', 'Vui lòng nhập họ và tên người dùng.');
       return;
     }
 
     setIsSaving(true);
-    setError(null);
-    setSuccess(null);
 
     try {
       const result = await userService.updateUser(
@@ -90,12 +88,12 @@ export const UserEditPage: React.FC = () => {
         currentAuthUser?.email
       );
 
-      setSuccess(result.message || 'Cập nhật tài khoản người dùng thành công.');
+      showToast('success', result.message || 'Cập nhật tài khoản người dùng thành công.');
       window.setTimeout(() => {
         navigate('/users');
-      }, 1200);
+      }, 800);
     } catch (err: any) {
-      setError(err.message || 'Không thể lưu thay đổi người dùng.');
+      showToast('error', err.message || 'Không thể lưu thay đổi người dùng.');
     } finally {
       setIsSaving(false);
     }
@@ -130,20 +128,6 @@ export const UserEditPage: React.FC = () => {
           Cập nhật thông tin định danh, nhóm địa bàn và phân quyền tài khoản
         </p>
       </header>
-
-      {success && (
-        <div className={`${styles.alert} ${styles.alertSuccess}`} role="alert">
-          <Check size={18} />
-          <span>{success}</span>
-        </div>
-      )}
-
-      {error && (
-        <div className={`${styles.alert} ${styles.alertError}`} role="alert">
-          <AlertCircle size={18} />
-          <span>{error}</span>
-        </div>
-      )}
 
       {targetUser && (
         <div className={styles.card}>

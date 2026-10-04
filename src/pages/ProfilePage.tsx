@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { Check, AlertCircle, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { AvatarUploader } from '../components/profile/AvatarUploader';
 import { sprint2Service } from '../services/sprint2Service';
+import { useToast } from '../context/ToastContext';
 
 const VN_PHONE_REGEX = /^(03|05|07|08|09)\d{8}$/;
 
 export const ProfilePage: React.FC = () => {
   const { user, updateUserProfile } = useAuth();
+  const { showToast } = useToast();
 
   const [fullName, setFullName] = useState(user?.fullName || 'Quản Trị Viên Hệ Thống');
   const [phone, setPhone] = useState(user?.phone || '0912345678');
@@ -17,7 +19,6 @@ export const ProfilePage: React.FC = () => {
 
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +32,6 @@ export const ProfilePage: React.FC = () => {
     setPhoneError(null);
 
     setIsSubmitting(true);
-    setStatusMessage(null);
 
     try {
       await sprint2Service.updateProfile({
@@ -51,11 +51,10 @@ export const ProfilePage: React.FC = () => {
         phone: cleanedPhone,
       });
 
-      setStatusMessage({ type: 'success', text: 'Cập nhật thông tin hồ sơ cá nhân thành công!' });
-      window.setTimeout(() => setStatusMessage(null), 4000);
+      showToast('success', 'Cập nhật thông tin hồ sơ cá nhân thành công!');
     } catch (err: any) {
       const detail = err.response?.data?.detail || err.message || 'Lỗi khi cập nhật hồ sơ.';
-      setStatusMessage({ type: 'error', text: detail });
+      showToast('error', detail);
     } finally {
       setIsSubmitting(false);
     }
@@ -63,34 +62,14 @@ export const ProfilePage: React.FC = () => {
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px 16px' }}>
-      <header style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+      <header style={{ marginBottom: '20px' }}>
+        <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-text-primary, #0f172a)', margin: 0, lineHeight: 1.3 }}>
           Hồ sơ Cá nhân
         </h1>
-        <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '4px' }}>
+        <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted, #64748b)', marginTop: '4px', lineHeight: 1.5 }}>
           Quản lý thông tin cá nhân, ảnh đại diện và thông tin liên hệ trong hệ thống CRM
         </p>
       </header>
-
-      {statusMessage && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '12px 16px',
-            borderRadius: '6px',
-            marginBottom: '20px',
-            backgroundColor: statusMessage.type === 'success' ? '#f0fdf4' : '#fef2f2',
-            border: `1px solid ${statusMessage.type === 'success' ? '#bbf7d0' : '#fecaca'}`,
-            color: statusMessage.type === 'success' ? '#166534' : '#991b1b',
-            fontSize: '0.875rem',
-          }}
-        >
-          {statusMessage.type === 'success' ? <Check size={18} /> : <AlertCircle size={18} />}
-          <span>{statusMessage.text}</span>
-        </div>
-      )}
 
       <div
         style={{

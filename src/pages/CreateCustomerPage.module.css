@@ -34,14 +34,21 @@
 }
 
 .headerBlock__title {
-  font-size: 1.65rem;
-  font-weight: 800;
+  font-family: var(--font-sans);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+  margin: 0;
+  line-height: 1.3;
 }
 
 .headerBlock__subtitle {
-  font-size: 0.88rem;
-  color: var(--color-text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--color-text-muted, #64748b);
   margin-top: 4px;
+  line-height: 1.5;
 }
 
 .livePreviewPill {

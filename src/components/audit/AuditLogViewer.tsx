@@ -1,17 +1,18 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Search, Eye, RefreshCw, AlertCircle } from 'lucide-react';
+import { Search, Eye, RefreshCw } from 'lucide-react';
 import { IAuditLogItem } from '../../interfaces';
 import { sprint2Service } from '../../services/sprint2Service';
 import { DiffViewerModal } from './DiffViewerModal';
+import { useToast } from '../../context/ToastContext';
 
 export const AuditLogViewer: React.FC = () => {
+  const { showToast } = useToast();
   const [logs, setLogs] = useState<IAuditLogItem[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Filters
   const [performedBy, setPerformedBy] = useState('');
@@ -22,7 +23,6 @@ export const AuditLogViewer: React.FC = () => {
 
   const fetchLogs = useCallback(async () => {
     setIsLoading(true);
-    setErrorMsg(null);
     try {
       const data = await sprint2Service.getAuditLogs({
         performed_by: performedBy || undefined,
@@ -34,11 +34,11 @@ export const AuditLogViewer: React.FC = () => {
       setTotal(data.total);
       setTotalPages(data.pages || 1);
     } catch (err: any) {
-      setErrorMsg(err.response?.data?.detail || err.message || 'Lỗi khi tải nhật ký kiểm toán.');
+      showToast('error', err.response?.data?.detail || err.message || 'Lỗi khi tải nhật ký kiểm toán.');
     } finally {
       setIsLoading(false);
     }
-  }, [performedBy, targetType, page, limit]);
+  }, [performedBy, targetType, page, limit, showToast]);
 
   useEffect(() => {
     fetchLogs();
@@ -130,7 +130,10 @@ export const AuditLogViewer: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
             type="button"
-            onClick={() => fetchLogs()}
+            onClick={() => {
+              fetchLogs();
+              showToast('info', 'Đã làm mới dữ liệu nhật ký kiểm toán.');
+            }}
             disabled={isLoading}
             style={{
               display: 'inline-flex',
@@ -150,25 +153,6 @@ export const AuditLogViewer: React.FC = () => {
           </button>
         </div>
       </div>
-
-      {errorMsg && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 14px',
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fecaca',
-            borderRadius: '6px',
-            color: '#b91c1c',
-            fontSize: '0.85rem',
-          }}
-        >
-          <AlertCircle size={16} />
-          <span>{errorMsg}</span>
-        </div>
-      )}
 
       {/* Audit Log Table */}
       <div

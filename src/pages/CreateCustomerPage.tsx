@@ -24,6 +24,7 @@ import {
 import { createAvatarSvgDataUri, formatCurrency } from '../utils/formatters';
 import { sprint2Service } from '../services/sprint2Service';
 import { CustomFieldRenderer } from '../components/custom-fields/CustomFieldRenderer';
+import { useToast } from '../context/ToastContext';
 import styles from './CreateCustomerPage.module.css';
 
 interface IFormErrors {
@@ -38,6 +39,7 @@ interface IFormErrors {
 
 export const CreateCustomerPage: React.FC = () => {
   const { addCustomer } = useCRMData();
+  const { showToast } = useToast();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState<CreateCustomerDTO>({
@@ -213,6 +215,7 @@ export const CreateCustomerPage: React.FC = () => {
       ...formData,
       custom_fields: customFieldValues,
     });
+    showToast('success', `Tạo hồ sơ khách hàng "${formData.fullName}" thành công!`);
     navigate(`/customers/${created.id}`);
   };
 

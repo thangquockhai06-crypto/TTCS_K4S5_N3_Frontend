@@ -29,12 +29,12 @@ import {
   SearchBar,
 } from '../components/common';
 import { CustomSelect } from '../components/common/CustomSelect';
-import { ToastNotification, IToastItem } from '../components/common/ToastNotification';
 import { useCRMData } from '../context/CRMDataContext';
 import { useCustomerFilter } from '../hooks/useCustomerFilter';
 import { CustomerSortFieldType, CustomerStatusType, ICustomer, ICustomField } from '../interfaces';
 import { sprint2Service } from '../services/sprint2Service';
 import { formatCurrency } from '../utils/formatters';
+import { useToast } from '../context/ToastContext';
 import styles from './CustomerListPage.module.css';
 
 const STATUS_FILTER_CHIPS: ReadonlyArray<{
@@ -58,6 +58,7 @@ const SORT_OPTIONS: ReadonlyArray<{ label: string; value: CustomerSortFieldType 
 
 export const CustomerListPage: React.FC = () => {
   const { customers } = useCRMData();
+  const { showToast } = useToast();
   const navigate = useNavigate();
 
   const {
@@ -84,15 +85,6 @@ export const CustomerListPage: React.FC = () => {
   const [customFields, setCustomFields] = useState<ICustomField[]>([]);
   const [selectedCustomFieldKey, setSelectedCustomFieldKey] = useState<string>('all');
   const [customFieldValue, setCustomFieldValue] = useState<string>('');
-
-  // Toast notifications state
-  const [toasts, setToasts] = useState<IToastItem[]>([]);
-  const addToast = (type: IToastItem['type'], message: string) => {
-    setToasts((prev) => [...prev, { id: `toast-${Date.now()}-${Math.random()}`, type, message }]);
-  };
-  const handleDismissToast = (id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
 
   useEffect(() => {
     void (async () => {
@@ -172,7 +164,7 @@ export const CustomerListPage: React.FC = () => {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
-    addToast(
+    showToast(
       'success',
       `Đã xuất ${displayCustomers.length} khách hàng kèm tất cả các cột trường tùy chỉnh ra file Excel thành công!`
     );
@@ -590,9 +582,6 @@ export const CustomerListPage: React.FC = () => {
           />
         )}
       </Drawer>
-
-      {/* Thông báo Toast góc dưới bên phải màn hình */}
-      <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />
     </div>
   );
 };

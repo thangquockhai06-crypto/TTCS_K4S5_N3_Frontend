@@ -5,16 +5,16 @@ import {
   Plus,
   Trash2,
   Edit2,
-  Check,
-  AlertCircle,
   TrendingUp,
   TrendingDown,
   X,
 } from 'lucide-react';
 import { IWinLossReason, ICompetitor } from '../../interfaces';
 import { sprint2Service } from '../../services/sprint2Service';
+import { useToast } from '../../context/ToastContext';
 
 export const WinLossConfig: React.FC = () => {
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<'reasons' | 'competitors'>('reasons');
   const [resultTypeFilter, setResultTypeFilter] = useState<'all' | 'WON' | 'LOST'>('all');
 
@@ -22,7 +22,6 @@ export const WinLossConfig: React.FC = () => {
   const [reasons, setReasons] = useState<IWinLossReason[]>([]);
   const [competitors, setCompetitors] = useState<ICompetitor[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Modal reason
   const [isReasonModalOpen, setIsReasonModalOpen] = useState(false);
@@ -43,7 +42,6 @@ export const WinLossConfig: React.FC = () => {
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
-    setStatusMsg(null);
     try {
       if (activeTab === 'reasons') {
         const data = await sprint2Service.getWinLossReasons(
@@ -55,11 +53,11 @@ export const WinLossConfig: React.FC = () => {
         setCompetitors(data);
       }
     } catch (err: any) {
-      setStatusMsg({ type: 'error', text: 'Không thể tải dữ liệu cấu hình.' });
+      showToast('error', 'Không thể tải dữ liệu cấu hình.');
     } finally {
       setIsLoading(false);
     }
-  }, [activeTab, resultTypeFilter]);
+  }, [activeTab, resultTypeFilter, showToast]);
 
   useEffect(() => {
     fetchData();
@@ -92,7 +90,7 @@ export const WinLossConfig: React.FC = () => {
           reason: reasonText,
           description: reasonDesc,
         });
-        setStatusMsg({ type: 'success', text: 'Cập nhật lý do thành công!' });
+        showToast('success', `Cập nhật lý do "${reasonText.trim()}" thành công!`);
       } else {
         await sprint2Service.createWinLossReason({
           result_type: reasonResultType,
@@ -100,12 +98,12 @@ export const WinLossConfig: React.FC = () => {
           reason: reasonText,
           description: reasonDesc,
         });
-        setStatusMsg({ type: 'success', text: 'Thêm mới lý do thành công!' });
+        showToast('success', `Thêm mới lý do "${reasonText.trim()}" thành công!`);
       }
       setIsReasonModalOpen(false);
       fetchData();
     } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.response?.data?.detail || 'Lỗi lưu lý do.' });
+      showToast('error', err.response?.data?.detail || 'Lỗi lưu lý do.');
     }
   };
 
@@ -113,10 +111,10 @@ export const WinLossConfig: React.FC = () => {
     if (!window.confirm(`Xóa lý do "${r.reason}"?`)) return;
     try {
       await sprint2Service.deleteWinLossReason(r.id);
-      setStatusMsg({ type: 'success', text: 'Đã xóa lý do thành công.' });
+      showToast('success', `Đã xóa lý do "${r.reason}" thành công.`);
       fetchData();
     } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.response?.data?.detail || 'Lỗi khi xóa lý do.' });
+      showToast('error', err.response?.data?.detail || 'Lỗi khi xóa lý do.');
     }
   };
 
@@ -152,7 +150,7 @@ export const WinLossConfig: React.FC = () => {
           pricing_tier: compPricingTier,
           win_rate: Number(compWinRate),
         });
-        setStatusMsg({ type: 'success', text: 'Cập nhật đối thủ cạnh tranh thành công!' });
+        showToast('success', `Cập nhật đối thủ cạnh tranh "${compName.trim()}" thành công!`);
       } else {
         await sprint2Service.createCompetitor({
           name: compName,
@@ -161,12 +159,12 @@ export const WinLossConfig: React.FC = () => {
           pricing_tier: compPricingTier,
           win_rate: Number(compWinRate),
         });
-        setStatusMsg({ type: 'success', text: 'Thêm mới đối thủ cạnh tranh thành công!' });
+        showToast('success', `Thêm mới đối thủ cạnh tranh "${compName.trim()}" thành công!`);
       }
       setIsCompetitorModalOpen(false);
       fetchData();
     } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.response?.data?.detail || 'Lỗi lưu đối thủ.' });
+      showToast('error', err.response?.data?.detail || 'Lỗi lưu đối thủ.');
     }
   };
 
@@ -174,23 +172,23 @@ export const WinLossConfig: React.FC = () => {
     if (!window.confirm(`Xóa đối thủ cạnh tranh "${c.name}"?`)) return;
     try {
       await sprint2Service.deleteCompetitor(c.id);
-      setStatusMsg({ type: 'success', text: 'Đã xóa đối thủ thành công.' });
+      showToast('success', `Đã xóa đối thủ cạnh tranh "${c.name}" thành công.`);
       fetchData();
     } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.response?.data?.detail || 'Lỗi khi xóa đối thủ.' });
+      showToast('error', err.response?.data?.detail || 'Lỗi khi xóa đối thủ.');
     }
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div>
-        <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+      <header style={{ marginBottom: '20px' }}>
+        <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-text-primary, #0f172a)', margin: 0, lineHeight: 1.3 }}>
           Lý do Thắng/Thua & Đối thủ cạnh tranh
-        </h2>
-        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 0' }}>
+        </h1>
+        <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted, #64748b)', marginTop: '4px', lineHeight: 1.5 }}>
           Chuẩn hóa các nguyên nhân Thắng (WON) hoặc Thất bại (LOST) và theo dõi điểm mạnh yếu của đối thủ cạnh tranh trực tiếp trên thị trường
         </p>
-      </div>
+      </header>
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>
@@ -233,25 +231,6 @@ export const WinLossConfig: React.FC = () => {
           <Swords size={14} /> Đối thủ Cạnh tranh (Competitors)
         </button>
       </div>
-
-      {statusMsg && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 14px',
-            backgroundColor: statusMsg.type === 'success' ? '#f0fdf4' : '#fef2f2',
-            border: `1px solid ${statusMsg.type === 'success' ? '#bbf7d0' : '#fecaca'}`,
-            borderRadius: '6px',
-            color: statusMsg.type === 'success' ? '#166534' : '#991b1b',
-            fontSize: '0.82rem',
-          }}
-        >
-          {statusMsg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}
-          <span>{statusMsg.text}</span>
-        </div>
-      )}
 
       {/* Tab 1: Win/Loss Reasons */}
       {activeTab === 'reasons' && (

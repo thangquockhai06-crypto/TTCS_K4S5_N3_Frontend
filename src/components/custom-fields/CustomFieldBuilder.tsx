@@ -207,27 +207,29 @@ export const CustomFieldBuilder: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Page Header */}
-      <div>
-        <h2
+      <header style={{ marginBottom: '20px' }}>
+        <h1
           style={{
-            fontSize: '1.25rem',
+            fontSize: '1.4rem',
             fontWeight: 700,
-            color: isDark ? '#f8fafc' : '#0f172a',
+            color: isDark ? '#f8fafc' : 'var(--color-text-primary, #0f172a)',
             margin: 0,
+            lineHeight: 1.3,
           }}
         >
           Trình thiết kế Trường Tùy chỉnh
-        </h2>
+        </h1>
         <p
           style={{
-            fontSize: '0.84rem',
-            color: isDark ? '#94a3b8' : '#64748b',
-            margin: '4px 0 0',
+            fontSize: '0.875rem',
+            color: isDark ? '#94a3b8' : 'var(--color-text-muted, #64748b)',
+            marginTop: '4px',
+            lineHeight: 1.5,
           }}
         >
-          Khai báo các trường dữ liệu tùy biến (Văn bản, Số, Ngày tháng, Danh sách chọn) cho Khách hàng & Cơ hội bán hàng, tự động đồng bộ trên Biểu mẫu, Bộ lọc và Xuất Excel.
+          Khai báo các trường dữ liệu tùy biến (Văn bản, Số, Ngày tháng, Danh sách chọn) cho Khách hàng &amp; Cơ hội bán hàng, tự động đồng bộ trên Biểu mẫu, Bộ lọc và Xuất Excel.
         </p>
-      </div>
+      </header>
 
       {/* Entity Switcher Tabs */}
       <div
