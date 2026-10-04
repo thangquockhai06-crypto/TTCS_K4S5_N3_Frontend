@@ -14,8 +14,10 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { IPriceList, IProduct } from '../../interfaces';
+import { useCRMData } from '../../context/CRMDataContext';
 import { sprint2Service } from '../../services/sprint2Service';
 import { CustomSelect, ICustomSelectOption } from '../common/CustomSelect';
+import { ConfirmModal } from '../common/ConfirmModal';
 
 interface IPriceListModalProps {
   isOpen: boolean;
@@ -32,6 +34,9 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
   products,
   onToast,
 }) => {
+  const { appearance } = useCRMData();
+  const isDark = appearance.theme === 'dark';
+
   const [activeTab, setActiveTab] = useState<'lists' | 'matrix'>('lists');
   const [priceLists, setPriceLists] = useState<IPriceList[]>([]);
   const [selectedPriceListId, setSelectedPriceListId] = useState<string>('');
@@ -41,7 +46,10 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
   // Chỉnh sửa bảng giá
   const [editingPriceList, setEditingPriceList] = useState<IPriceList | null>(null);
 
-  // Form states
+  // Xác nhận xóa bảng giá bằng ConfirmModal (thay thế hoàn toàn window.confirm)
+  const [priceListToDelete, setPriceListToDelete] = useState<IPriceList | null>(null);
+
+  // Form states (cho phép nhập từ đầu khi thêm mới)
   const [name, setName] = useState<string>('');
   const [code, setCode] = useState<string>('');
   const [multiplier, setMultiplier] = useState<string>('0.85');
@@ -68,6 +76,7 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
       fetchPriceLists();
       setShowCreateForm(false);
       setEditingPriceList(null);
+      setPriceListToDelete(null);
     }
   }, [isOpen]);
 
@@ -131,15 +140,14 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
     }
   };
 
-  const handleDeletePriceList = async (pl: IPriceList) => {
-    const confirmed = window.confirm(
-      `Xác nhận xóa: Bạn có chắc chắn muốn xóa bảng giá "${pl.name}" (${pl.code})? Thao tác này không thể hoàn tác.`
-    );
-    if (!confirmed) return;
+  const handleConfirmDeletePriceList = async () => {
+    if (!priceListToDelete) return;
+    const pl = priceListToDelete;
+    setPriceListToDelete(null);
 
     try {
       const res = await sprint2Service.deletePriceList(pl.id);
-      onToast?.(res.message || `Đã xóa bảng giá "${pl.name}" thành công!`, 'success');
+      onToast?.(res.message || `Đã xóa vĩnh viễn bảng giá "${pl.name}" thành công!`, 'success');
       fetchPriceLists();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Lỗi khi xóa bảng giá.';
@@ -174,11 +182,11 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
     height: '38px',
     padding: '0 12px',
     borderRadius: '6px',
-    border: '1px solid #cbd5e1',
+    border: isDark ? '1px solid #334155' : '1px solid #cbd5e1',
     fontSize: '0.85rem',
     fontWeight: 500,
-    color: '#0f172a',
-    backgroundColor: '#ffffff',
+    color: isDark ? '#f8fafc' : '#0f172a',
+    backgroundColor: isDark ? '#111827' : '#ffffff',
     boxSizing: 'border-box',
     outline: 'none',
     transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
@@ -188,7 +196,7 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
     display: 'block',
     fontSize: '0.78rem',
     fontWeight: 600,
-    color: '#334155',
+    color: isDark ? '#cbd5e1' : '#334155',
     marginBottom: '6px',
   };
 
@@ -199,7 +207,7 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.55)',
+        backgroundColor: isDark ? 'rgba(0, 0, 0, 0.7)' : 'rgba(15, 23, 42, 0.55)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -209,14 +217,17 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
     >
       <div
         style={{
-          backgroundColor: '#ffffff',
+          backgroundColor: isDark ? '#111827' : '#ffffff',
           borderRadius: '10px',
+          border: isDark ? '1px solid #1e293b' : 'none',
           width: '100%',
           maxWidth: '960px',
           maxHeight: '92vh',
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.15)',
+          boxShadow: isDark
+            ? '0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.4)'
+            : '0 20px 25px -5px rgba(0, 0, 0, 0.15)',
           overflow: 'hidden',
         }}
       >
@@ -227,8 +238,8 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '16px 24px',
-            borderBottom: '1px solid #e2e8f0',
-            backgroundColor: '#ffffff',
+            borderBottom: `1px solid ${isDark ? '#1e293b' : '#e2e8f0'}`,
+            backgroundColor: isDark ? '#111827' : '#ffffff',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -237,19 +248,19 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                 width: '36px',
                 height: '36px',
                 borderRadius: '8px',
-                backgroundColor: '#eff6ff',
+                backgroundColor: isDark ? 'rgba(37, 99, 235, 0.2)' : '#eff6ff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <Tag size={20} color="#2563eb" />
+              <Tag size={20} color={isDark ? '#60a5fa' : '#2563eb'} />
             </div>
             <div>
-              <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#0f172a' }}>
+              <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a' }}>
                 Quản lý Bảng giá Niêm Yết & Giá Sàn (Price Lists)
               </h2>
-              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+              <span style={{ fontSize: '0.75rem', color: isDark ? '#94a3b8' : '#64748b' }}>
                 Hỗ trợ nhân viên kinh doanh tạo báo giá chuẩn xác theo chính sách giá và kiểm soát giá sàn công ty
               </span>
             </div>
@@ -260,7 +271,7 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
             style={{
               background: 'none',
               border: 'none',
-              color: '#64748b',
+              color: isDark ? '#94a3b8' : '#64748b',
               cursor: 'pointer',
               padding: '4px',
             }}
@@ -276,8 +287,8 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '0 24px',
-            borderBottom: '1px solid #e2e8f0',
-            backgroundColor: '#f8fafc',
+            borderBottom: `1px solid ${isDark ? '#1e293b' : '#e2e8f0'}`,
+            backgroundColor: isDark ? '#161f30' : '#f8fafc',
             flexWrap: 'wrap',
             gap: '8px',
           }}
@@ -294,7 +305,7 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                 border: 'none',
                 borderBottom: activeTab === 'lists' ? '2px solid #2563eb' : '2px solid transparent',
                 backgroundColor: 'transparent',
-                color: activeTab === 'lists' ? '#2563eb' : '#64748b',
+                color: activeTab === 'lists' ? (isDark ? '#60a5fa' : '#2563eb') : isDark ? '#94a3b8' : '#64748b',
                 fontWeight: activeTab === 'lists' ? 600 : 500,
                 fontSize: '0.84rem',
                 cursor: 'pointer',
@@ -315,7 +326,7 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                 border: 'none',
                 borderBottom: activeTab === 'matrix' ? '2px solid #2563eb' : '2px solid transparent',
                 backgroundColor: 'transparent',
-                color: activeTab === 'matrix' ? '#2563eb' : '#64748b',
+                color: activeTab === 'matrix' ? (isDark ? '#60a5fa' : '#2563eb') : isDark ? '#94a3b8' : '#64748b',
                 fontWeight: activeTab === 'matrix' ? 600 : 500,
                 fontSize: '0.84rem',
                 cursor: 'pointer',
@@ -335,9 +346,29 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
               borderRadius: '20px',
               fontSize: '0.74rem',
               fontWeight: 600,
-              backgroundColor: isDirector ? '#fef3c7' : '#f1f5f9',
-              color: isDirector ? '#b45309' : '#475569',
-              border: `1px solid ${isDirector ? '#fde68a' : '#e2e8f0'}`,
+              backgroundColor: isDark
+                ? isDirector
+                  ? 'rgba(245, 158, 11, 0.15)'
+                  : '#1e293b'
+                : isDirector
+                ? '#fef3c7'
+                : '#f1f5f9',
+              color: isDark
+                ? isDirector
+                  ? '#fbbf24'
+                  : '#94a3b8'
+                : isDirector
+                ? '#b45309'
+                : '#475569',
+              border: `1px solid ${
+                isDark
+                  ? isDirector
+                    ? 'rgba(245, 158, 11, 0.3)'
+                    : '#334155'
+                  : isDirector
+                  ? '#fde68a'
+                  : '#e2e8f0'
+              }`,
             }}
           >
             {isDirector ? <ShieldCheck size={14} /> : <Lock size={14} />}
@@ -347,11 +378,11 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
 
         {/* Body Content */}
         <div style={{ padding: '20px 24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* TAB 1: Danh sách Bảng giá (Hỗ trợ Thêm, Sửa, Xóa đầy đủ) */}
+          {/* TAB 1: Danh sách Bảng giá (Hỗ trợ Thêm, Sửa, Xóa - Đã loại bỏ nút Xem ma trận thừa trong bảng) */}
           {activeTab === 'lists' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.88rem', fontWeight: 600, color: '#334155' }}>
+                <span style={{ fontSize: '0.88rem', fontWeight: 600, color: isDark ? '#cbd5e1' : '#334155' }}>
                   Các bảng giá phân khúc đã ban hành
                 </span>
                 {!showCreateForm && (
@@ -384,22 +415,22 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                   onSubmit={handleSubmitForm}
                   style={{
                     padding: '18px',
-                    backgroundColor: '#f8fafc',
+                    backgroundColor: isDark ? '#161f30' : '#f8fafc',
                     borderRadius: '8px',
-                    border: '1px solid #cbd5e1',
+                    border: `1px solid ${isDark ? '#334155' : '#cbd5e1'}`,
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '14px',
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f172a' }}>
+                    <span style={{ fontSize: '0.88rem', fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a' }}>
                       {editingPriceList ? `Chỉnh sửa Bảng giá: ${editingPriceList.name}` : 'Thêm Bảng giá Mới'}
                     </span>
                     <button
                       type="button"
                       onClick={handleCancelForm}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: isDark ? '#94a3b8' : '#64748b' }}
                     >
                       <X size={16} />
                     </button>
@@ -476,10 +507,10 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                         height: '36px',
                         padding: '0 14px',
                         borderRadius: '6px',
-                        border: '1px solid #cbd5e1',
-                        backgroundColor: '#ffffff',
+                        border: isDark ? '1px solid #334155' : '1px solid #cbd5e1',
+                        backgroundColor: isDark ? '#1e293b' : '#ffffff',
                         fontSize: '0.8rem',
-                        color: '#334155',
+                        color: isDark ? '#cbd5e1' : '#334155',
                         cursor: 'pointer',
                         fontWeight: 500,
                       }}
@@ -506,30 +537,30 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                 </form>
               )}
 
-              {/* Bảng Danh sách Bảng giá: Thêm nút Sửa, Xóa */}
-              <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+              {/* Bảng Danh sách Bảng giá: Đã xóa nút Xem ma trận thừa, giữ nút Sửa và Xóa */}
+              <div style={{ border: `1px solid ${isDark ? '#1e293b' : '#e2e8f0'}`, borderRadius: '8px', overflow: 'hidden' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', textAlign: 'left' }}>
-                  <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                  <thead style={{ backgroundColor: isDark ? '#161f30' : '#f8fafc', borderBottom: `1px solid ${isDark ? '#1e293b' : '#e2e8f0'}` }}>
                     <tr>
-                      <th style={{ padding: '12px 14px', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                      <th style={{ padding: '12px 14px', color: isDark ? '#94a3b8' : '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
                         Mã bảng giá
                       </th>
-                      <th style={{ padding: '12px 14px', color: '#64748b', fontWeight: 600 }}>
+                      <th style={{ padding: '12px 14px', color: isDark ? '#94a3b8' : '#64748b', fontWeight: 600 }}>
                         Tên bảng giá
                       </th>
-                      <th style={{ padding: '12px 14px', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                      <th style={{ padding: '12px 14px', color: isDark ? '#94a3b8' : '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
                         Hệ số giá
                       </th>
-                      <th style={{ padding: '12px 14px', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                      <th style={{ padding: '12px 14px', color: isDark ? '#94a3b8' : '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
                         Tỷ lệ chiết khấu
                       </th>
-                      <th style={{ padding: '12px 14px', color: '#64748b', fontWeight: 600 }}>
+                      <th style={{ padding: '12px 14px', color: isDark ? '#94a3b8' : '#64748b' }}>
                         Mô tả
                       </th>
-                      <th style={{ padding: '12px 14px', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                      <th style={{ padding: '12px 14px', color: isDark ? '#94a3b8' : '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
                         Trạng thái
                       </th>
-                      <th style={{ padding: '12px 14px', textAlign: 'right', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                      <th style={{ padding: '12px 14px', textAlign: 'right', color: isDark ? '#94a3b8' : '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
                         Thao tác
                       </th>
                     </tr>
@@ -537,13 +568,13 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                   <tbody>
                     {isLoading ? (
                       <tr>
-                        <td colSpan={7} style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>
+                        <td colSpan={7} style={{ padding: '32px', textAlign: 'center', color: isDark ? '#94a3b8' : '#64748b' }}>
                           Đang nạp danh sách bảng giá...
                         </td>
                       </tr>
                     ) : priceLists.length === 0 ? (
                       <tr>
-                        <td colSpan={7} style={{ padding: '32px', textAlign: 'center', color: '#94a3b8' }}>
+                        <td colSpan={7} style={{ padding: '32px', textAlign: 'center', color: isDark ? '#64748b' : '#94a3b8' }}>
                           Chưa có bảng giá nào. Hãy nhấn "Thêm bảng giá mới" để bắt đầu.
                         </td>
                       </tr>
@@ -551,14 +582,14 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                       priceLists.map((pl) => {
                         const discountPercent = Math.round((1 - pl.multiplier) * 100);
                         return (
-                          <tr key={pl.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                            <td style={{ padding: '12px 14px', fontWeight: 600, color: '#2563eb', whiteSpace: 'nowrap' }}>
+                          <tr key={pl.id} style={{ borderBottom: `1px solid ${isDark ? '#1e293b' : '#f1f5f9'}`, backgroundColor: isDark ? '#111827' : '#ffffff' }}>
+                            <td style={{ padding: '12px 14px', fontWeight: 600, color: isDark ? '#60a5fa' : '#2563eb', whiteSpace: 'nowrap' }}>
                               {pl.code}
                             </td>
-                            <td style={{ padding: '12px 14px', fontWeight: 500, color: '#1e293b' }}>
+                            <td style={{ padding: '12px 14px', fontWeight: 500, color: isDark ? '#f8fafc' : '#1e293b' }}>
                               {pl.name}
                             </td>
-                            <td style={{ padding: '12px 14px', color: '#0f172a', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                            <td style={{ padding: '12px 14px', color: isDark ? '#f8fafc' : '#0f172a', fontWeight: 700, whiteSpace: 'nowrap' }}>
                               {pl.multiplier}x
                             </td>
                             <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}>
@@ -568,8 +599,8 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                                   borderRadius: '10px',
                                   fontSize: '0.72rem',
                                   fontWeight: 600,
-                                  backgroundColor: discountPercent > 0 ? '#eff6ff' : '#f1f5f9',
-                                  color: discountPercent > 0 ? '#1d4ed8' : '#64748b',
+                                  backgroundColor: discountPercent > 0 ? (isDark ? 'rgba(37, 99, 235, 0.2)' : '#eff6ff') : isDark ? '#1e293b' : '#f1f5f9',
+                                  color: discountPercent > 0 ? (isDark ? '#93c5fd' : '#1d4ed8') : isDark ? '#94a3b8' : '#64748b',
                                   whiteSpace: 'nowrap',
                                 }}
                               >
@@ -580,7 +611,7 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                                   : 'Giá gốc niêm yết'}
                               </span>
                             </td>
-                            <td style={{ padding: '12px 14px', color: '#64748b' }}>{pl.description || '—'}</td>
+                            <td style={{ padding: '12px 14px', color: isDark ? '#94a3b8' : '#64748b' }}>{pl.description || '—'}</td>
                             <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}>
                               <span
                                 style={{
@@ -588,8 +619,8 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                                   borderRadius: '4px',
                                   fontSize: '0.72rem',
                                   fontWeight: 600,
-                                  backgroundColor: pl.is_active ? '#dcfce7' : '#f1f5f9',
-                                  color: pl.is_active ? '#15803d' : '#64748b',
+                                  backgroundColor: pl.is_active ? (isDark ? 'rgba(16, 185, 129, 0.18)' : '#dcfce7') : isDark ? '#1e293b' : '#f1f5f9',
+                                  color: pl.is_active ? (isDark ? '#86efac' : '#15803d') : isDark ? '#94a3b8' : '#64748b',
                                   whiteSpace: 'nowrap',
                                 }}
                               >
@@ -598,37 +629,16 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                             </td>
                             <td style={{ padding: '12px 14px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                                {/* Nút xem ma trận */}
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setSelectedPriceListId(pl.id);
-                                    setActiveTab('matrix');
-                                  }}
-                                  style={{
-                                    padding: '4px 10px',
-                                    borderRadius: '5px',
-                                    border: '1px solid #cbd5e1',
-                                    backgroundColor: '#ffffff',
-                                    color: '#2563eb',
-                                    fontSize: '0.75rem',
-                                    fontWeight: 600,
-                                    cursor: 'pointer',
-                                  }}
-                                >
-                                  Xem ma trận
-                                </button>
-
                                 {/* Nút sửa bảng giá */}
                                 <button
                                   type="button"
                                   onClick={() => handleOpenEdit(pl)}
                                   style={{
-                                    padding: '5px',
-                                    border: '1px solid #e2e8f0',
+                                    padding: '5px 7px',
+                                    border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
                                     borderRadius: '5px',
-                                    backgroundColor: '#ffffff',
-                                    color: '#2563eb',
+                                    backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                                    color: isDark ? '#60a5fa' : '#2563eb',
                                     cursor: 'pointer',
                                   }}
                                   title="Chỉnh sửa bảng giá"
@@ -639,13 +649,13 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                                 {/* Nút xóa bảng giá */}
                                 <button
                                   type="button"
-                                  onClick={() => handleDeletePriceList(pl)}
+                                  onClick={() => setPriceListToDelete(pl)}
                                   style={{
-                                    padding: '5px',
-                                    border: '1px solid #fecaca',
+                                    padding: '5px 7px',
+                                    border: `1px solid ${isDark ? '#7f1d1d' : '#fecaca'}`,
                                     borderRadius: '5px',
-                                    backgroundColor: '#ffffff',
-                                    color: '#dc2626',
+                                    backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                                    color: isDark ? '#f87171' : '#dc2626',
                                     cursor: 'pointer',
                                   }}
                                   title="Xóa bảng giá"
@@ -674,15 +684,15 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '12px 16px',
-                  backgroundColor: '#f8fafc',
+                  backgroundColor: isDark ? '#161f30' : '#f8fafc',
                   borderRadius: '8px',
-                  border: '1px solid #e2e8f0',
+                  border: `1px solid ${isDark ? '#1e293b' : '#e2e8f0'}`,
                   flexWrap: 'wrap',
                   gap: '12px',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: '300px' }}>
-                  <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#334155', whiteSpace: 'nowrap' }}>
+                  <label style={{ fontSize: '0.82rem', fontWeight: 600, color: isDark ? '#cbd5e1' : '#334155', whiteSpace: 'nowrap' }}>
                     Chọn bảng giá áp dụng:
                   </label>
                   <div style={{ width: '320px', maxWidth: '100%' }}>
@@ -697,12 +707,12 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
 
                 {selectedPriceList && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.8rem' }}>
-                    <span style={{ color: '#64748b' }}>
-                      Hệ số nhân: <strong style={{ color: '#0f172a' }}>{selectedPriceList.multiplier}x</strong>
+                    <span style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
+                      Hệ số nhân: <strong style={{ color: isDark ? '#f8fafc' : '#0f172a' }}>{selectedPriceList.multiplier}x</strong>
                     </span>
-                    <span style={{ color: '#64748b' }}>
+                    <span style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
                       Chiết khấu tương ứng:{' '}
-                      <strong style={{ color: '#2563eb' }}>
+                      <strong style={{ color: isDark ? '#60a5fa' : '#2563eb' }}>
                         {Math.round((1 - selectedPriceList.multiplier) * 100)}%
                       </strong>
                     </span>
@@ -717,14 +727,14 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                   alignItems: 'center',
                   gap: '8px',
                   padding: '9px 14px',
-                  backgroundColor: '#eff6ff',
+                  backgroundColor: isDark ? 'rgba(37, 99, 235, 0.15)' : '#eff6ff',
                   borderRadius: '6px',
-                  border: '1px solid #bfdbfe',
+                  border: `1px solid ${isDark ? 'rgba(37, 99, 235, 0.3)' : '#bfdbfe'}`,
                   fontSize: '0.78rem',
-                  color: '#1e40af',
+                  color: isDark ? '#bfdbfe' : '#1e40af',
                 }}
               >
-                <AlertTriangle size={16} color="#2563eb" style={{ flexShrink: 0 }} />
+                <AlertTriangle size={16} color={isDark ? '#60a5fa' : '#2563eb'} style={{ flexShrink: 0 }} />
                 <span>
                   <strong>Nguyên tắc Giá sàn:</strong> Nếu giá sau chiết khấu của bảng giá &lt; Giá sàn của
                   sản phẩm, hệ thống sẽ cảnh báo <em>"Cần duyệt chiết khấu do thấp hơn giá sàn"</em> để ngăn chặn việc
@@ -732,30 +742,30 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                 </span>
               </div>
 
-              {/* Bảng Ma trận Giá Sản Phẩm: Rõ ràng, không ngắt quãng chữ */}
-              <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflowX: 'auto' }}>
+              {/* Bảng Ma trận Giá Sản Phẩm */}
+              <div style={{ border: `1px solid ${isDark ? '#1e293b' : '#e2e8f0'}`, borderRadius: '8px', overflowX: 'auto' }}>
                 <table style={{ width: '100%', minWidth: '900px', borderCollapse: 'collapse', fontSize: '0.82rem', textAlign: 'left' }}>
-                  <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                  <thead style={{ backgroundColor: isDark ? '#161f30' : '#f8fafc', borderBottom: `1px solid ${isDark ? '#1e293b' : '#e2e8f0'}` }}>
                     <tr>
-                      <th style={{ padding: '12px 14px', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                      <th style={{ padding: '12px 14px', color: isDark ? '#94a3b8' : '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
                         Mã SKU
                       </th>
-                      <th style={{ padding: '12px 14px', color: '#64748b', fontWeight: 600, minWidth: '200px' }}>
+                      <th style={{ padding: '12px 14px', color: isDark ? '#94a3b8' : '#64748b', fontWeight: 600, minWidth: '200px' }}>
                         Tên sản phẩm
                       </th>
-                      <th style={{ padding: '12px 14px', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                      <th style={{ padding: '12px 14px', color: isDark ? '#94a3b8' : '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
                         Loại sản phẩm
                       </th>
-                      <th style={{ padding: '12px 14px', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                      <th style={{ padding: '12px 14px', color: isDark ? '#94a3b8' : '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
                         Đơn vị tính
                       </th>
-                      <th style={{ padding: '12px 14px', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                      <th style={{ padding: '12px 14px', color: isDark ? '#94a3b8' : '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
                         Giá niêm yết
                       </th>
-                      <th style={{ padding: '12px 14px', color: '#2563eb', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                      <th style={{ padding: '12px 14px', color: isDark ? '#60a5fa' : '#2563eb', fontWeight: 700, whiteSpace: 'nowrap' }}>
                         Giá áp dụng ({selectedPriceList?.multiplier || 1.0}x)
                       </th>
-                      <th style={{ padding: '12px 14px', color: '#047857', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                      <th style={{ padding: '12px 14px', color: isDark ? '#34d399' : '#047857', fontWeight: 600, whiteSpace: 'nowrap' }}>
                         Giá sàn
                       </th>
 
@@ -764,8 +774,8 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                         <th
                           style={{
                             padding: '12px 14px',
-                            color: '#b45309',
-                            backgroundColor: '#fefce8',
+                            color: isDark ? '#fbbf24' : '#b45309',
+                            backgroundColor: isDark ? 'rgba(245, 158, 11, 0.12)' : '#fefce8',
                             fontWeight: 600,
                             whiteSpace: 'nowrap',
                           }}
@@ -776,7 +786,7 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                         </th>
                       )}
 
-                      <th style={{ padding: '12px 14px', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                      <th style={{ padding: '12px 14px', color: isDark ? '#94a3b8' : '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
                         Kiểm soát chính sách giá
                       </th>
                     </tr>
@@ -786,7 +796,7 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                       <tr>
                         <td
                           colSpan={isDirector ? 9 : 8}
-                          style={{ padding: '28px', textAlign: 'center', color: '#94a3b8' }}
+                          style={{ padding: '28px', textAlign: 'center', color: isDark ? '#64748b' : '#94a3b8' }}
                         >
                           Không có dữ liệu sản phẩm.
                         </td>
@@ -801,14 +811,20 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                           <tr
                             key={p.id}
                             style={{
-                              borderBottom: '1px solid #f1f5f9',
-                              backgroundColor: isBelowFloor ? '#fffbeb' : '#ffffff',
+                              borderBottom: `1px solid ${isDark ? '#1e293b' : '#f1f5f9'}`,
+                              backgroundColor: isBelowFloor
+                                ? isDark
+                                  ? 'rgba(245, 158, 11, 0.12)'
+                                  : '#fffbeb'
+                                : isDark
+                                ? '#111827'
+                                : '#ffffff',
                             }}
                           >
-                            <td style={{ padding: '12px 14px', fontWeight: 600, color: '#2563eb', whiteSpace: 'nowrap' }}>
+                            <td style={{ padding: '12px 14px', fontWeight: 600, color: isDark ? '#60a5fa' : '#2563eb', whiteSpace: 'nowrap' }}>
                               {p.sku}
                             </td>
-                            <td style={{ padding: '12px 14px', fontWeight: 500, color: '#1e293b' }}>
+                            <td style={{ padding: '12px 14px', fontWeight: 500, color: isDark ? '#f8fafc' : '#1e293b' }}>
                               {p.name}
                             </td>
                             <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}>
@@ -818,31 +834,51 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                                   borderRadius: '10px',
                                   fontSize: '0.72rem',
                                   fontWeight: 600,
-                                  backgroundColor: p.product_type === 'subscription' ? '#ecfeff' : '#eff6ff',
-                                  color: p.product_type === 'subscription' ? '#0e7490' : '#1d4ed8',
+                                  backgroundColor:
+                                    p.product_type === 'subscription'
+                                      ? isDark
+                                        ? 'rgba(14, 165, 233, 0.18)'
+                                        : '#ecfeff'
+                                      : isDark
+                                      ? 'rgba(99, 102, 241, 0.18)'
+                                      : '#eff6ff',
+                                  color:
+                                    p.product_type === 'subscription'
+                                      ? isDark
+                                        ? '#7dd3fc'
+                                        : '#0e7490'
+                                      : isDark
+                                      ? '#a5b4fc'
+                                      : '#1d4ed8',
                                   whiteSpace: 'nowrap',
                                 }}
                               >
                                 {p.product_type === 'subscription' ? 'Dịch vụ thuê bao' : 'Sản phẩm một lần'}
                               </span>
                             </td>
-                            <td style={{ padding: '12px 14px', color: '#64748b', whiteSpace: 'nowrap' }}>
+                            <td style={{ padding: '12px 14px', color: isDark ? '#94a3b8' : '#64748b', whiteSpace: 'nowrap' }}>
                               {p.unit}
                             </td>
-                            <td style={{ padding: '12px 14px', color: '#64748b', whiteSpace: 'nowrap' }}>
+                            <td style={{ padding: '12px 14px', color: isDark ? '#94a3b8' : '#64748b', whiteSpace: 'nowrap' }}>
                               {formatCurrency(p.selling_price)}
                             </td>
-                            <td style={{ padding: '12px 14px', fontWeight: 700, color: '#1d4ed8', whiteSpace: 'nowrap' }}>
+                            <td style={{ padding: '12px 14px', fontWeight: 700, color: isDark ? '#60a5fa' : '#1d4ed8', whiteSpace: 'nowrap' }}>
                               {formatCurrency(appliedPrice)}
                             </td>
-                            <td style={{ padding: '12px 14px', color: '#047857', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                            <td style={{ padding: '12px 14px', color: isDark ? '#34d399' : '#047857', fontWeight: 600, whiteSpace: 'nowrap' }}>
                               {formatCurrency(p.floor_price)}
                             </td>
 
                             {/* Cột Giá vốn: Ẩn nếu không phải Director */}
                             {isDirector && (
-                              <td style={{ padding: '12px 14px', backgroundColor: '#fefce8', whiteSpace: 'nowrap' }}>
-                                <span style={{ color: '#b45309', fontWeight: 600 }}>
+                              <td
+                                style={{
+                                  padding: '12px 14px',
+                                  backgroundColor: isDark ? 'rgba(245, 158, 11, 0.12)' : '#fefce8',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                <span style={{ color: isDark ? '#fbbf24' : '#b45309', fontWeight: 600 }}>
                                   {formatCurrency(p.cost_price)}
                                 </span>
                               </td>
@@ -860,9 +896,9 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                                     borderRadius: '4px',
                                     fontSize: '0.74rem',
                                     fontWeight: 600,
-                                    backgroundColor: '#fee2e2',
-                                    color: '#b91c1c',
-                                    border: '1px solid #fca5a5',
+                                    backgroundColor: isDark ? 'rgba(239, 68, 68, 0.2)' : '#fee2e2',
+                                    color: isDark ? '#fca5a5' : '#b91c1c',
+                                    border: `1px solid ${isDark ? 'rgba(239, 68, 68, 0.3)' : '#fca5a5'}`,
                                     whiteSpace: 'nowrap',
                                   }}
                                   title={`Giá áp dụng (${formatCurrency(appliedPrice)}) thấp hơn giá sàn (${formatCurrency(p.floor_price)}). Báo giá này bắt buộc cần Giám đốc phê duyệt chiết khấu.`}
@@ -879,9 +915,9 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                                     borderRadius: '4px',
                                     fontSize: '0.74rem',
                                     fontWeight: 600,
-                                    backgroundColor: '#dcfce7',
-                                    color: '#15803d',
-                                    border: '1px solid #86efac',
+                                    backgroundColor: isDark ? 'rgba(16, 185, 129, 0.18)' : '#dcfce7',
+                                    color: isDark ? '#86efac' : '#15803d',
+                                    border: `1px solid ${isDark ? 'rgba(16, 185, 129, 0.3)' : '#86efac'}`,
                                     whiteSpace: 'nowrap',
                                   }}
                                 >
@@ -906,8 +942,8 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
             display: 'flex',
             justifyContent: 'flex-end',
             padding: '14px 24px',
-            borderTop: '1px solid #e2e8f0',
-            backgroundColor: '#f8fafc',
+            borderTop: `1px solid ${isDark ? '#1e293b' : '#e2e8f0'}`,
+            backgroundColor: isDark ? '#161f30' : '#f8fafc',
           }}
         >
           <button
@@ -917,9 +953,9 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
               height: '36px',
               padding: '0 18px',
               borderRadius: '6px',
-              border: '1px solid #cbd5e1',
-              backgroundColor: '#ffffff',
-              color: '#334155',
+              border: isDark ? '1px solid #334155' : '1px solid #cbd5e1',
+              backgroundColor: isDark ? '#1e293b' : '#ffffff',
+              color: isDark ? '#cbd5e1' : '#334155',
               fontSize: '0.84rem',
               fontWeight: 500,
               cursor: 'pointer',
@@ -929,6 +965,18 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
           </button>
         </div>
       </div>
+
+      {/* In-app Confirm Modal xóa bảng giá (thay thế window.confirm) */}
+      <ConfirmModal
+        isOpen={priceListToDelete !== null}
+        title="Xác nhận xóa bảng giá"
+        message={`Bạn có chắc chắn muốn xóa vĩnh viễn bảng giá "${priceListToDelete?.name}" (${priceListToDelete?.code})? Thao tác này không thể hoàn tác.`}
+        confirmLabel="Xác nhận xóa"
+        cancelLabel="Hủy bỏ"
+        isDanger={true}
+        onConfirm={handleConfirmDeletePriceList}
+        onCancel={() => setPriceListToDelete(null)}
+      />
     </div>
   );
 };

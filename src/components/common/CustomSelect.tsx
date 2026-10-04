@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
+import { useCRMData } from '../../context/CRMDataContext';
 
 export interface ICustomSelectOption<T extends string = string> {
   value: T;
@@ -27,6 +28,8 @@ export function CustomSelect<T extends string = string>({
 }: ICustomSelectProps<T>): React.ReactElement {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { appearance } = useCRMData();
+  const isDark = appearance.theme === 'dark';
 
   const selectedOption = options.find((opt) => opt.value === value);
 
@@ -64,10 +67,26 @@ export function CustomSelect<T extends string = string>({
           height,
           padding: '0 12px',
           borderRadius: '6px',
-          border: isOpen ? '1px solid #2563eb' : '1px solid #cbd5e1',
-          boxShadow: isOpen ? '0 0 0 3px rgba(37, 99, 235, 0.1)' : 'none',
-          backgroundColor: disabled ? '#f8fafc' : '#ffffff',
-          color: selectedOption ? '#1e293b' : '#94a3b8',
+          border: isOpen
+            ? '1px solid #2563eb'
+            : isDark
+            ? '1px solid #334155'
+            : '1px solid #cbd5e1',
+          boxShadow: isOpen ? '0 0 0 3px rgba(37, 99, 235, 0.2)' : 'none',
+          backgroundColor: disabled
+            ? isDark
+              ? '#1e293b'
+              : '#f8fafc'
+            : isDark
+            ? '#111827'
+            : '#ffffff',
+          color: selectedOption
+            ? isDark
+              ? '#f8fafc'
+              : '#1e293b'
+            : isDark
+            ? '#64748b'
+            : '#94a3b8',
           fontSize: '0.84rem',
           fontWeight: 500,
           display: 'flex',
@@ -84,7 +103,7 @@ export function CustomSelect<T extends string = string>({
         </span>
         <ChevronDown
           size={16}
-          color="#64748b"
+          color={isDark ? '#94a3b8' : '#64748b'}
           style={{
             marginLeft: '8px',
             flexShrink: 0,
@@ -105,10 +124,12 @@ export function CustomSelect<T extends string = string>({
             minWidth: '160px',
             maxHeight: '240px',
             overflowY: 'auto',
-            backgroundColor: '#ffffff',
+            backgroundColor: isDark ? '#1f293d' : '#ffffff',
             borderRadius: '8px',
-            border: '1px solid #e2e8f0',
-            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.06)',
+            border: isDark ? '1px solid #334155' : '1px solid #e2e8f0',
+            boxShadow: isDark
+              ? '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4)'
+              : '0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.06)',
             zIndex: 10000,
             padding: '4px',
             boxSizing: 'border-box',
@@ -128,8 +149,18 @@ export function CustomSelect<T extends string = string>({
                   borderRadius: '6px',
                   fontSize: '0.82rem',
                   fontWeight: isSelected ? 600 : 400,
-                  color: isSelected ? '#1d4ed8' : '#334155',
-                  backgroundColor: isSelected ? '#eff6ff' : 'transparent',
+                  color: isSelected
+                    ? isDark
+                      ? '#60a5fa'
+                      : '#1d4ed8'
+                    : isDark
+                    ? '#cbd5e1'
+                    : '#334155',
+                  backgroundColor: isSelected
+                    ? isDark
+                      ? 'rgba(37, 99, 235, 0.25)'
+                      : '#eff6ff'
+                    : 'transparent',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
@@ -138,7 +169,7 @@ export function CustomSelect<T extends string = string>({
                 }}
                 onMouseEnter={(e) => {
                   if (!isSelected) {
-                    e.currentTarget.style.backgroundColor = '#f8fafc';
+                    e.currentTarget.style.backgroundColor = isDark ? '#334155' : '#f8fafc';
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -148,7 +179,7 @@ export function CustomSelect<T extends string = string>({
                 }}
               >
                 <span>{opt.label}</span>
-                {isSelected && <Check size={14} color="#2563eb" style={{ flexShrink: 0 }} />}
+                {isSelected && <Check size={14} color={isDark ? '#60a5fa' : '#2563eb'} style={{ flexShrink: 0 }} />}
               </div>
             );
           })}
