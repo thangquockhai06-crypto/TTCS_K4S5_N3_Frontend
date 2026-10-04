@@ -12,6 +12,8 @@ import {
   Sliders,
   Target,
   UserCheck,
+  Users,
+  Briefcase,
   X,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -35,6 +37,20 @@ const ALL_MENU_ITEMS: ReadonlyArray<IMenuItem> = [
     label: 'Tổng quan',
     path: '/dashboard',
     icon: <LayoutDashboard size={19} />,
+    requiredPermission: 'view_dashboard',
+  },
+  {
+    id: 'customers',
+    label: 'Khách hàng',
+    path: '/customers',
+    icon: <Users size={19} />,
+    requiredPermission: 'view_dashboard',
+  },
+  {
+    id: 'deals',
+    label: 'Cơ hội bán hàng',
+    path: '/deals',
+    icon: <Briefcase size={19} />,
     requiredPermission: 'view_dashboard',
   },
   {
@@ -188,7 +204,7 @@ export const Sidebar: React.FC<ISidebarProps> = ({
         </nav>
 
         <div className={styles.sidebar__footer}>
-          <div className={styles.sidebar__tokenStatus} title="S1-02 Bảo vệ phiên JWT">
+          <div className={styles.sidebar__tokenStatus} title="Bảo vệ phiên JWT">
             <ShieldCheck size={14} className={styles.sidebar__tokenIcon} />
             <div className={styles.sidebar__tokenMeta}>
               <span className={styles.sidebar__tokenTitle}>Phiên JWT Hoạt động</span>

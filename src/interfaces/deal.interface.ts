@@ -18,6 +18,7 @@ export interface IDeal {
   ownerAvatar: string;
   tags: string[];
   daysInStage: number;
+  custom_fields?: Record<string, string | number>;
 }
 
 export interface IDealStageColumn {

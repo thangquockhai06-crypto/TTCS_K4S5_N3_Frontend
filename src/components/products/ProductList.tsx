@@ -62,9 +62,6 @@ export const ProductList: React.FC = () => {
   const addToast = useCallback((message: string, type: 'success' | 'warning' | 'error' | 'info' = 'success') => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
     setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
   }, []);
 
   const handleDismissToast = useCallback((id: string) => {

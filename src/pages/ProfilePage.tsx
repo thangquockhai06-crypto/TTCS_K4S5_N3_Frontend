@@ -65,7 +65,7 @@ export const ProfilePage: React.FC = () => {
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px 16px' }}>
       <header style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-          Hồ sơ Cá nhân (S2-02)
+          Hồ sơ Cá nhân
         </h1>
         <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '4px' }}>
           Quản lý thông tin cá nhân, ảnh đại diện và thông tin liên hệ trong hệ thống CRM
@@ -105,7 +105,7 @@ export const ProfilePage: React.FC = () => {
           {/* S2-03: Avatar Uploader */}
           <div>
             <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#1e293b', marginBottom: '12px' }}>
-              Ảnh đại diện cá nhân (S2-03)
+              Ảnh đại diện cá nhân
             </label>
             <AvatarUploader
               currentAvatarUrl={avatarUrl || user?.avatarUrl}

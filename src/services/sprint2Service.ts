@@ -25,6 +25,12 @@ import {
   mockUpdatePriceList,
   mockDeletePriceList,
 } from '../mock/products.mock';
+import {
+  getStoredCustomFields,
+  mockCreateCustomField,
+  mockUpdateCustomField,
+  mockDeleteCustomField,
+} from '../mock/customFields.mock';
 
 class Sprint2Service {
   // S2-01: Excel User Import
@@ -208,25 +214,47 @@ class Sprint2Service {
 
   // S2-08: Custom Fields
   async getCustomFields(entityType?: 'customer' | 'deal'): Promise<ICustomField[]> {
-    const response = await axiosInstance.get<ICustomField[]>('/custom-fields', {
-      params: { entity_type: entityType },
-    });
-    return response.data;
+    try {
+      const response = await axiosInstance.get<ICustomField[]>('/custom-fields', {
+        params: { entity_type: entityType },
+      });
+      if (response.data && Array.isArray(response.data)) {
+        return response.data;
+      }
+    } catch {
+      // Fallback sang LocalStorage mock
+    }
+    return getStoredCustomFields(entityType);
   }
 
   async createCustomField(field: Partial<ICustomField>): Promise<ICustomField> {
-    const response = await axiosInstance.post<ICustomField>('/custom-fields', field);
-    return response.data;
+    try {
+      const response = await axiosInstance.post<ICustomField>('/custom-fields', field);
+      if (response.data) return response.data;
+    } catch {
+      // Fallback sang LocalStorage mock
+    }
+    return mockCreateCustomField(field);
   }
 
   async updateCustomField(id: string, field: Partial<ICustomField>): Promise<ICustomField> {
-    const response = await axiosInstance.put<ICustomField>(`/custom-fields/${id}`, field);
-    return response.data;
+    try {
+      const response = await axiosInstance.put<ICustomField>(`/custom-fields/${id}`, field);
+      if (response.data) return response.data;
+    } catch {
+      // Fallback sang LocalStorage mock
+    }
+    return mockUpdateCustomField(id, field);
   }
 
   async deleteCustomField(id: string): Promise<{ message: string }> {
-    const response = await axiosInstance.delete<{ message: string }>(`/custom-fields/${id}`);
-    return response.data;
+    try {
+      const response = await axiosInstance.delete<{ message: string }>(`/custom-fields/${id}`);
+      if (response.data) return response.data;
+    } catch {
+      // Fallback sang LocalStorage mock
+    }
+    return mockDeleteCustomField(id);
   }
 
   // S2-09: Pipeline Configuration

@@ -191,7 +191,7 @@ export const ForgotPasswordPage: React.FC = () => {
                 }}
               >
                 <KeyRound size={13} />
-                <span>QUÊN MẬT KHẨU (S1-03)</span>
+                <span>QUÊN MẬT KHẨU</span>
               </div>
               <h1 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '6px' }}>
                 Khôi phục mật khẩu tài khoản

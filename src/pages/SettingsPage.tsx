@@ -141,7 +141,7 @@ export const SettingsPage: React.FC = () => {
         <h1 className={styles.header__title}>Cài đặt hệ thống & Tài khoản</h1>
         <p className={styles.header__subtitle}>
           Quản lý hồ sơ quản trị viên, giao diện hiển thị, kênh thông báo và chính sách bảo mật phiên
-          JWT (S1-02).
+          JWT.
         </p>
       </header>
 
@@ -171,7 +171,7 @@ export const SettingsPage: React.FC = () => {
           >
             <Building2 size={17} />
             <div>
-              <strong>Sơ đồ Cây Tổ chức (S2-06)</strong>
+              <strong>Sơ đồ Cây Tổ chức</strong>
               <span>Cây đa cấp, Trưởng bộ phận & Địa bàn</span>
             </div>
           </button>
@@ -185,7 +185,7 @@ export const SettingsPage: React.FC = () => {
           >
             <FolderTree size={17} />
             <div>
-              <strong>Danh mục dùng chung (S2-07)</strong>
+              <strong>Danh mục dùng chung</strong>
               <span>Nguồn khách hàng & Ngành nghề</span>
             </div>
           </button>
@@ -199,8 +199,8 @@ export const SettingsPage: React.FC = () => {
           >
             <Sliders size={17} />
             <div>
-              <strong>Trường tùy biến (S2-08)</strong>
-              <span>Text, Number, Date, Select & Dynamic Form</span>
+              <strong>Trường tùy biến</strong>
+              <span>Văn bản, Số, Ngày tháng, Danh sách chọn</span>
             </div>
           </button>
 
@@ -213,7 +213,7 @@ export const SettingsPage: React.FC = () => {
           >
             <GitCommit size={17} />
             <div>
-              <strong>Cấu hình Phễu (S2-09)</strong>
+              <strong>Cấu hình Phễu</strong>
               <span>Chặng bán hàng, Xác suất & Exit-rule</span>
             </div>
           </button>
@@ -227,7 +227,7 @@ export const SettingsPage: React.FC = () => {
           >
             <Trophy size={17} />
             <div>
-              <strong>Thắng/Thua & Đối thủ (S2-10)</strong>
+              <strong>Thắng/Thua & Đối thủ</strong>
               <span>Nguyên nhân WON/LOST & Điểm mạnh/yếu</span>
             </div>
           </button>
@@ -242,7 +242,7 @@ export const SettingsPage: React.FC = () => {
             <ShieldCheck size={17} />
             <div>
               <strong>Bảo mật & Phiên JWT</strong>
-              <span>Xác thực 2 lớp & Token S1-02</span>
+              <span>Xác thực 2 lớp & Quản lý Token</span>
             </div>
           </button>
 
@@ -464,7 +464,7 @@ export const SettingsPage: React.FC = () => {
                 <div className={styles.securityHeader}>
                   <div>
                     <Badge tone="success" dot>
-                      S1-02 · AXIOS INTERCEPTOR ĐANG HOẠT ĐỘNG
+                      AXIOS INTERCEPTOR ĐANG HOẠT ĐỘNG
                     </Badge>
                     <h2 className={styles.cardHeading}>
                       Trình kiểm tra Phiên JWT & Tự động làm mới Token

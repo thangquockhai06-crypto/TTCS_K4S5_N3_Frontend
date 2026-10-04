@@ -90,56 +90,48 @@ export const DashboardPage: React.FC = () => {
       desc: 'Quản trị tài khoản, phân vai trò, nhóm làm việc và kiểm soát đăng nhập',
       icon: <UserCheck size={22} style={{ color: '#2563eb' }} />,
       path: '/users',
-      badge: 'S1-08 / S1-09',
     },
     {
       title: 'Cơ cấu Tổ chức',
       desc: 'Sơ đồ cây phòng ban, phân cấp nhân sự và quản lý đơn vị tổ chức',
       icon: <Building2 size={22} style={{ color: '#0891b2' }} />,
       path: '/organization',
-      badge: 'S2-06',
     },
     {
       title: 'Danh mục Dùng chung',
       desc: 'Quản lý các danh mục tra cứu chuẩn hóa dùng chung toàn hệ thống CRM',
       icon: <FolderTree size={22} style={{ color: '#7c3aed' }} />,
       path: '/categories',
-      badge: 'S2-07',
     },
     {
       title: 'Sản phẩm & Bảng giá',
       desc: 'Danh mục sản phẩm, dịch vụ và chính sách giá niêm yết bảo mật',
       icon: <Package size={22} style={{ color: '#059669' }} />,
       path: '/products',
-      badge: 'S2-05',
     },
     {
       title: 'Cấu hình Pipeline & Xác suất',
       desc: 'Thiết lập các giai đoạn phễu bán hàng và tỷ lệ xác suất thành công',
       icon: <GitCommit size={22} style={{ color: '#ea580c' }} />,
       path: '/pipeline',
-      badge: 'S2-09',
     },
     {
       title: 'Lý do Thắng/Thua & Đối thủ',
       desc: 'Chuẩn hóa lý do chốt thành công, thất bại và theo dõi đối thủ cạnh tranh',
       icon: <Target size={22} style={{ color: '#d97706' }} />,
       path: '/win-loss',
-      badge: 'S2-10',
     },
     {
       title: 'Trường Tùy chỉnh (Custom Fields)',
       desc: 'Định nghĩa các thuộc tính mở rộng cho đối tượng dữ liệu hệ thống',
       icon: <Sliders size={22} style={{ color: '#4f46e5' }} />,
       path: '/custom-fields',
-      badge: 'S2-08',
     },
     {
       title: 'Nhật ký Kiểm toán Hệ thống',
       desc: 'Theo dõi chi tiết các biến động dữ liệu và so sánh thay đổi Diff Viewer',
       icon: <FileText size={22} style={{ color: '#dc2626' }} />,
       path: '/audit-logs',
-      badge: 'S2-04',
     },
   ];
 
@@ -261,7 +253,6 @@ export const DashboardPage: React.FC = () => {
               >
                 <div className={styles.moduleCardTop}>
                   <div className={styles.moduleIconBox}>{m.icon}</div>
-                  <span className={styles.moduleBadge}>{m.badge}</span>
                 </div>
                 <h3 className={styles.moduleTitle}>{m.title}</h3>
                 <p className={styles.moduleDesc}>{m.desc}</p>

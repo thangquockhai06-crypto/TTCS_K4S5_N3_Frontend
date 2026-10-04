@@ -17,6 +17,10 @@ import { CategoriesPage } from '../pages/CategoriesPage';
 import { CustomFieldsPage } from '../pages/CustomFieldsPage';
 import { PipelineConfigPage } from '../pages/PipelineConfigPage';
 import { WinLossPage } from '../pages/WinLossPage';
+import { CustomerListPage } from '../pages/CustomerListPage';
+import { CreateCustomerPage } from '../pages/CreateCustomerPage';
+import { CustomerDetailPage } from '../pages/CustomerDetailPage';
+import { DealPipelinePage } from '../pages/DealPipelinePage';
 
 interface IProtectedRouteProps {
   children: React.ReactElement;
@@ -54,6 +58,12 @@ export const AppRoutes: React.FC = () => {
         {/* User Management & Dedicated Edit (S1-08, S1-09, S1-10, S2-01) */}
         <Route path="users" element={<UserManagementPage />} />
         <Route path="users/:id/edit" element={<UserEditPage />} />
+
+        {/* Customer & Deal Modules (S2-08 Custom Fields integration) */}
+        <Route path="customers" element={<CustomerListPage />} />
+        <Route path="customers/new" element={<CreateCustomerPage />} />
+        <Route path="customers/:id" element={<CustomerDetailPage />} />
+        <Route path="deals" element={<DealPipelinePage />} />
 
         {/* Sprint 2 Modules */}
         <Route path="profile" element={<ProfilePage />} />

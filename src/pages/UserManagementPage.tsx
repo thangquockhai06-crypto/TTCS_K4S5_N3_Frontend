@@ -261,7 +261,7 @@ export const UserManagementPage: React.FC = () => {
             color: activeTab === 'handover' ? '#ffffff' : '#475569',
           }}
         >
-          Khóa tài khoản &amp; Bàn giao Khách hàng / Deals (S1-10)
+          Khóa tài khoản &amp; Bàn giao Khách hàng / Deals
         </button>
       </div>
 
@@ -294,7 +294,7 @@ export const UserManagementPage: React.FC = () => {
             type="button"
             className={styles.btnSecondary}
             onClick={() => setIsExcelModalOpen(true)}
-            title="Nhập danh sách người dùng từ tệp Excel / CSV (S2-01)"
+            title="Nhập danh sách người dùng từ tệp Excel / CSV"
           >
             <FileSpreadsheet size={16} style={{ color: '#16a34a' }} />
             <span>Nhập Excel</span>

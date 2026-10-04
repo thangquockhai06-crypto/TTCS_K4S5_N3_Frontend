@@ -185,7 +185,7 @@ export const WinLossConfig: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
         <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-          Lý do Thắng/Thua & Đối thủ cạnh tranh (Win/Loss Config - S2-10)
+          Lý do Thắng/Thua & Đối thủ cạnh tranh
         </h2>
         <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 0' }}>
           Chuẩn hóa các nguyên nhân Thắng (WON) hoặc Thất bại (LOST) và theo dõi điểm mạnh yếu của đối thủ cạnh tranh trực tiếp trên thị trường
@@ -545,7 +545,7 @@ export const WinLossConfig: React.FC = () => {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
-                {editingReason ? 'Chỉnh sửa Lý do Thắng/Thua' : 'Thêm mới Lý do Thắng/Thua (S2-10)'}
+                {editingReason ? 'Chỉnh sửa Lý do Thắng/Thua' : 'Thêm mới Lý do Thắng/Thua'}
               </h3>
               <button
                 type="button"

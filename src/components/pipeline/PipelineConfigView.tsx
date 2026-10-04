@@ -148,7 +148,7 @@ export const PipelineConfigView: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-            Cấu hình Phễu Bán hàng (Pipeline Stages - S2-09)
+            Cấu hình Phễu Bán hàng
           </h2>
           <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 0' }}>
             Thiết lập các chặng phễu, xác suất thành công (0-100%) và quy tắc điều kiện chuyển bước (Exit-rule). Cơ hội đang hoạt động luôn được bảo toàn an toàn.
@@ -402,7 +402,7 @@ export const PipelineConfigView: React.FC = () => {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
-                {editingStage ? 'Chỉnh sửa Giai đoạn' : 'Thêm mới Giai đoạn phễu (S2-09)'}
+                {editingStage ? 'Chỉnh sửa Giai đoạn' : 'Thêm mới Giai đoạn phễu'}
               </h3>
               <button
                 type="button"

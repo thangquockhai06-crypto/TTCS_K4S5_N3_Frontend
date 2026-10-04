@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CheckCircle2, AlertTriangle, AlertCircle, Info, X } from 'lucide-react';
 import { useCRMData } from '../../context/CRMDataContext';
 
@@ -11,33 +11,51 @@ export interface IToastItem {
 interface IToastNotificationProps {
   toasts: IToastItem[];
   onDismiss: (id: string) => void;
+  autoDismissTimeMs?: number;
 }
 
 interface ISingleToastProps {
   toast: IToastItem;
   onDismiss: (id: string) => void;
+  autoDismissTimeMs?: number;
 }
 
-const SingleToast: React.FC<ISingleToastProps> = ({ toast, onDismiss }) => {
+const SingleToast: React.FC<ISingleToastProps> = ({
+  toast,
+  onDismiss,
+  autoDismissTimeMs = 3500,
+}) => {
   const [isVisible, setIsVisible] = useState<boolean>(false);
+  const isClosingRef = useRef<boolean>(false);
   const { appearance } = useCRMData();
   const isDark = appearance.theme === 'dark';
 
-  useEffect(() => {
-    // Kích hoạt hiệu ứng xuất hiện chuyển từ từ mờ sang rõ
-    const appearTimer = setTimeout(() => {
-      setIsVisible(true);
-    }, 20);
-    return () => clearTimeout(appearTimer);
-  }, []);
-
-  const handleClose = () => {
-    // Hiệu ứng mờ dần chuyển từ rõ sang mờ rồi mới xóa
+  const triggerClose = () => {
+    if (isClosingRef.current) return;
+    isClosingRef.current = true;
+    // Kích hoạt hiệu ứng mờ dần từ từ sang trong suốt (Fade-out)
     setIsVisible(false);
     setTimeout(() => {
       onDismiss(toast.id);
-    }, 320);
+    }, 420);
   };
+
+  useEffect(() => {
+    // 1. Kích hoạt hiệu ứng từ từ mờ sang rõ khi xuất hiện (Fade-in)
+    const appearTimer = setTimeout(() => {
+      setIsVisible(true);
+    }, 20);
+
+    // 2. Tự động kích hoạt hiệu ứng mờ dần và biến mất sau khoảng thời gian quy định
+    const autoCloseTimer = setTimeout(() => {
+      triggerClose();
+    }, autoDismissTimeMs);
+
+    return () => {
+      clearTimeout(appearTimer);
+      clearTimeout(autoCloseTimer);
+    };
+  }, [autoDismissTimeMs]);
 
   const isSuccess = toast.type === 'success';
   const isWarning = toast.type === 'warning';
@@ -103,14 +121,16 @@ const SingleToast: React.FC<ISingleToastProps> = ({ toast, onDismiss }) => {
         borderRadius: '8px',
         backgroundColor: bgColor,
         border: `1px solid ${borderColor}`,
-        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.05)',
+        boxShadow: isDark
+          ? '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4)'
+          : '0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.05)',
         color: textColor,
         fontSize: '0.84rem',
         fontWeight: 500,
         boxSizing: 'border-box',
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? 'translateY(0) scale(1)' : 'translateY(12px) scale(0.96)',
-        transition: 'opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), transform 0.32s cubic-bezier(0.16, 1, 0.3, 1)',
+        transition: 'opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
@@ -125,7 +145,7 @@ const SingleToast: React.FC<ISingleToastProps> = ({ toast, onDismiss }) => {
 
       <button
         type="button"
-        onClick={handleClose}
+        onClick={triggerClose}
         style={{
           background: 'none',
           border: 'none',
@@ -147,7 +167,11 @@ const SingleToast: React.FC<ISingleToastProps> = ({ toast, onDismiss }) => {
   );
 };
 
-export const ToastNotification: React.FC<IToastNotificationProps> = ({ toasts, onDismiss }) => {
+export const ToastNotification: React.FC<IToastNotificationProps> = ({
+  toasts,
+  onDismiss,
+  autoDismissTimeMs = 3500,
+}) => {
   if (toasts.length === 0) return null;
 
   return (
@@ -166,7 +190,12 @@ export const ToastNotification: React.FC<IToastNotificationProps> = ({ toasts, o
       }}
     >
       {toasts.map((toast) => (
-        <SingleToast key={toast.id} toast={toast} onDismiss={onDismiss} />
+        <SingleToast
+          key={toast.id}
+          toast={toast}
+          onDismiss={onDismiss}
+          autoDismissTimeMs={autoDismissTimeMs}
+        />
       ))}
     </div>
   );

@@ -1,10 +1,13 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Plus, TrendingUp } from 'lucide-react';
 import { DealPipeline } from '../components/customer/DealPipeline';
 import { Badge, Button, Card, Input, Modal, SearchBar } from '../components/common';
+import { CustomSelect } from '../components/common/CustomSelect';
 import { useCRMData } from '../context/CRMDataContext';
-import { DealStageType } from '../interfaces';
+import { DealStageType, ICustomField } from '../interfaces';
 import { formatCompactCurrency, formatCurrency } from '../utils/formatters';
+import { sprint2Service } from '../services/sprint2Service';
+import { CustomFieldRenderer } from '../components/custom-fields/CustomFieldRenderer';
 import styles from './DealPipelinePage.module.css';
 
 export const DealPipelinePage: React.FC = () => {
@@ -25,6 +28,25 @@ export const DealPipelinePage: React.FC = () => {
     value: 165000,
     stage: 'New',
   });
+
+  const [dealCustomFields, setDealCustomFields] = useState<ICustomField[]>([]);
+  const [dealCustomValues, setDealCustomValues] = useState<Record<string, string | number>>({});
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const fields = await sprint2Service.getCustomFields('deal');
+        setDealCustomFields(fields);
+        const initVal: Record<string, string | number> = {};
+        fields.forEach((f) => {
+          if (f.default_value) initVal[f.field_name] = f.default_value;
+        });
+        setDealCustomValues(initVal);
+      } catch {
+        // Fallback
+      }
+    })();
+  }, []);
 
   const filteredDeals = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -74,6 +96,7 @@ export const DealPipelinePage: React.FC = () => {
       expectedCloseDate: '15/11/2026',
       ownerName: 'Quản Trị Viên Hệ Thống',
       tags: ['Doanh nghiệp', 'Mục tiêu Q4'],
+      custom_fields: dealCustomValues,
     });
 
     setNewDealForm({
@@ -83,6 +106,7 @@ export const DealPipelinePage: React.FC = () => {
       value: 165000,
       stage: 'New',
     });
+    setDealCustomValues({});
     setIsNewDealModalOpen(false);
   };
 
@@ -193,23 +217,43 @@ export const DealPipelinePage: React.FC = () => {
             }
           />
           <div className={styles.modalForm__selectWrap}>
-            <label htmlFor="deal-stage-select">Giai đoạn khởi tạo</label>
-            <select
-              id="deal-stage-select"
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
+              Giai đoạn khởi tạo
+            </label>
+            <CustomSelect<DealStageType>
               value={newDealForm.stage}
-              onChange={(e) =>
+              onChange={(val) =>
                 setNewDealForm((prev) => ({
                   ...prev,
-                  stage: e.target.value as DealStageType,
+                  stage: val,
                 }))
               }
-            >
-              <option value="New">Cơ hội mới (New)</option>
-              <option value="Contacted">Đã liên hệ (Contacted)</option>
-              <option value="Negotiation">Đang đàm phán (Negotiation)</option>
-              <option value="Won">Chốt thành công (Won)</option>
-            </select>
+              options={[
+                { value: 'New', label: 'Cơ hội mới (New)' },
+                { value: 'Contacted', label: 'Đã liên hệ (Contacted)' },
+                { value: 'Negotiation', label: 'Đang đàm phán (Negotiation)' },
+                { value: 'Won', label: 'Chốt thành công (Won)' },
+              ]}
+              height="38px"
+            />
           </div>
+
+          {/* Trường tùy chỉnh của thương vụ */}
+          {dealCustomFields.length > 0 && (
+            <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #e2e8f0' }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>
+                Trường thông tin tùy chỉnh thương vụ
+              </label>
+              <CustomFieldRenderer
+                fields={dealCustomFields}
+                values={dealCustomValues}
+                onChange={(fieldNameKey, val) =>
+                  setDealCustomValues((prev) => ({ ...prev, [fieldNameKey]: val }))
+                }
+                layout="stack"
+              />
+            </div>
+          )}
           <div className={styles.modalForm__footer}>
             <Button variant="secondary" onClick={() => setIsNewDealModalOpen(false)}>
               Hủy bỏ
