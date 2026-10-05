@@ -131,11 +131,11 @@ export const LoginForm: React.FC = () => {
     formState.password.length >= 8 && !validateField('password', formState.password);
 
   return (
-    <div className={styles.loginFormContainer}>
-      <div className={styles.loginForm__header}>
-        <h2 className={styles.loginForm__title}>Đăng nhập tài khoản</h2>
-        <p className={styles.loginForm__subtitle}>
-          Vui lòng nhập email và mật khẩu doanh nghiệp để truy cập NexusCRM.
+    <div className={styles.loginCard}>
+      <div className={styles.loginCard__header}>
+        <h2 className={styles.loginCard__title}>Đăng nhập</h2>
+        <p className={styles.loginCard__subtitle}>
+          Nhập thông tin tài khoản để truy cập hệ thống NexusCRM.
         </p>
       </div>
 
@@ -239,7 +239,7 @@ export const LoginForm: React.FC = () => {
                 setFormState((prev) => ({ ...prev, rememberMe: e.target.checked }))
               }
             />
-            <span>Duy trì đăng nhập</span>
+            <span>Duy trì đăng nhập 30 ngày</span>
           </label>
           <Link
             to="/forgot-password"
@@ -261,10 +261,10 @@ export const LoginForm: React.FC = () => {
           {isLockedOut ? `Đang khóa (${formattedTime})` : 'Đăng nhập vào Hệ thống'}
         </Button>
 
-        <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '0.825rem', color: 'var(--color-text-secondary, #475569)' }}>
-          Chưa có tài khoản doanh nghiệp?{' '}
+        <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '0.84rem', color: 'var(--color-text-secondary, #475569)' }}>
+          Bạn chưa có tài khoản?{' '}
           <Link to="/register" style={{ color: 'var(--color-primary, #2563eb)', fontWeight: 600, textDecoration: 'none' }}>
-            Đăng ký tài khoản mới
+            Đăng ký ngay!
           </Link>
         </div>
       </form>

@@ -1,161 +1,209 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, Eye, EyeOff, KeyRound, Lock, Mail } from 'lucide-react';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, KeyRound, Mail } from 'lucide-react';
+import { ResetPasswordForm } from '../components/auth/ResetPasswordForm';
+import { VerifyTokenForm } from '../components/auth/VerifyTokenForm';
 import { Button, Input } from '../components/common';
 import { useToast } from '../context/ToastContext';
+import { axiosInstance, USE_REAL_BACKEND } from '../utils/axiosInstance';
 import logoUrl from '../assets/logo.svg';
 import styles from './LoginPage.module.css';
-
-type StepType = 'email_step' | 'otp_step' | 'reset_step' | 'success_step';
+import formStyles from '../components/auth/LoginForm.module.css';
 
 export const ForgotPasswordPage: React.FC = () => {
-  const { showToast } = useToast();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
-  const [step, setStep] = useState<StepType>('email_step');
-  const [email, setEmail] = useState('');
+  const getInitialMode = (): 'request' | 'verify' | 'reset' => {
+    if (location.pathname === '/reset-password' || searchParams.get('token')) {
+      return 'reset';
+    }
+    if (location.pathname === '/verify-token' || location.pathname === '/verify-reset-token') {
+      return 'verify';
+    }
+    return 'request';
+  };
+
+  const [mode, setMode] = useState<'request' | 'verify' | 'reset'>(getInitialMode);
+  const [email, setEmail] = useState(() => window.sessionStorage.getItem('nexus_crm_reset_email') || '');
   const [emailError, setEmailError] = useState<string | null>(null);
-
-  // OTP step
-  const [otpCode, setOtpCode] = useState('');
-  const [otpError, setOtpError] = useState<string | null>(null);
-
-  // Reset step
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPass, setShowPass] = useState(false);
-  const [showConfirmPass, setShowConfirmPass] = useState(false);
-  const [passError, setPassError] = useState<string | null>(null);
-  const [confirmPassError, setConfirmPassError] = useState<string | null>(null);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [verifiedToken, setVerifiedToken] = useState<string>(() => window.sessionStorage.getItem('nexus_crm_reset_token') || '');
 
-  // Step 1: Send Email
-  const handleEmailSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const trimmed = email.trim();
+  const validateEmail = (val: string): boolean => {
+    const trimmed = val.trim();
     if (!trimmed) {
       setEmailError('Vui lòng nhập địa chỉ email.');
-      return;
+      return false;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!regex.test(trimmed)) {
       setEmailError('Địa chỉ email không đúng định dạng.');
-      return;
+      return false;
     }
     setEmailError(null);
-    setIsSubmitting(true);
+    return true;
+  };
 
-    setTimeout(() => {
+  const isEmailValid = email.trim().length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+
+  const handleRequestSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    e.preventDefault();
+    if (!validateEmail(email)) return;
+
+    setIsSubmitting(true);
+    const demoToken = '123456';
+    window.sessionStorage.setItem('nexus_crm_reset_email', email.trim());
+    window.sessionStorage.setItem('nexus_crm_reset_token', demoToken);
+
+    try {
+      if (USE_REAL_BACKEND) {
+        await axiosInstance.post('/auth/forgot-password', {
+          email: email.trim(),
+        }, { timeout: 1500 });
+      }
+    } catch {
+      // Anti-enumeration: still proceed
+    } finally {
       setIsSubmitting(false);
-      setStep('otp_step');
       showToast('success', 'Đã gửi mã xác thực qua email.');
-    }, 400);
+      setMode('verify');
+      navigate('/verify-token');
+    }
   };
 
-  // Step 2: Verify OTP (Demo token 123456)
-  const handleOtpSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!otpCode.trim()) {
-      setOtpError('Vui lòng nhập mã xác thực gồm 6 số.');
-      return;
-    }
-    // Mã xác thực chuẩn mẫu 123456
-    if (otpCode.trim() !== '123456') {
-      setOtpError('Mã xác thực không chính xác hoặc đã hết hạn. Thử mã mẫu: 123456');
-      showToast('error', 'Mã xác thực không chính xác.');
-      return;
-    }
-
-    setOtpError(null);
-    setStep('reset_step');
+  const handleTokenVerified = (token: string): void => {
+    setVerifiedToken(token);
+    window.sessionStorage.setItem('nexus_crm_reset_token', token);
     showToast('info', 'Xác thực thành công. Vui lòng tạo mật khẩu mới.');
+    setMode('reset');
+    navigate('/reset-password');
   };
 
-  // Step 3: Reset Password
-  const handleResetSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!newPassword) {
-      setPassError('Vui lòng nhập mật khẩu mới.');
-      return;
-    }
-    if (newPassword.length < 8) {
-      setPassError('Mật khẩu phải có tối thiểu 8 ký tự.');
-      return;
-    }
-    if (!/[A-Za-z]/.test(newPassword) || !/[0-9]/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
-      setPassError('Mật khẩu phải bao gồm cả chữ cái, chữ số và ký tự đặc biệt.');
-      return;
-    }
-    setPassError(null);
-
-    if (newPassword !== confirmPassword) {
-      setConfirmPassError('Mật khẩu xác nhận không khớp.');
-      return;
-    }
-    setConfirmPassError(null);
-
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setStep('success_step');
-      showToast('success', 'Đặt lại mật khẩu mới thành công! Bạn có thể đăng nhập ngay.');
-    }, 400);
+  const handleResendToken = (): void => {
+    const demoToken = '123456';
+    window.sessionStorage.setItem('nexus_crm_reset_token', demoToken);
+    showToast('success', 'Đã gửi lại mã xác thực qua email.');
   };
+
+  const subtitleText =
+    mode === 'reset'
+      ? 'Đặt lại mật khẩu tài khoản'
+      : mode === 'verify'
+      ? 'Xác thực mã khôi phục tài khoản'
+      : 'Khôi phục mật khẩu tài khoản';
 
   return (
-    <div className={styles.authPageContainer}>
-      <div className={styles.authCard}>
-        {/* Brand Header */}
-        <header className={styles.authHeader}>
-          <img src={logoUrl} alt="NexusCRM" className={styles.authLogo} />
-          <div>
-            <h1 className={styles.authBrandTitle}>NexusCRM</h1>
-            <p className={styles.authBrandSubtitle}>Khôi phục và đặt lại mật khẩu</p>
-          </div>
-        </header>
+    <div className={styles.authContainer}>
+      <header className={styles.brandHeader}>
+        <div className={styles.brandLogoRow}>
+          <img src={logoUrl} alt="NexusCRM Logo" className={styles.logo} />
+          <h1 className={styles.brandTitle}>NexusCRM</h1>
+        </div>
+        <p className={styles.brandSubtitle}>{subtitleText}</p>
+      </header>
 
-        {/* STEP 1: Nhập Email */}
-        {step === 'email_step' && (
-          <div>
-            <div style={{ marginBottom: '18px' }}>
-              <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-text-primary, #0f172a)' }}>
-                Quên mật khẩu
-              </h2>
-              <p style={{ margin: '4px 0 0', fontSize: '0.84rem', color: 'var(--color-text-secondary, #64748b)' }}>
-                Nhập địa chỉ email doanh nghiệp đã đăng ký để nhận mã xác thực đặt lại mật khẩu.
+      <main className={styles.formWrapper}>
+        {mode === 'reset' ? (
+          <div style={{ width: '100%', maxWidth: '440px', display: 'flex', flexDirection: 'column' }}>
+            <ResetPasswordForm initialToken={verifiedToken} />
+            <div style={{ textAlign: 'center', marginTop: '16px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('request');
+                  navigate('/forgot-password');
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--color-primary)',
+                  fontSize: '0.8125rem',
+                  cursor: 'pointer',
+                  fontWeight: 500,
+                  textDecoration: 'underline',
+                }}
+              >
+                Gửi lại yêu cầu qua email
+              </button>
+            </div>
+          </div>
+        ) : mode === 'verify' ? (
+          <VerifyTokenForm
+            initialEmail={email}
+            onSuccess={handleTokenVerified}
+            onResend={handleResendToken}
+          />
+        ) : (
+          <div className={formStyles.loginCard}>
+            <div className={formStyles.loginCard__header}>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  color: 'var(--color-primary)',
+                  padding: '4px 10px',
+                  background: 'var(--color-primary-soft)',
+                  borderRadius: 'var(--radius-full)',
+                  marginBottom: '4px',
+                }}
+              >
+                <KeyRound size={13} />
+                <span>QUÊN MẬT KHẨU</span>
+              </div>
+              <h2 className={formStyles.loginCard__title}>Khôi phục mật khẩu</h2>
+              <p className={formStyles.loginCard__subtitle}>
+                Nhập địa chỉ email để nhận mã xác thực đặt lại mật khẩu cho tài khoản.
               </p>
             </div>
 
-            <form onSubmit={handleEmailSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form
+              onSubmit={(e) => void handleRequestSubmit(e)}
+              noValidate
+              style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+            >
               <Input
                 label="Email"
                 type="email"
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
-                  setEmailError(null);
+                  if (emailError) validateEmail(e.target.value);
                 }}
                 error={emailError ?? undefined}
+                isValid={isEmailValid}
                 leftIcon={<Mail size={16} />}
                 placeholder="admin@nexuscrm.vn"
-                required
+                disabled={isSubmitting}
                 autoFocus
               />
 
-              <Button type="submit" variant="primary" size="lg" fullWidth isLoading={isSubmitting}>
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                fullWidth
+                isLoading={isSubmitting}
+              >
                 Gửi mã xác thực qua Email
               </Button>
 
-              <div style={{ textAlign: 'center', marginTop: '6px' }}>
+              <div style={{ textAlign: 'center', marginTop: '8px' }}>
                 <Link
                   to="/login"
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '4px',
+                    gap: '5px',
+                    color: 'var(--color-text-secondary)',
                     fontSize: '0.84rem',
-                    color: 'var(--color-text-secondary, #64748b)',
                     textDecoration: 'none',
+                    fontWeight: 500,
                   }}
                 >
                   <ArrowLeft size={14} />
@@ -165,161 +213,11 @@ export const ForgotPasswordPage: React.FC = () => {
             </form>
           </div>
         )}
+      </main>
 
-        {/* STEP 2: Nhập Mã Xác Thực */}
-        {step === 'otp_step' && (
-          <div>
-            <div style={{ marginBottom: '18px' }}>
-              <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-text-primary, #0f172a)' }}>
-                Nhập mã xác thực
-              </h2>
-              <p style={{ margin: '4px 0 0', fontSize: '0.84rem', color: 'var(--color-text-secondary, #64748b)' }}>
-                Mã xác thực đã được gửi tới <strong>{email}</strong>. Vui lòng nhập mã để tiếp tục.
-              </p>
-            </div>
-
-            <form onSubmit={handleOtpSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <Input
-                label="Mã xác thực"
-                type="text"
-                value={otpCode}
-                onChange={(e) => {
-                  setOtpCode(e.target.value);
-                  setOtpError(null);
-                }}
-                error={otpError ?? undefined}
-                leftIcon={<KeyRound size={16} />}
-                placeholder="Nhập 123456"
-                required
-                autoFocus
-              />
-
-              <Button type="submit" variant="primary" size="lg" fullWidth>
-                Xác nhận mã xác thực
-              </Button>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.825rem' }}>
-                <button
-                  type="button"
-                  onClick={() => setStep('email_step')}
-                  style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                >
-                  <ArrowLeft size={13} /> Nhập lại email
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    showToast('success', 'Đã gửi lại mã xác thực qua email.');
-                  }}
-                  style={{ background: 'none', border: 'none', color: 'var(--color-primary, #2563eb)', cursor: 'pointer', fontWeight: 600 }}
-                >
-                  Gửi lại mã
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* STEP 3: Đặt Lại Mật Khẩu Mới */}
-        {step === 'reset_step' && (
-          <div>
-            <div style={{ marginBottom: '18px' }}>
-              <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-text-primary, #0f172a)' }}>
-                Đặt lại mật khẩu mới
-              </h2>
-              <p style={{ margin: '4px 0 0', fontSize: '0.84rem', color: 'var(--color-text-secondary, #64748b)' }}>
-                Tạo mật khẩu mới an toàn cho tài khoản <strong>{email}</strong>.
-              </p>
-            </div>
-
-            <form onSubmit={handleResetSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <Input
-                label="Mật khẩu mới"
-                type={showPass ? 'text' : 'password'}
-                value={newPassword}
-                onChange={(e) => {
-                  setNewPassword(e.target.value);
-                  setPassError(null);
-                }}
-                error={passError ?? undefined}
-                leftIcon={<Lock size={16} />}
-                placeholder="Tối thiểu 8 ký tự (chữ, số, ký tự đặc biệt)"
-                required
-                autoFocus
-                rightElement={
-                  <button
-                    type="button"
-                    onClick={() => setShowPass(!showPass)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#64748b' }}
-                    aria-label={showPass ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                  >
-                    {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                }
-              />
-
-              <Input
-                label="Xác nhận mật khẩu mới"
-                type={showConfirmPass ? 'text' : 'password'}
-                value={confirmPassword}
-                onChange={(e) => {
-                  setConfirmPassword(e.target.value);
-                  setConfirmPassError(null);
-                }}
-                error={confirmPassError ?? undefined}
-                leftIcon={<Lock size={16} />}
-                placeholder="Nhập lại mật khẩu mới"
-                required
-                rightElement={
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPass(!showConfirmPass)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#64748b' }}
-                    aria-label={showConfirmPass ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                  >
-                    {showConfirmPass ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                }
-              />
-
-              <Button type="submit" variant="primary" size="lg" fullWidth isLoading={isSubmitting}>
-                Cập nhật mật khẩu mới
-              </Button>
-            </form>
-          </div>
-        )}
-
-        {/* STEP 4: Thành công */}
-        {step === 'success_step' && (
-          <div style={{ textAlign: 'center', padding: '12px 0' }}>
-            <div
-              style={{
-                display: 'inline-flex',
-                padding: '12px',
-                background: 'var(--color-success-soft, #dcfce7)',
-                borderRadius: '50%',
-                color: 'var(--color-success, #16a34a)',
-                marginBottom: '16px',
-              }}
-            >
-              <CheckCircle2 size={36} />
-            </div>
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0 0 8px', color: '#0f172a' }}>
-              Đặt lại mật khẩu thành công!
-            </h2>
-            <p style={{ fontSize: '0.875rem', color: '#64748b', lineHeight: 1.5, margin: '0 0 20px' }}>
-              Mật khẩu mới của bạn đã được cập nhật thành công vào hệ thống. Bạn có thể đăng nhập ngay bây giờ.
-            </p>
-            <Button variant="primary" fullWidth size="lg" onClick={() => navigate('/login')}>
-              Đăng nhập ngay
-            </Button>
-          </div>
-        )}
-
-        <footer className={styles.authFooter}>
-          <span>NexusCRM Enterprise © 2026 · Hệ thống thông tin nội bộ</span>
-        </footer>
-      </div>
+      <footer className={styles.authFooter}>
+        <span>NexusCRM Enterprise © 2026 · Hệ thống thông tin nội bộ</span>
+      </footer>
     </div>
   );
 };

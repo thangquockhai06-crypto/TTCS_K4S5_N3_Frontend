@@ -14,7 +14,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { IRegisterPayload } from '../../interfaces';
 import { Button, Input } from '../common';
 import { useToast } from '../../context/ToastContext';
-import styles from './LoginForm.module.css';
+import styles from './RegisterForm.module.css';
 
 interface IRegisterFieldErrors {
   fullName?: string;
@@ -43,6 +43,27 @@ export const RegisterForm: React.FC = () => {
   const [errors, setErrors] = useState<IRegisterFieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  const getPasswordStrength = (pass: string): { label: string; color: string; percent: number } => {
+    if (!pass) {
+      return { label: 'Chưa nhập', color: '#94a3b8', percent: 0 };
+    }
+    let score = 0;
+    if (pass.length >= 8) score += 1;
+    if (/[a-z]/.test(pass) && /[A-Z]/.test(pass)) score += 1;
+    if (/[0-9]/.test(pass)) score += 1;
+    if (/[^A-Za-z0-9]/.test(pass)) score += 1;
+
+    if (score <= 1) {
+      return { label: 'Yếu', color: '#ef4444', percent: 33 };
+    }
+    if (score <= 3) {
+      return { label: 'Trung bình', color: '#f59e0b', percent: 66 };
+    }
+    return { label: 'Rất mạnh', color: '#10b981', percent: 100 };
+  };
+
+  const strength = getPasswordStrength(formData.password);
+
   const validateField = (
     field: keyof IRegisterPayload,
     value: string,
@@ -61,15 +82,12 @@ export const RegisterForm: React.FC = () => {
         }
         return undefined;
       case 'companyName':
-        if (!trimmed) return 'Vui lòng nhập tên doanh nghiệp.';
+        if (!trimmed) return 'Vui lòng nhập tên doanh nghiệp / tổ chức.';
         if (trimmed.length < 2) return 'Tên doanh nghiệp phải có ít nhất 2 ký tự.';
         return undefined;
       case 'password':
         if (!value) return 'Vui lòng nhập mật khẩu.';
         if (value.length < 8) return 'Mật khẩu phải có tối thiểu 8 ký tự.';
-        if (!/[A-Za-z]/.test(value) || !/[0-9]/.test(value) || !/[^A-Za-z0-9]/.test(value)) {
-          return 'Mật khẩu phải bao gồm cả chữ cái, chữ số và ký tự đặc biệt.';
-        }
         return undefined;
       case 'confirmPassword':
         if (!value) return 'Vui lòng xác nhận lại mật khẩu.';
@@ -117,7 +135,7 @@ export const RegisterForm: React.FC = () => {
     setErrors(nextErrors);
 
     if (Object.values(nextErrors).some((msg) => Boolean(msg))) {
-      setSubmitError('Vui lòng nhập đủ thông tin và đúng định dạng.');
+      setSubmitError('Vui lòng nhập đúng email/mật khẩu và điền đủ các trường bắt buộc.');
       return;
     }
 
@@ -150,46 +168,48 @@ export const RegisterForm: React.FC = () => {
   };
 
   return (
-    <div className={styles.loginFormContainer}>
-      <div className={styles.loginForm__header}>
-        <h2 className={styles.loginForm__title}>Đăng ký tài khoản</h2>
-        <p className={styles.loginForm__subtitle}>
-          Tạo tài khoản quản trị mới để quản lý khách hàng và cơ hội bán hàng.
+    <div className={styles.registerCard}>
+      <div className={styles.registerCard__header}>
+        <h2 className={styles.registerCard__title}>Đăng ký tài khoản</h2>
+        <p className={styles.registerCard__subtitle}>
+          Tạo tài khoản quản trị mới để bắt đầu sử dụng NexusCRM.
         </p>
       </div>
 
       {submitError && (
         <div className={styles.errorAlert} role="alert">
-          <AlertTriangle size={16} className={styles.errorAlert__icon} />
+          <AlertTriangle size={16} />
           <span>{submitError}</span>
         </div>
       )}
 
-      <form className={styles.loginForm} onSubmit={(e) => void handleSubmit(e)} noValidate>
-        <Input
-          label="Họ và tên"
-          type="text"
-          value={formData.fullName}
-          onChange={(e) => handleFieldChange('fullName', e.target.value)}
-          error={errors.fullName}
-          leftIcon={<User size={16} />}
-          placeholder="VD: Trần Minh Hoàng"
-          required
-        />
+      <form className={styles.form} onSubmit={(e) => void handleSubmit(e)} noValidate>
+        <div className={styles.grid2}>
+          <Input
+            label="Họ và tên *"
+            type="text"
+            value={formData.fullName}
+            onChange={(e) => handleFieldChange('fullName', e.target.value)}
+            error={errors.fullName}
+            leftIcon={<User size={16} />}
+            placeholder="VD: Trần Minh Hoàn"
+            required
+          />
+
+          <Input
+            label="Email công việc *"
+            type="email"
+            value={formData.email}
+            onChange={(e) => handleFieldChange('email', e.target.value)}
+            error={errors.email}
+            leftIcon={<Mail size={16} />}
+            placeholder="hoang.tran@congty."
+            required
+          />
+        </div>
 
         <Input
-          label="Email"
-          type="email"
-          value={formData.email}
-          onChange={(e) => handleFieldChange('email', e.target.value)}
-          error={errors.email}
-          leftIcon={<Mail size={16} />}
-          placeholder="hoang.tran@congty.vn"
-          required
-        />
-
-        <Input
-          label="Tên doanh nghiệp"
+          label="Tên doanh nghiệp / Tổ chức *"
           type="text"
           value={formData.companyName}
           onChange={(e) => handleFieldChange('companyName', e.target.value)}
@@ -199,47 +219,64 @@ export const RegisterForm: React.FC = () => {
           required
         />
 
-        <Input
-          label="Mật khẩu"
-          type={showPassword ? 'text' : 'password'}
-          value={formData.password}
-          onChange={(e) => handleFieldChange('password', e.target.value)}
-          error={errors.password}
-          leftIcon={<Lock size={16} />}
-          placeholder="Tối thiểu 8 ký tự (chữ, số, ký tự đặc biệt)"
-          required
-          rightElement={
-            <button
-              type="button"
-              onClick={() => setShowPassword((prev) => !prev)}
-              className={styles.loginForm__eyeBtn}
-              aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-            >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          }
-        />
+        <div className={styles.grid2}>
+          <Input
+            label="Mật khẩu *"
+            type={showPassword ? 'text' : 'password'}
+            value={formData.password}
+            onChange={(e) => handleFieldChange('password', e.target.value)}
+            error={errors.password}
+            leftIcon={<Lock size={16} />}
+            placeholder="Tối thiểu 8 ký tự"
+            required
+            rightElement={
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className={styles.eyeBtn}
+                aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            }
+          />
 
-        <Input
-          label="Xác nhận mật khẩu"
-          type={showConfirmPassword ? 'text' : 'password'}
-          value={formData.confirmPassword}
-          onChange={(e) => handleFieldChange('confirmPassword', e.target.value)}
-          error={errors.confirmPassword}
-          leftIcon={<Lock size={16} />}
-          placeholder="Nhập lại mật khẩu"
-          required
-          rightElement={
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword((prev) => !prev)}
-              className={styles.loginForm__eyeBtn}
-              aria-label={showConfirmPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-            >
-              {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          }
-        />
+          <Input
+            label="Xác nhận mật khẩu *"
+            type={showConfirmPassword ? 'text' : 'password'}
+            value={formData.confirmPassword}
+            onChange={(e) => handleFieldChange('confirmPassword', e.target.value)}
+            error={errors.confirmPassword}
+            leftIcon={<Lock size={16} />}
+            placeholder="Nhập lại mật khẩu"
+            required
+            rightElement={
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((prev) => !prev)}
+                className={styles.eyeBtn}
+                aria-label={showConfirmPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+              >
+                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            }
+          />
+        </div>
+
+        <div className={styles.strengthBox}>
+          <div className={styles.strengthBox__row}>
+            <span>Độ an toàn mật khẩu:</span>
+            <strong style={{ color: strength.color, fontWeight: 600 }}>{strength.label}</strong>
+          </div>
+          {strength.percent > 0 && (
+            <div className={styles.strengthBox__track}>
+              <div
+                className={styles.strengthBox__fill}
+                style={{ width: `${strength.percent}%`, backgroundColor: strength.color }}
+              />
+            </div>
+          )}
+        </div>
 
         <Button
           type="submit"
@@ -249,13 +286,13 @@ export const RegisterForm: React.FC = () => {
           isLoading={isLoading}
           rightIcon={<ArrowRight size={17} />}
         >
-          Đăng ký tài khoản
+          Hoàn tất Đăng ký & Truy cập
         </Button>
 
-        <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '0.825rem', color: 'var(--color-text-secondary, #475569)' }}>
-          Đã có tài khoản doanh nghiệp?{' '}
-          <Link to="/login" style={{ color: 'var(--color-primary, #2563eb)', fontWeight: 600, textDecoration: 'none' }}>
-            Đăng nhập ngay
+        <div className={styles.switchRow}>
+          <span>Đã có tài khoản?</span>{' '}
+          <Link to="/login" className={styles.switchLink}>
+            Đăng nhập ngay!
           </Link>
         </div>
       </form>

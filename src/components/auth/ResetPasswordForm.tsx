@@ -127,7 +127,7 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ initialTok
             setFieldErrors((prev) => ({ ...prev, token: undefined }));
           }}
           error={fieldErrors.token}
-          placeholder="Nhập mã token từ email..."
+          placeholder="test1234"
           disabled={isSubmitting}
         />
 

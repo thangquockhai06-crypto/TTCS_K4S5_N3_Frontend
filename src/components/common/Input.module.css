@@ -71,6 +71,13 @@
   box-shadow: none !important;
 }
 
+.field__input::-ms-reveal,
+.field__input::-ms-clear {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 .field__input--withLeft {
   padding-left: 10px;
 }

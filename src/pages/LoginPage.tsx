@@ -5,24 +5,22 @@ import styles from './LoginPage.module.css';
 
 export const LoginPage: React.FC = () => {
   return (
-    <div className={styles.authPageContainer}>
-      <div className={styles.authCard}>
-        <header className={styles.authHeader}>
-          <img src={logoUrl} alt="NexusCRM" className={styles.authLogo} />
-          <div>
-            <h1 className={styles.authBrandTitle}>NexusCRM</h1>
-            <p className={styles.authBrandSubtitle}>Hệ thống Quản trị Quan hệ Khách hàng Doanh nghiệp</p>
-          </div>
-        </header>
+    <div className={styles.authContainer}>
+      <header className={styles.brandHeader}>
+        <div className={styles.brandLogoRow}>
+          <img src={logoUrl} alt="NexusCRM Logo" className={styles.logo} />
+          <h1 className={styles.brandTitle}>NexusCRM</h1>
+        </div>
+        <p className={styles.brandSubtitle}>Đăng nhập bằng tài khoản NexusCRM</p>
+      </header>
 
-        <main>
-          <LoginForm />
-        </main>
+      <main className={styles.formWrapper}>
+        <LoginForm />
+      </main>
 
-        <footer className={styles.authFooter}>
-          <span>NexusCRM Enterprise © 2026 · Hệ thống thông tin nội bộ</span>
-        </footer>
-      </div>
+      <footer className={styles.authFooter}>
+        <span>NexusCRM Enterprise © 2026 · Hệ thống thông tin nội bộ</span>
+      </footer>
     </div>
   );
 };
