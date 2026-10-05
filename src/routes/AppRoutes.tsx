@@ -18,6 +18,8 @@ import { UserManagementPage } from '../pages/UserManagementPage';
 import { ProductsPage } from '../pages/ProductsPage';
 import { AuditLogsPage } from '../pages/AuditLogsPage';
 import { ProfilePage } from '../pages/ProfilePage';
+import { ContactManagementPage } from '../pages/ContactManagementPage';
+import { BulkImportPage } from '../pages/BulkImportPage';
 
 interface IProtectedRouteProps {
   children: React.ReactElement;
@@ -60,6 +62,8 @@ export const AppRoutes: React.FC = () => {
         <Route path="reports" element={<ReportsPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="profile" element={<ProfilePage />} />
+        <Route path="contacts" element={<ContactManagementPage />} />
+        <Route path="customers/import" element={<BulkImportPage />} />
       </Route>
 
       <Route path="/forbidden" element={<ErrorPage code={403} />} />

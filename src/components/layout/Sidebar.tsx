@@ -21,7 +21,7 @@ import styles from './Sidebar.module.css';
 
 import { useAuthorization } from '../../hooks/useAuthorization';
 import { IMenuItem } from '../../interfaces/menu.interface';
-import { Package, FileText } from 'lucide-react';
+import { Package, FileText, BookUser, FileSpreadsheet } from 'lucide-react';
 
 export interface ISidebarProps {
   isCollapsed: boolean;
@@ -53,6 +53,20 @@ const ALL_MENU_ITEMS: ReadonlyArray<IMenuItem> = [
     icon: <Users size={19} />,
     requiredPermission: 'manage_customers',
     badge: '50',
+  },
+  {
+    id: 'contacts',
+    label: 'Người liên hệ & Vai trò Mua',
+    path: '/contacts',
+    icon: <BookUser size={19} />,
+    requiredPermission: 'manage_customers',
+  },
+  {
+    id: 'bulk-import',
+    label: 'Nhập Khách hàng từ Excel',
+    path: '/customers/import',
+    icon: <FileSpreadsheet size={19} />,
+    requiredPermission: 'manage_customers',
   },
   {
     id: 'deals',
