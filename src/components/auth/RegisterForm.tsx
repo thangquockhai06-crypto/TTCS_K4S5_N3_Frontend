@@ -236,7 +236,7 @@ export const RegisterForm: React.FC = () => {
                 className={styles.eyeBtn}
                 aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
               >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                {showPassword ? <Eye size={16} /> : <EyeOff size={16} />}
               </button>
             }
           />
@@ -257,7 +257,7 @@ export const RegisterForm: React.FC = () => {
                 className={styles.eyeBtn}
                 aria-label={showConfirmPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
               >
-                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                {showConfirmPassword ? <Eye size={16} /> : <EyeOff size={16} />}
               </button>
             }
           />

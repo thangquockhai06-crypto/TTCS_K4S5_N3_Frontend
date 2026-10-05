@@ -125,11 +125,6 @@ export const LoginForm: React.FC = () => {
     }
   };
 
-  const isEmailValid =
-    formState.email.trim().length > 0 && !validateField('email', formState.email);
-  const isPasswordValid =
-    formState.password.length >= 8 && !validateField('password', formState.password);
-
   return (
     <div className={styles.loginCard}>
       <div className={styles.loginCard__header}>
@@ -196,7 +191,6 @@ export const LoginForm: React.FC = () => {
           value={formState.email}
           onChange={(e) => handleInputChange('email', e.target.value)}
           error={fieldErrors.email}
-          isValid={isEmailValid}
           disabled={isLockedOut || isLoading}
           leftIcon={<Mail size={16} />}
           placeholder="admin@nexuscrm.vn"
@@ -211,7 +205,6 @@ export const LoginForm: React.FC = () => {
           value={formState.password}
           onChange={(e) => handleInputChange('password', e.target.value)}
           error={fieldErrors.password}
-          isValid={isPasswordValid}
           disabled={isLockedOut || isLoading}
           leftIcon={<Lock size={16} />}
           placeholder="••••••••••••"
@@ -224,7 +217,7 @@ export const LoginForm: React.FC = () => {
               aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
               disabled={isLockedOut}
             >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showPassword ? <Eye size={16} /> : <EyeOff size={16} />}
             </button>
           }
         />

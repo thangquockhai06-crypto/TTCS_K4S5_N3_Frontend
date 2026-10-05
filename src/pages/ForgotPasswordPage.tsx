@@ -47,8 +47,6 @@ export const ForgotPasswordPage: React.FC = () => {
     return true;
   };
 
-  const isEmailValid = email.trim().length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-
   const handleRequestSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     if (!validateEmail(email)) return;
@@ -172,11 +170,11 @@ export const ForgotPasswordPage: React.FC = () => {
                 type="email"
                 value={email}
                 onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (emailError) validateEmail(e.target.value);
+                  const val = e.target.value;
+                  setEmail(val);
+                  validateEmail(val);
                 }}
                 error={emailError ?? undefined}
-                isValid={isEmailValid}
                 leftIcon={<Mail size={16} />}
                 placeholder="admin@nexuscrm.vn"
                 disabled={isSubmitting}

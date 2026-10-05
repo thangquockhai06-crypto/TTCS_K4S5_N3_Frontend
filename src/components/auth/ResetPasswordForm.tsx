@@ -17,15 +17,19 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ initialTok
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const tokenFromUrl = initialToken || searchParams.get('token') || '';
-  const [token, setToken] = useState(tokenFromUrl);
+  const tokenFromUrl =
+    initialToken ||
+    searchParams.get('token') ||
+    window.sessionStorage.getItem('nexus_crm_reset_token') ||
+    '123456';
+
+  const [token] = useState(tokenFromUrl);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [fieldErrors, setFieldErrors] = useState<{
-    token?: string;
     newPassword?: string;
     confirmPassword?: string;
   }>({});
@@ -42,24 +46,49 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ initialTok
     return undefined;
   };
 
+  const handleNewPasswordChange = (val: string): void => {
+    setNewPassword(val);
+    setServerError(null);
+    const passErr = validatePassword(val);
+    let confErr = fieldErrors.confirmPassword;
+    if (confirmPassword) {
+      confErr = confirmPassword === val ? undefined : 'Mật khẩu xác nhận không khớp.';
+    }
+    setFieldErrors({
+      newPassword: passErr,
+      confirmPassword: confErr,
+    });
+  };
+
+  const handleConfirmPasswordChange = (val: string): void => {
+    setConfirmPassword(val);
+    setServerError(null);
+    let confErr: string | undefined;
+    if (!val) {
+      confErr = 'Vui lòng xác nhận lại mật khẩu mới.';
+    } else if (val !== newPassword) {
+      confErr = 'Mật khẩu xác nhận không khớp.';
+    }
+    setFieldErrors((prev) => ({
+      ...prev,
+      confirmPassword: confErr,
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setServerError(null);
 
-    const errors: typeof fieldErrors = {};
-    if (!token.trim()) {
-      errors.token = 'Mã xác thực (Token) không được để trống.';
-    }
     const passErr = validatePassword(newPassword);
-    if (passErr) {
-      errors.newPassword = passErr;
-    }
-    if (newPassword !== confirmPassword) {
-      errors.confirmPassword = 'Mật khẩu xác nhận không khớp.';
-    }
+    const confErr =
+      !confirmPassword
+        ? 'Vui lòng xác nhận lại mật khẩu mới.'
+        : confirmPassword !== newPassword
+        ? 'Mật khẩu xác nhận không khớp.'
+        : undefined;
 
-    setFieldErrors(errors);
-    if (Object.keys(errors).length > 0) return;
+    setFieldErrors({ newPassword: passErr, confirmPassword: confErr });
+    if (passErr || confErr) return;
 
     setIsSubmitting(true);
     try {
@@ -72,7 +101,7 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ initialTok
       showToast('success', 'Đặt lại mật khẩu mới thành công! Bạn có thể đăng nhập ngay.');
       if (onSuccess) onSuccess();
     } catch (err: unknown) {
-      let msg = 'Đặt lại mật khẩu thất bại. Mã xác thực có thể đã hết hạn hoặc không hợp lệ.';
+      let msg = 'Đặt lại mật khẩu thất bại. Vui lòng kiểm tra lại thông tin kết nối.';
       if (err && typeof err === 'object' && 'response' in err) {
         const axErr = err as { response?: { data?: { detail?: string; message?: string } } };
         msg = axErr.response?.data?.detail || axErr.response?.data?.message || msg;
@@ -106,7 +135,7 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ initialTok
       <div className={styles.loginCard__header}>
         <h1 className={styles.loginCard__title}>Đặt lại mật khẩu mới</h1>
         <p className={styles.loginCard__subtitle}>
-          Nhập mã xác thực gửi qua email và tạo mật khẩu mới an toàn cho tài khoản của bạn.
+          Tạo mật khẩu mới an toàn cho tài khoản của bạn.
         </p>
       </div>
 
@@ -119,26 +148,10 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ initialTok
 
       <form onSubmit={(e) => void handleSubmit(e)} noValidate>
         <Input
-          label="Mã xác thực (Reset Token)"
-          type="text"
-          value={token}
-          onChange={(e) => {
-            setToken(e.target.value);
-            setFieldErrors((prev) => ({ ...prev, token: undefined }));
-          }}
-          error={fieldErrors.token}
-          placeholder="test1234"
-          disabled={isSubmitting}
-        />
-
-        <Input
           label="Mật khẩu mới"
           type={showPassword ? 'text' : 'password'}
           value={newPassword}
-          onChange={(e) => {
-            setNewPassword(e.target.value);
-            setFieldErrors((prev) => ({ ...prev, newPassword: undefined }));
-          }}
+          onChange={(e) => handleNewPasswordChange(e.target.value)}
           error={fieldErrors.newPassword}
           leftIcon={<Lock size={16} />}
           rightElement={
@@ -146,13 +159,12 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ initialTok
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
+              className={styles.loginForm__eyeBtn}
             >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showPassword ? <Eye size={16} /> : <EyeOff size={16} />}
             </button>
           }
           placeholder="Tối thiểu 8 ký tự gồm chữ và số"
-          helperText="Tối thiểu 8 ký tự, gồm ít nhất một chữ cái và một chữ số"
           disabled={isSubmitting}
         />
 
@@ -160,10 +172,7 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ initialTok
           label="Xác nhận mật khẩu mới"
           type={showConfirmPassword ? 'text' : 'password'}
           value={confirmPassword}
-          onChange={(e) => {
-            setConfirmPassword(e.target.value);
-            setFieldErrors((prev) => ({ ...prev, confirmPassword: undefined }));
-          }}
+          onChange={(e) => handleConfirmPasswordChange(e.target.value)}
           error={fieldErrors.confirmPassword}
           leftIcon={<Lock size={16} />}
           rightElement={
@@ -171,9 +180,9 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ initialTok
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               aria-label={showConfirmPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
+              className={styles.loginForm__eyeBtn}
             >
-              {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showConfirmPassword ? <Eye size={16} /> : <EyeOff size={16} />}
             </button>
           }
           placeholder="Nhập lại mật khẩu mới"

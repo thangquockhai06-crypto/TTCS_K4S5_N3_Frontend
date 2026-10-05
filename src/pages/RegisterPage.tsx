@@ -12,7 +12,6 @@ export const RegisterPage: React.FC = () => {
           <h1 className={styles.brandTitle}>NexusCRM</h1>
         </div>
         <p className={styles.brandSubtitle}>Đăng ký tài khoản NexusCRM</p>
-        <span className={styles.brandDomain}>nexuscrm.vn</span>
       </header>
 
       <main className={styles.formWrapper}>

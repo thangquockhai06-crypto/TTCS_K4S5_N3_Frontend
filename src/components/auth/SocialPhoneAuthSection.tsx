@@ -1061,7 +1061,7 @@ export const SocialPhoneAuthSection: React.FC<ISocialPhoneAuthSectionProps> = ({
                             onClick={() => setShowSecret((p) => !p)}
                             aria-label={showSecret ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
                           >
-                            {showSecret ? <EyeOff size={16} /> : <Eye size={16} />}
+                            {showSecret ? <Eye size={16} /> : <EyeOff size={16} />}
                           </button>
                         )}
                       </div>
