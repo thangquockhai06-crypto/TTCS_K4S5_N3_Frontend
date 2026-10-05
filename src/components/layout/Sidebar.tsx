@@ -15,6 +15,8 @@ import {
   Users,
   Briefcase,
   X,
+  BookUser,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { Avatar } from '../common';
@@ -45,6 +47,20 @@ const ALL_MENU_ITEMS: ReadonlyArray<IMenuItem> = [
     path: '/customers',
     icon: <Users size={19} />,
     requiredPermission: 'view_dashboard',
+  },
+  {
+    id: 'contacts',
+    label: 'Người liên hệ & Vai trò Mua',
+    path: '/contacts',
+    icon: <BookUser size={19} />,
+    requiredPermission: 'manage_customers',
+  },
+  {
+    id: 'bulk-import',
+    label: 'Nhập Khách hàng từ Excel',
+    path: '/customers/import',
+    icon: <FileSpreadsheet size={19} />,
+    requiredPermission: 'manage_customers',
   },
   {
     id: 'deals',

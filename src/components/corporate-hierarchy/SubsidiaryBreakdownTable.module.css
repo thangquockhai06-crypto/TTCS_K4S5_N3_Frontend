@@ -1,0 +1,62 @@
+.tableContainer {
+  width: 100%;
+  overflow-x: auto;
+  background-color: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.breakdownTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.8125rem;
+}
+
+.breakdownTable th {
+  background-color: #f8fafc;
+  padding: 0.875rem 1rem;
+  font-weight: 700;
+  color: #475569;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+:global([data-theme='dark']) .breakdownTable th {
+  background-color: rgba(255, 255, 255, 0.04);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+}
+
+.breakdownTable td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  vertical-align: middle;
+}
+
+.parentRow {
+  background-color: rgba(147, 51, 234, 0.04);
+}
+
+:global([data-theme='dark']) .parentRow {
+  background-color: rgba(147, 51, 234, 0.1);
+}
+
+.parentRow td {
+  border-bottom: 2px solid #d8b4fe;
+}
+
+.tableTotalRow {
+  background-color: #f8fafc;
+  font-weight: 800;
+}
+
+:global([data-theme='dark']) .tableTotalRow {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.tableTotalRow td {
+  border-top: 2px solid #cbd5e1;
+  font-size: 0.875rem;
+}

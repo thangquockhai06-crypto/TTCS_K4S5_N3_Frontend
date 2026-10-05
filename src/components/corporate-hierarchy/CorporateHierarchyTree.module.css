@@ -1,0 +1,217 @@
+.treeContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+  padding: 1.5rem 0;
+}
+
+.parentCard {
+  width: 100%;
+  max-width: 800px;
+  background-color: var(--color-surface, #ffffff);
+  border: 2px solid #a855f7;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 25px -5px rgba(168, 85, 247, 0.15), 0 8px 10px -6px rgba(168, 85, 247, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+:global([data-theme='dark']) .parentCard {
+  background-color: rgba(147, 51, 234, 0.08);
+  border-color: rgba(168, 85, 247, 0.5);
+}
+
+.parentHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.parentTitleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.parentName {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-text, #0f172a);
+}
+
+.parentMeta {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted, #64748b);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.groupTotalBanner {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(126, 34, 206, 0.25);
+}
+
+@media (max-width: 700px) {
+  .groupTotalBanner {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bannerCol {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bannerLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.9;
+}
+
+.bannerValue {
+  font-size: 1.75rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.bannerSubValue {
+  font-size: 1.25rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.bannerSubText {
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+.connectorLine {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  width: 100%;
+}
+
+.verticalLine {
+  width: 3px;
+  height: 28px;
+  background-color: #cbd5e1;
+}
+
+.horizontalBar {
+  width: 85%;
+  height: 3px;
+  background-color: #cbd5e1;
+}
+
+.subsidiariesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.childCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.25rem;
+  background-color: var(--color-surface, #ffffff);
+  border: 1.5px solid var(--color-border, #e2e8f0);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  gap: 0.75rem;
+}
+
+.childCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.08);
+  border-color: #3b82f6;
+}
+
+.childHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.childName {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-text, #1e293b);
+  line-height: 1.35;
+}
+
+.childMeta {
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #64748b);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.childValueBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.625rem 0.75rem;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+:global([data-theme='dark']) .childValueBox {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.childValue {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #059669;
+}
+
+.childFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.625rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.emptySubsidiaries {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+  background-color: var(--color-surface, #ffffff);
+  border: 2px dashed #e2e8f0;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 600px;
+  gap: 0.75rem;
+  text-align: center;
+}

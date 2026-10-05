@@ -22,6 +22,8 @@ import { CustomerListPage } from '../pages/CustomerListPage';
 import { CreateCustomerPage } from '../pages/CreateCustomerPage';
 import { CustomerDetailPage } from '../pages/CustomerDetailPage';
 import { DealPipelinePage } from '../pages/DealPipelinePage';
+import { ContactManagementPage } from '../pages/ContactManagementPage';
+import { BulkImportPage } from '../pages/BulkImportPage';
 
 interface IProtectedRouteProps {
   children: React.ReactElement;
@@ -77,6 +79,8 @@ export const AppRoutes: React.FC = () => {
         <Route path="custom-fields" element={<CustomFieldsPage />} />
         <Route path="audit-logs" element={<AuditLogsPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="contacts" element={<ContactManagementPage />} />
+        <Route path="customers/import" element={<BulkImportPage />} />
       </Route>
 
       {/* Error Pages (S1-07) */}
