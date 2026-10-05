@@ -258,7 +258,7 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
             </div>
             <div>
               <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a' }}>
-                Quản lý Bảng giá Niêm Yết & Giá Sàn (Price Lists)
+                Quản lý Bảng giá Niêm Yết &amp; Giá Sàn
               </h2>
               <span style={{ fontSize: '0.75rem', color: isDark ? '#94a3b8' : '#64748b' }}>
                 Hỗ trợ nhân viên kinh doanh tạo báo giá chuẩn xác theo chính sách giá và kiểm soát giá sàn công ty
@@ -333,7 +333,7 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
               }}
             >
               <Calculator size={15} />
-              Ma trận Giá & Kiểm soát Giá sàn (Matrix Simulation)
+              Ma trận Giá &amp; Kiểm soát Giá sàn
             </button>
           </div>
 
@@ -438,7 +438,7 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
 
                   <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '12px' }}>
                     <div>
-                      <label style={labelStyle}>Tên bảng giá *</label>
+                      <label style={labelStyle}>Tên bảng giá <span style={{ color: '#dc2626' }}>*</span></label>
                       <input
                         type="text"
                         required
@@ -450,7 +450,7 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                     </div>
 
                     <div>
-                      <label style={labelStyle}>Mã bảng giá *</label>
+                      <label style={labelStyle}>Mã bảng giá <span style={{ color: '#dc2626' }}>*</span></label>
                       <input
                         type="text"
                         required
@@ -462,7 +462,7 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({
                     </div>
 
                     <div>
-                      <label style={labelStyle}>Hệ số giá (Multiplier) *</label>
+                      <label style={labelStyle}>Hệ số giá <span style={{ color: '#dc2626' }}>*</span></label>
                       <input
                         type="number"
                         step="0.05"

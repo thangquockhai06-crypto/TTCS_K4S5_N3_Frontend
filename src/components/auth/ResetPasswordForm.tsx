@@ -4,6 +4,7 @@ import { CheckCircle2, Eye, EyeOff, Lock, ArrowLeft, ShieldAlert } from 'lucide-
 import { IResetPasswordRequest } from '../../interfaces';
 import { axiosInstance } from '../../utils/axiosInstance';
 import { Button, Input } from '../common';
+import { useToast } from '../../context/ToastContext';
 import styles from './LoginForm.module.css';
 
 interface ResetPasswordFormProps {
@@ -12,6 +13,7 @@ interface ResetPasswordFormProps {
 }
 
 export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ initialToken, onSuccess }) => {
+  const { showToast } = useToast();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -67,6 +69,7 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ initialTok
       };
       await axiosInstance.post('/auth/reset-password', payload);
       setIsSuccess(true);
+      showToast('success', 'Đặt lại mật khẩu mới thành công! Bạn có thể đăng nhập ngay.');
       if (onSuccess) onSuccess();
     } catch (err: unknown) {
       let msg = 'Đặt lại mật khẩu thất bại. Mã xác thực có thể đã hết hạn hoặc không hợp lệ.';
@@ -75,6 +78,7 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ initialTok
         msg = axErr.response?.data?.detail || axErr.response?.data?.message || msg;
       }
       setServerError(msg);
+      showToast('error', msg);
     } finally {
       setIsSubmitting(false);
     }

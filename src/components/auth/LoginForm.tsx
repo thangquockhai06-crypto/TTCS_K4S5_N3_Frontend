@@ -15,6 +15,7 @@ import { useCountdown } from '../../hooks/useCountdown';
 import { ILoginPayload } from '../../interfaces';
 import { AUTH_STORAGE_KEYS } from '../../mock/auth.mock';
 import { Button, Input } from '../common';
+import { useToast } from '../../context/ToastContext';
 import styles from './LoginForm.module.css';
 
 const MAX_ATTEMPTS = 5;
@@ -22,6 +23,7 @@ const LOCKOUT_DURATION_SECONDS = 15 * 60;
 
 export const LoginForm: React.FC = () => {
   const { login, isLoading } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
 
   const {
@@ -50,7 +52,7 @@ export const LoginForm: React.FC = () => {
   const validateField = (name: 'email' | 'password', value: string): string | undefined => {
     if (name === 'email') {
       const trimmed = value.trim();
-      if (!trimmed) return 'Vui lòng nhập địa chỉ email công việc.';
+      if (!trimmed) return 'Vui lòng nhập đúng email/mật khẩu.';
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(trimmed)) return 'Địa chỉ email không đúng định dạng.';
       return undefined;
@@ -77,6 +79,7 @@ export const LoginForm: React.FC = () => {
     setFieldErrors({ email: emailErr, password: passwordErr });
 
     if (emailErr || passwordErr) {
+      setAuthError('Vui lòng nhập đúng email/mật khẩu.');
       return;
     }
 
@@ -85,6 +88,7 @@ export const LoginForm: React.FC = () => {
       setFailedAttempts(0);
       resetCountdown();
       window.localStorage.removeItem(AUTH_STORAGE_KEYS.FAILED_ATTEMPTS);
+      showToast('success', 'Đăng nhập thành công! Chào mừng bạn trở lại hệ thống.');
       navigate('/dashboard');
     } catch (err: unknown) {
       let serverMsg: string | undefined;
@@ -105,16 +109,18 @@ export const LoginForm: React.FC = () => {
 
       if (nextAttempts >= MAX_ATTEMPTS || is429) {
         startCountdown(LOCKOUT_DURATION_SECONDS);
-        setAuthError(
+        const lockMsg =
           serverMsg ||
-            'Bạn đã nhập sai quá 5 lần quy định. Tài khoản tạm thời bị khóa trong 15 phút để bảo mật.'
-        );
+          'Bạn đã nhập sai quá 5 lần quy định. Tài khoản tạm thời bị khóa trong 15 phút để bảo mật.';
+        setAuthError(lockMsg);
+        showToast('warning', 'Tài khoản đã bị tạm khóa 15 phút do đăng nhập sai quá 5 lần.');
       } else {
         const remaining = MAX_ATTEMPTS - nextAttempts;
-        setAuthError(
+        const errAlertMsg =
           serverMsg ||
-            `Email hoặc mật khẩu không chính xác. Còn ${remaining} lần thử trước khi khóa bảo mật 15 phút.`
-        );
+          `Vui lòng nhập đúng email/mật khẩu. Còn ${remaining} lần thử trước khi khóa bảo mật 15 phút.`;
+        setAuthError(errAlertMsg);
+        showToast('error', serverMsg || `Vui lòng nhập đúng email/mật khẩu. Còn ${remaining} lần thử.`);
       }
     }
   };
@@ -125,16 +131,11 @@ export const LoginForm: React.FC = () => {
     formState.password.length >= 8 && !validateField('password', formState.password);
 
   return (
-    <motion.div
-      className={styles.loginFormContainer}
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.32 }}
-    >
+    <div className={styles.loginFormContainer}>
       <div className={styles.loginForm__header}>
-        <h1 className={styles.loginForm__title}>Đăng nhập hệ thống</h1>
+        <h2 className={styles.loginForm__title}>Đăng nhập tài khoản</h2>
         <p className={styles.loginForm__subtitle}>
-          Nhập thông tin tài khoản doanh nghiệp để truy cập NexusCRM.
+          Vui lòng nhập email và mật khẩu doanh nghiệp để truy cập NexusCRM.
         </p>
       </div>
 
@@ -151,9 +152,9 @@ export const LoginForm: React.FC = () => {
               <ShieldAlert size={20} />
             </div>
             <div className={styles.lockoutBanner__text}>
-              <h2 className={styles.lockoutBanner__title}>
+              <h3 className={styles.lockoutBanner__title}>
                 Tài khoản tạm khóa bảo mật (Chính sách 15 phút)
-              </h2>
+              </h3>
               <p className={styles.lockoutBanner__desc}>
                 Phát hiện 5 lần đăng nhập thất bại liên tiếp. Vui lòng chờ đồng hồ đếm ngược kết thúc để bảo đảm an toàn.
               </p>
@@ -188,7 +189,7 @@ export const LoginForm: React.FC = () => {
 
       <form className={styles.loginForm} onSubmit={(e) => void handleSubmit(e)} noValidate>
         <Input
-          label="Email công việc"
+          label="Email"
           type="email"
           name="email"
           autoComplete="email"
@@ -197,8 +198,9 @@ export const LoginForm: React.FC = () => {
           error={fieldErrors.email}
           isValid={isEmailValid}
           disabled={isLockedOut || isLoading}
-          leftIcon={<Mail size={17} />}
-          placeholder="name@company.com"
+          leftIcon={<Mail size={16} />}
+          placeholder="admin@nexuscrm.vn"
+          required
         />
 
         <Input
@@ -211,8 +213,9 @@ export const LoginForm: React.FC = () => {
           error={fieldErrors.password}
           isValid={isPasswordValid}
           disabled={isLockedOut || isLoading}
-          leftIcon={<Lock size={17} />}
+          leftIcon={<Lock size={16} />}
           placeholder="••••••••••••"
+          required
           rightElement={
             <button
               type="button"
@@ -257,7 +260,14 @@ export const LoginForm: React.FC = () => {
         >
           {isLockedOut ? `Đang khóa (${formattedTime})` : 'Đăng nhập vào Hệ thống'}
         </Button>
+
+        <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '0.825rem', color: 'var(--color-text-secondary, #475569)' }}>
+          Chưa có tài khoản doanh nghiệp?{' '}
+          <Link to="/register" style={{ color: 'var(--color-primary, #2563eb)', fontWeight: 600, textDecoration: 'none' }}>
+            Đăng ký tài khoản mới
+          </Link>
+        </div>
       </form>
-    </motion.div>
+    </div>
   );
 };

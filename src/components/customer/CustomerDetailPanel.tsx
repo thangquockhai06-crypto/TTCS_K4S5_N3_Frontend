@@ -141,7 +141,7 @@ export const CustomerDetailPanel: React.FC<ICustomerDetailPanelProps> = ({
       <Card padding="md" className={styles.panelSection}>
         <div className={styles.panelSection__titleRow}>
           <Tag size={15} className={styles.panelSection__icon} />
-          <h3 className={styles.panelSection__heading}>Nhãn phân loại (Tags)</h3>
+          <h3 className={styles.panelSection__heading}>Nhãn phân loại</h3>
         </div>
         <div className={styles.tagsWrap}>
           <Badge tone="accent" size="md">

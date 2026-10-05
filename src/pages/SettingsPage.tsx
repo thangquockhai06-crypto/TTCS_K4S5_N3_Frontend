@@ -345,7 +345,7 @@ export const SettingsPage: React.FC = () => {
 
                 <div className={styles.settingRow}>
                   <div>
-                    <strong>Màu nhấn thương hiệu (Accent Color)</strong>
+                    <strong>Màu nhấn thương hiệu</strong>
                     <p>Màu chủ đạo trên các nút bấm, biểu đồ và trạng thái đang chọn</p>
                   </div>
                   <div className={styles.colorSwatches}>
@@ -375,7 +375,7 @@ export const SettingsPage: React.FC = () => {
 
                 <div className={styles.settingRow}>
                   <div>
-                    <strong>Mật độ bảng thu gọn (Compact Density)</strong>
+                    <strong>Mật độ bảng thu gọn</strong>
                     <p>Thu hẹp khoảng cách dòng để hiển thị nhiều dữ liệu hơn trên màn hình lớn</p>
                   </div>
                   <button

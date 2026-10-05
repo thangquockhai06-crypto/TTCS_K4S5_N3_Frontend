@@ -4,7 +4,7 @@ import { DealPipeline } from '../components/customer/DealPipeline';
 import { Badge, Button, Card, Input, Modal, SearchBar } from '../components/common';
 import { CustomSelect } from '../components/common/CustomSelect';
 import { useCRMData } from '../context/CRMDataContext';
-import { DealStageType, ICustomField } from '../interfaces';
+import { DealStageType, ICustomField, IDeal, IWinLossReason, ICompetitor } from '../interfaces';
 import { formatCompactCurrency, formatCurrency } from '../utils/formatters';
 import { sprint2Service } from '../services/sprint2Service';
 import { CustomFieldRenderer } from '../components/custom-fields/CustomFieldRenderer';
@@ -34,11 +34,35 @@ export const DealPipelinePage: React.FC = () => {
   const [dealCustomFields, setDealCustomFields] = useState<ICustomField[]>([]);
   const [dealCustomValues, setDealCustomValues] = useState<Record<string, string | number>>({});
 
+  // Win/Loss & Competitor integration (Sprint 5 Requirement)
+  const [winReasons, setWinReasons] = useState<IWinLossReason[]>([]);
+  const [competitors, setCompetitors] = useState<ICompetitor[]>([]);
+  const [closingDeal, setClosingDeal] = useState<{
+    deal: IDeal;
+    targetStage: DealStageType;
+  } | null>(null);
+  const [closeDealForm, setCloseDealForm] = useState<{
+    reasonId: string;
+    competitorId: string;
+    closeNotes: string;
+  }>({
+    reasonId: '',
+    competitorId: '',
+    closeNotes: '',
+  });
+
   useEffect(() => {
     void (async () => {
       try {
-        const fields = await sprint2Service.getCustomFields('deal');
+        const [fields, rData, cData] = await Promise.all([
+          sprint2Service.getCustomFields('deal'),
+          sprint2Service.getWinLossReasons('WON'),
+          sprint2Service.getCompetitors(),
+        ]);
         setDealCustomFields(fields);
+        setWinReasons(rData);
+        setCompetitors(cData);
+
         const initVal: Record<string, string | number> = {};
         fields.forEach((f) => {
           if (f.default_value) initVal[f.field_name] = f.default_value;
@@ -114,6 +138,30 @@ export const DealPipelinePage: React.FC = () => {
     showToast('success', `Đã tạo cơ hội bán hàng "${createdTitle}" thành công!`);
   };
 
+  const handleConfirmCloseDeal = (e: React.FormEvent<HTMLFormElement>): void => {
+    e.preventDefault();
+    if (!closingDeal) return;
+    if (!closeDealForm.reasonId) {
+      showToast('warning', 'Vui lòng chọn lý do thắng theo quy chuẩn Sprint 5.');
+      return;
+    }
+    if (!closeDealForm.competitorId) {
+      showToast('warning', 'Vui lòng chọn đối thủ cạnh tranh đã gặp trong thương vụ.');
+      return;
+    }
+
+    const selectedReason = winReasons.find((r) => r.id === closeDealForm.reasonId);
+    const selectedComp = competitors.find((c) => c.id === closeDealForm.competitorId);
+
+    moveDealStage(closingDeal.deal.id, closingDeal.targetStage);
+    const dealTitle = closingDeal.deal.title;
+    setClosingDeal(null);
+    showToast(
+      'success',
+      `Đã chốt thành công thương vụ "${dealTitle}"! Ghi nhận lý do: ${selectedReason?.reason || ''}, đối thủ: ${selectedComp?.name || ''}`
+    );
+  };
+
   return (
     <div className={styles.pipelinePage}>
       <header className={styles.header}>
@@ -123,7 +171,7 @@ export const DealPipelinePage: React.FC = () => {
               BẢNG KANBAN TƯƠNG TÁC · KÉO THẢ TRỰC TIẾP
             </Badge>
           </div>
-          <h1 className={styles.header__title}>Phễu cơ hội bán hàng (Deal Pipeline)</h1>
+          <h1 className={styles.header__title}>Phễu cơ hội bán hàng</h1>
           <p className={styles.header__subtitle}>
             Kéo thả thẻ cơ hội giữa các cột hoặc dùng nút mũi tên để cập nhật dự báo doanh thu theo
             thời gian thực.
@@ -176,6 +224,16 @@ export const DealPipelinePage: React.FC = () => {
       <DealPipeline
         deals={filteredDeals}
         onMoveDeal={(dealId, newStage) => {
+          const targetDeal = deals.find((d) => d.id === dealId);
+          if (newStage === 'Won' && targetDeal) {
+            setClosingDeal({ deal: targetDeal, targetStage: newStage });
+            setCloseDealForm({
+              reasonId: winReasons[0]?.id || '',
+              competitorId: competitors[0]?.id || '',
+              closeNotes: '',
+            });
+            return;
+          }
           moveDealStage(dealId, newStage);
           showToast('success', 'Đã chuyển giai đoạn cơ hội bán hàng thành công!');
         }}
@@ -239,10 +297,10 @@ export const DealPipelinePage: React.FC = () => {
                 }))
               }
               options={[
-                { value: 'New', label: 'Cơ hội mới (New)' },
-                { value: 'Contacted', label: 'Đã liên hệ (Contacted)' },
-                { value: 'Negotiation', label: 'Đang đàm phán (Negotiation)' },
-                { value: 'Won', label: 'Chốt thành công (Won)' },
+                { value: 'New', label: 'Cơ hội mới' },
+                { value: 'Contacted', label: 'Đã liên hệ' },
+                { value: 'Negotiation', label: 'Đang đàm phán' },
+                { value: 'Won', label: 'Chốt thành công' },
               ]}
               height="38px"
             />
@@ -273,6 +331,159 @@ export const DealPipelinePage: React.FC = () => {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Modal Đóng cơ hội bán hàng */}
+      <Modal
+        isOpen={Boolean(closingDeal)}
+        onClose={() => setClosingDeal(null)}
+        title="Đóng cơ hội bán hàng"
+        subtitle="Khai báo lý do thành công và đối thủ cạnh tranh thị trường để hoàn tất chốt thương vụ."
+      >
+        {closingDeal && (
+          <form onSubmit={handleConfirmCloseDeal} className={styles.modalForm}>
+            <div
+              style={{
+                backgroundColor: 'var(--color-bg-app, #f8fafc)',
+                padding: '12px 14px',
+                borderRadius: '8px',
+                border: '1px solid var(--color-border, #e2e8f0)',
+                fontSize: '0.84rem',
+              }}
+            >
+              <div style={{ fontWeight: 700, color: 'var(--color-text-primary, #0f172a)' }}>
+                {closingDeal.deal.title}
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '16px',
+                  marginTop: '6px',
+                  color: 'var(--color-text-secondary, #475569)',
+                  fontSize: '0.8rem',
+                }}
+              >
+                <span>
+                  Doanh nghiệp: <strong>{closingDeal.deal.company}</strong>
+                </span>
+                <span>
+                  Giá trị: <strong>{formatCurrency(closingDeal.deal.value)}</strong>
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  color: 'var(--color-text-secondary, #334155)',
+                  marginBottom: '6px',
+                }}
+              >
+                Lý do chốt thương vụ thành công *
+              </label>
+              <select
+                required
+                value={closeDealForm.reasonId}
+                onChange={(e) =>
+                  setCloseDealForm((prev) => ({ ...prev, reasonId: e.target.value }))
+                }
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.84rem',
+                  backgroundColor: '#ffffff',
+                }}
+              >
+                <option value="">-- Chọn lý do thành công đã khai báo --</option>
+                {winReasons.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    [{r.code}] {r.reason}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  color: 'var(--color-text-secondary, #334155)',
+                  marginBottom: '6px',
+                }}
+              >
+                Đối thủ cạnh tranh trực tiếp *
+              </label>
+              <select
+                required
+                value={closeDealForm.competitorId}
+                onChange={(e) =>
+                  setCloseDealForm((prev) => ({ ...prev, competitorId: e.target.value }))
+                }
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.84rem',
+                  backgroundColor: '#ffffff',
+                }}
+              >
+                <option value="">-- Chọn đối thủ cạnh tranh trực tiếp --</option>
+                {competitors.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({c.pricing_tier || 'Trung cấp'}) — Tỷ lệ thắng đối đầu {c.win_rate}%
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  color: 'var(--color-text-secondary, #334155)',
+                  marginBottom: '6px',
+                }}
+              >
+                Ghi chú bài học kinh nghiệm / Phân tích
+              </label>
+              <textarea
+                rows={3}
+                placeholder="Ghi nhận điều giúp chúng ta chiến thắng hoặc điểm khác biệt so với đối thủ..."
+                value={closeDealForm.closeNotes}
+                onChange={(e) =>
+                  setCloseDealForm((prev) => ({ ...prev, closeNotes: e.target.value }))
+                }
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.84rem',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+
+            <div className={styles.modalForm__footer}>
+              <Button variant="secondary" onClick={() => setClosingDeal(null)}>
+                Hủy bỏ
+              </Button>
+              <Button type="submit" variant="primary">
+                Xác nhận chốt thương vụ
+              </Button>
+            </div>
+          </form>
+        )}
       </Modal>
     </div>
   );

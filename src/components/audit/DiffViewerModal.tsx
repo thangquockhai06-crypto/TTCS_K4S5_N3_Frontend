@@ -15,10 +15,10 @@ export const DiffViewerModal: React.FC<IDiffViewerModalProps> = ({
 }) => {
   if (!isOpen || !logItem) return null;
 
-  let metadataObj: any = null;
+  let metadataObj: Record<string, unknown> | null = null;
   if (logItem.metadata) {
     try {
-      metadataObj = JSON.parse(logItem.metadata);
+      metadataObj = JSON.parse(logItem.metadata) as Record<string, unknown>;
     } catch {
       metadataObj = null;
     }
@@ -166,7 +166,7 @@ export const DiffViewerModal: React.FC<IDiffViewerModalProps> = ({
                     marginBottom: '6px',
                   }}
                 >
-                  Giá trị cũ (Before)
+                  Giá trị cũ
                 </span>
                 <div
                   style={{
@@ -205,7 +205,7 @@ export const DiffViewerModal: React.FC<IDiffViewerModalProps> = ({
                     marginBottom: '6px',
                   }}
                 >
-                  Giá trị mới (After)
+                  Giá trị mới
                 </span>
                 <div
                   style={{
@@ -231,7 +231,7 @@ export const DiffViewerModal: React.FC<IDiffViewerModalProps> = ({
           {metadataObj && (
             <div style={{ marginTop: '8px' }}>
               <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', marginBottom: '4px' }}>
-                Thông tin ngữ cảnh bổ sung (Context Metadata)
+                Thông tin ngữ cảnh bổ sung
               </span>
               <pre
                 style={{

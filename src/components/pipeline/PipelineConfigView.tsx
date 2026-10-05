@@ -229,7 +229,7 @@ export const PipelineConfigView: React.FC = () => {
               <th style={{ padding: '10px 14px', color: '#64748b' }}>Tên giai đoạn phễu</th>
               <th style={{ padding: '10px 14px', color: '#64748b' }}>Mã trạng thái</th>
               <th style={{ padding: '10px 14px', color: '#64748b' }}>Xác suất chốt</th>
-              <th style={{ padding: '10px 14px', color: '#64748b' }}>Điều kiện chuyển tiếp (Exit Rules)</th>
+              <th style={{ padding: '10px 14px', color: '#64748b' }}>Điều kiện chuyển tiếp</th>
               <th style={{ padding: '10px 14px', textAlign: 'right', color: '#64748b' }}>Thao tác</th>
             </tr>
           </thead>

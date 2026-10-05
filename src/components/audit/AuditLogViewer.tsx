@@ -120,10 +120,10 @@ export const AuditLogViewer: React.FC = () => {
             }}
           >
             <option value="all">Tất cả đối tượng</option>
-            <option value="deal">Phễu Cơ hội (Deal)</option>
-            <option value="customer">Khách hàng (Customer)</option>
-            <option value="user">Người dùng / Phân quyền (User)</option>
-            <option value="quota">Chỉ tiêu / Doanh số (Quota)</option>
+            <option value="deal">Phễu cơ hội</option>
+            <option value="customer">Khách hàng</option>
+            <option value="user">Người dùng / Phân quyền</option>
+            <option value="quota">Chỉ tiêu / Doanh số</option>
           </select>
         </div>
 

@@ -1,6 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import {
   AlertTriangle,
   ArrowRight,
@@ -8,16 +7,14 @@ import {
   Eye,
   EyeOff,
   Lock,
-  LogIn,
   Mail,
-  Sparkles,
   User,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { IRegisterPayload } from '../../interfaces';
 import { Button, Input } from '../common';
-import { SocialPhoneAuthSection } from './SocialPhoneAuthSection';
-import styles from './RegisterForm.module.css';
+import { useToast } from '../../context/ToastContext';
+import styles from './LoginForm.module.css';
 
 interface IRegisterFieldErrors {
   fullName?: string;
@@ -29,6 +26,7 @@ interface IRegisterFieldErrors {
 
 export const RegisterForm: React.FC = () => {
   const { register, isLoading } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState<IRegisterPayload>({
@@ -40,11 +38,12 @@ export const RegisterForm: React.FC = () => {
     confirmPassword: '',
   });
 
-  const [showPass, setShowPass] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
   const [errors, setErrors] = useState<IRegisterFieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const validateSingle = (
+  const validateField = (
     field: keyof IRegisterPayload,
     value: string,
     currentPassword = formData.password
@@ -52,6 +51,7 @@ export const RegisterForm: React.FC = () => {
     const trimmed = value.trim();
     switch (field) {
       case 'fullName':
+        if (!trimmed) return 'Vui lòng nhập họ và tên.';
         if (trimmed.length < 3) return 'Họ và tên phải có ít nhất 3 ký tự.';
         return undefined;
       case 'email':
@@ -61,10 +61,15 @@ export const RegisterForm: React.FC = () => {
         }
         return undefined;
       case 'companyName':
-        if (trimmed.length < 2) return 'Vui lòng nhập tên công ty hoặc tổ chức.';
+        if (!trimmed) return 'Vui lòng nhập tên doanh nghiệp.';
+        if (trimmed.length < 2) return 'Tên doanh nghiệp phải có ít nhất 2 ký tự.';
         return undefined;
       case 'password':
-        if (value.length < 8) return 'Mật khẩu phải có từ 8 ký tự trở lên.';
+        if (!value) return 'Vui lòng nhập mật khẩu.';
+        if (value.length < 8) return 'Mật khẩu phải có tối thiểu 8 ký tự.';
+        if (!/[A-Za-z]/.test(value) || !/[0-9]/.test(value) || !/[^A-Za-z0-9]/.test(value)) {
+          return 'Mật khẩu phải bao gồm cả chữ cái, chữ số và ký tự đặc biệt.';
+        }
         return undefined;
       case 'confirmPassword':
         if (!value) return 'Vui lòng xác nhận lại mật khẩu.';
@@ -78,7 +83,7 @@ export const RegisterForm: React.FC = () => {
   const handleFieldChange = (field: keyof IRegisterPayload, value: string): void => {
     setFormData((prev) => {
       const next = { ...prev, [field]: value };
-      const errMsg = validateSingle(field, value, next.password);
+      const errMsg = validateField(field, value, next.password);
       setErrors((prevErr) => ({
         ...prevErr,
         [field]: errMsg,
@@ -96,29 +101,14 @@ export const RegisterForm: React.FC = () => {
     setSubmitError(null);
   };
 
-  const passwordStrength = useMemo(() => {
-    const p = formData.password;
-    if (!p) return { score: 0, label: 'Chưa nhập', color: '#94A3B8' };
-    let score = 0;
-    if (p.length >= 8) score += 1;
-    if (/[A-Z]/.test(p)) score += 1;
-    if (/[0-9]/.test(p)) score += 1;
-    if (/[^A-Za-z0-9]/.test(p)) score += 1;
-
-    if (score <= 1) return { score: 25, label: 'Yếu', color: '#EF4444' };
-    if (score === 2) return { score: 50, label: 'Trung bình', color: '#F59E0B' };
-    if (score === 3) return { score: 75, label: 'Mạnh', color: '#3B82F6' };
-    return { score: 100, label: 'Rất mạnh', color: '#10B981' };
-  }, [formData.password]);
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     const nextErrors: IRegisterFieldErrors = {
-      fullName: validateSingle('fullName', formData.fullName),
-      email: validateSingle('email', formData.email),
-      companyName: validateSingle('companyName', formData.companyName),
-      password: validateSingle('password', formData.password),
-      confirmPassword: validateSingle(
+      fullName: validateField('fullName', formData.fullName),
+      email: validateField('email', formData.email),
+      companyName: validateField('companyName', formData.companyName),
+      password: validateField('password', formData.password),
+      confirmPassword: validateField(
         'confirmPassword',
         formData.confirmPassword,
         formData.password
@@ -127,11 +117,13 @@ export const RegisterForm: React.FC = () => {
     setErrors(nextErrors);
 
     if (Object.values(nextErrors).some((msg) => Boolean(msg))) {
+      setSubmitError('Vui lòng nhập đủ thông tin và đúng định dạng.');
       return;
     }
 
     try {
       await register(formData);
+      showToast('success', 'Đăng ký tài khoản doanh nghiệp thành công! Đang chuyển hướng...');
       navigate('/dashboard');
     } catch (err: unknown) {
       let serverMsg: string | undefined;
@@ -140,143 +132,114 @@ export const RegisterForm: React.FC = () => {
           response?: { status?: number; data?: { detail?: string; message?: string } };
         };
         serverMsg = axiosErr.response?.data?.detail || axiosErr.response?.data?.message;
-      } else if (err && typeof err === 'object' && 'message' in err) {
-        const errObj = err as { message?: string };
-        if (errObj.message?.includes('Network Error') || errObj.message?.includes('ERR_CONNECTION_REFUSED')) {
-          serverMsg = 'Chưa bật máy chủ Backend (http://localhost:8000). Vui lòng chạy start-server.bat trước.';
-        }
       }
 
       if (serverMsg) {
         setSubmitError(serverMsg);
+        showToast('error', serverMsg);
       } else if (err instanceof Error && err.message === 'EMAIL_ALREADY_EXISTS') {
-        setSubmitError(
-          'Địa chỉ email này đã được đăng ký. Vui lòng chuyển sang trang Đăng nhập.'
-        );
+        const existMsg = 'Địa chỉ email này đã được đăng ký. Vui lòng chuyển sang trang Đăng nhập.';
+        setSubmitError(existMsg);
+        showToast('warning', existMsg);
       } else {
-        setSubmitError(
-          'Không thể kết nối máy chủ Backend tại http://localhost:8000. Vui lòng kiểm tra xem Backend đã khởi chạy chưa.'
-        );
+        const genericMsg = 'Đăng ký không thành công. Vui lòng kiểm tra lại thông tin kết nối.';
+        setSubmitError(genericMsg);
+        showToast('error', genericMsg);
       }
     }
   };
 
   return (
-    <motion.div
-      className={styles.registerCard}
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.32 }}
-    >
-      <div className={styles.registerCard__header}>
-        <div className={styles.registerCard__badge}>
-          <Sparkles size={13} />
-          <span>KHỞI TẠO KHÔNG GIAN LÀM VIỆC MỚI</span>
-        </div>
-        <h1 className={styles.registerCard__title}>Đăng ký tài khoản</h1>
-        <p className={styles.registerCard__subtitle}>
-          Tạo tài khoản quản trị mới để quản lý khách hàng, phễu doanh thu và hợp đồng doanh nghiệp.
+    <div className={styles.loginFormContainer}>
+      <div className={styles.loginForm__header}>
+        <h2 className={styles.loginForm__title}>Đăng ký tài khoản</h2>
+        <p className={styles.loginForm__subtitle}>
+          Tạo tài khoản quản trị mới để quản lý khách hàng và cơ hội bán hàng.
         </p>
       </div>
 
       {submitError && (
         <div className={styles.errorAlert} role="alert">
-          <AlertTriangle size={16} />
+          <AlertTriangle size={16} className={styles.errorAlert__icon} />
           <span>{submitError}</span>
         </div>
       )}
 
-      <form className={styles.form} onSubmit={(e) => void handleSubmit(e)} noValidate>
-        <div className={styles.grid2}>
-          <Input
-            label="Họ và tên *"
-            value={formData.fullName}
-            onChange={(e) => handleFieldChange('fullName', e.target.value)}
-            error={errors.fullName}
-            isValid={formData.fullName.trim().length >= 3 && !errors.fullName}
-            leftIcon={<User size={16} />}
-            placeholder="VD: Trần Minh Hoàng"
-          />
+      <form className={styles.loginForm} onSubmit={(e) => void handleSubmit(e)} noValidate>
+        <Input
+          label="Họ và tên"
+          type="text"
+          value={formData.fullName}
+          onChange={(e) => handleFieldChange('fullName', e.target.value)}
+          error={errors.fullName}
+          leftIcon={<User size={16} />}
+          placeholder="VD: Trần Minh Hoàng"
+          required
+        />
 
-          <Input
-            label="Email công việc *"
-            type="email"
-            value={formData.email}
-            onChange={(e) => handleFieldChange('email', e.target.value)}
-            error={errors.email}
-            isValid={formData.email.includes('@') && !errors.email}
-            leftIcon={<Mail size={16} />}
-            placeholder="hoang.tran@congty.vn"
-          />
-        </div>
+        <Input
+          label="Email"
+          type="email"
+          value={formData.email}
+          onChange={(e) => handleFieldChange('email', e.target.value)}
+          error={errors.email}
+          leftIcon={<Mail size={16} />}
+          placeholder="hoang.tran@congty.vn"
+          required
+        />
 
-        <div>
-          <Input
-            label="Tên doanh nghiệp / Tổ chức *"
-            value={formData.companyName}
-            onChange={(e) => handleFieldChange('companyName', e.target.value)}
-            error={errors.companyName}
-            isValid={formData.companyName.trim().length >= 2 && !errors.companyName}
-            leftIcon={<Building2 size={16} />}
-            placeholder="VD: Công ty Công nghệ Nexus"
-          />
-        </div>
+        <Input
+          label="Tên doanh nghiệp"
+          type="text"
+          value={formData.companyName}
+          onChange={(e) => handleFieldChange('companyName', e.target.value)}
+          error={errors.companyName}
+          leftIcon={<Building2 size={16} />}
+          placeholder="VD: Công ty Công nghệ Nexus"
+          required
+        />
 
-        <div className={styles.grid2}>
-          <Input
-            label="Mật khẩu *"
-            type={showPass ? 'text' : 'password'}
-            value={formData.password}
-            onChange={(e) => handleFieldChange('password', e.target.value)}
-            error={errors.password}
-            isValid={formData.password.length >= 8 && !errors.password}
-            leftIcon={<Lock size={16} />}
-            placeholder="Tối thiểu 8 ký tự"
-            rightElement={
-              <button
-                type="button"
-                onClick={() => setShowPass((prev) => !prev)}
-                className={styles.eyeBtn}
-                aria-label={showPass ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-              >
-                {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
-              </button>
-            }
-          />
+        <Input
+          label="Mật khẩu"
+          type={showPassword ? 'text' : 'password'}
+          value={formData.password}
+          onChange={(e) => handleFieldChange('password', e.target.value)}
+          error={errors.password}
+          leftIcon={<Lock size={16} />}
+          placeholder="Tối thiểu 8 ký tự (chữ, số, ký tự đặc biệt)"
+          required
+          rightElement={
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className={styles.loginForm__eyeBtn}
+              aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          }
+        />
 
-          <Input
-            label="Xác nhận mật khẩu *"
-            type={showPass ? 'text' : 'password'}
-            value={formData.confirmPassword}
-            onChange={(e) => handleFieldChange('confirmPassword', e.target.value)}
-            error={errors.confirmPassword}
-            isValid={
-              formData.confirmPassword.length >= 8 &&
-              formData.confirmPassword === formData.password
-            }
-            leftIcon={<Lock size={16} />}
-            placeholder="Nhập lại mật khẩu"
-          />
-        </div>
-
-        {/* Thanh đo độ mạnh mật khẩu */}
-        <div className={styles.strengthBox}>
-          <div className={styles.strengthBox__row}>
-            <span>Độ an toàn mật khẩu:</span>
-            <strong style={{ color: passwordStrength.color }}>
-              {passwordStrength.label}
-            </strong>
-          </div>
-          <div className={styles.strengthBox__track}>
-            <div
-              className={styles.strengthBox__fill}
-              style={{
-                width: `${passwordStrength.score}%`,
-                backgroundColor: passwordStrength.color,
-              }}
-            />
-          </div>
-        </div>
+        <Input
+          label="Xác nhận mật khẩu"
+          type={showConfirmPassword ? 'text' : 'password'}
+          value={formData.confirmPassword}
+          onChange={(e) => handleFieldChange('confirmPassword', e.target.value)}
+          error={errors.confirmPassword}
+          leftIcon={<Lock size={16} />}
+          placeholder="Nhập lại mật khẩu"
+          required
+          rightElement={
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword((prev) => !prev)}
+              className={styles.loginForm__eyeBtn}
+              aria-label={showConfirmPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+            >
+              {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          }
+        />
 
         <Button
           type="submit"
@@ -286,19 +249,16 @@ export const RegisterForm: React.FC = () => {
           isLoading={isLoading}
           rightIcon={<ArrowRight size={17} />}
         >
-          Hoàn tất Đăng ký & Truy cập
+          Đăng ký tài khoản
         </Button>
+
+        <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '0.825rem', color: 'var(--color-text-secondary, #475569)' }}>
+          Đã có tài khoản doanh nghiệp?{' '}
+          <Link to="/login" style={{ color: 'var(--color-primary, #2563eb)', fontWeight: 600, textDecoration: 'none' }}>
+            Đăng nhập ngay
+          </Link>
+        </div>
       </form>
-
-      <SocialPhoneAuthSection mode="register" />
-
-      <div className={styles.switchRow}>
-        <span>Đã có tài khoản trên hệ thống?</span>
-        <Link to="/login" className={styles.switchLink}>
-          <LogIn size={14} />
-          Quay lại Đăng nhập
-        </Link>
-      </div>
-    </motion.div>
+    </div>
   );
 };

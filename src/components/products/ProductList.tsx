@@ -1004,7 +1004,7 @@ export const ProductList: React.FC = () => {
               {/* Hàng 1: Mã SKU & Tên sản phẩm */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.8fr', gap: '16px', alignItems: 'flex-start' }}>
                 <div>
-                  <label style={labelStyle}>Mã sản phẩm (SKU) *</label>
+                  <label style={labelStyle}>Mã sản phẩm (SKU) <span style={{ color: '#dc2626' }}>*</span></label>
                   <input
                     type="text"
                     required
@@ -1016,7 +1016,7 @@ export const ProductList: React.FC = () => {
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Tên sản phẩm & dịch vụ *</label>
+                  <label style={labelStyle}>Tên sản phẩm &amp; dịch vụ <span style={{ color: '#dc2626' }}>*</span></label>
                   <input
                     type="text"
                     required
@@ -1166,7 +1166,7 @@ export const ProductList: React.FC = () => {
                   }}
                 >
                   <Lock size={14} color={isDark ? '#64748b' : '#94a3b8'} />
-                  <span>Trường Giá vốn (Cost Price) được bảo mật, chỉ Giám đốc kinh doanh có quyền xem và sửa.</span>
+                  <span>Trường Giá vốn được bảo mật, chỉ Giám đốc kinh doanh có quyền xem và sửa.</span>
                 </div>
               )}
 

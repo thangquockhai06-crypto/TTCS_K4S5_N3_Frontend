@@ -443,16 +443,16 @@ export const CreateCustomerPage: React.FC = () => {
                     handleFieldChange('status', e.target.value as CustomerStatusType)
                   }
                 >
-                  <option value="New Lead">Tiềm năng mới (New Lead)</option>
-                  <option value="Negotiation">Đang đàm phán (Negotiation)</option>
-                  <option value="Active">Đang hợp tác (Active)</option>
-                  <option value="At Risk">Cần chú ý (At Risk)</option>
+                  <option value="New Lead">Tiềm năng mới</option>
+                  <option value="Negotiation">Đang đàm phán</option>
+                  <option value="Active">Đang hợp tác</option>
+                  <option value="At Risk">Cần chú ý</option>
                 </select>
               </div>
             </div>
 
             <div className={styles.tagsEditor}>
-              <label htmlFor="tag-adder">Nhãn phân loại (Tags)</label>
+              <label htmlFor="tag-adder">Nhãn phân loại</label>
               <div className={styles.tagsEditor__row}>
                 <input
                   id="tag-adder"

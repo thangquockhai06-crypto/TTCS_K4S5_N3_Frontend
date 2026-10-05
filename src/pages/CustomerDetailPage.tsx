@@ -40,11 +40,11 @@ import styles from './CustomerDetailPage.module.css';
 type DetailTabType = 'overview' | 'activities' | 'notes' | 'files';
 
 const STATUS_OPTIONS: ReadonlyArray<{ label: string; value: CustomerStatusType }> = [
-  { label: 'Đang hợp tác (Active)', value: 'Active' },
-  { label: 'Đang đàm phán (Negotiation)', value: 'Negotiation' },
-  { label: 'Tiềm năng mới (New Lead)', value: 'New Lead' },
-  { label: 'Cần chú ý (At Risk)', value: 'At Risk' },
-  { label: 'Đã ngừng (Churned)', value: 'Churned' },
+  { label: 'Đang hợp tác', value: 'Active' },
+  { label: 'Đang đàm phán', value: 'Negotiation' },
+  { label: 'Tiềm năng mới', value: 'New Lead' },
+  { label: 'Cần chú ý', value: 'At Risk' },
+  { label: 'Đã ngừng hợp tác', value: 'Churned' },
 ];
 
 export const CustomerDetailPage: React.FC = () => {
@@ -298,7 +298,7 @@ export const CustomerDetailPage: React.FC = () => {
               {/* Dòng thời gian hoạt động */}
               <Card padding="md">
                 <div className={styles.cardSectionHeader}>
-                  <h3>Dòng thời gian Hoạt động (Timeline)</h3>
+                  <h3>Dòng thời gian Hoạt động</h3>
                   <Button
                     variant="ghost"
                     size="sm"
