@@ -1,0 +1,262 @@
+/* ============================================================
+   BulkImportManager.module.css
+   Container chính của wizard nhập hàng loạt
+   ============================================================ */
+
+.manager {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 1.5rem;
+}
+
+/* ------ Page header ------ */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.header__titleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.header__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+}
+
+.header__subtitle {
+  font-size: 0.875rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ------ Wizard progress steps ------ */
+.steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 6px;
+  overflow: hidden;
+}
+
+.step {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #94a3b8;
+  transition: background 0.2s, color 0.2s;
+  cursor: default;
+}
+
+.step__num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s, color 0.2s;
+}
+
+.step--active {
+  background: #fff;
+  color: #1e40af;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.step--active .step__num {
+  background: #2563eb;
+  color: #fff;
+}
+
+.step--done {
+  color: #16a34a;
+}
+
+.step--done .step__num {
+  background: #22c55e;
+  color: #fff;
+}
+
+.stepDivider {
+  width: 1px;
+  height: 28px;
+  background: #e2e8f0;
+  flex-shrink: 0;
+}
+
+/* ------ Content card ------ */
+.card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.75rem;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+}
+
+.card__header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.card__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.card__sub {
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+/* ------ Action row ------ */
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.actions__left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.actions__right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ------ Result section ------ */
+.result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.result__icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #16a34a;
+}
+
+.result__title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+}
+
+.result__sub {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.result__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.result__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 8px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+}
+
+.result__stat--imported { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+.result__stat--updated  { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
+.result__stat--skipped  { background: #f8fafc; border-color: #e2e8f0; color: #475569; }
+
+.result__stat__value {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.result__stat__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.result__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+@media (max-width: 640px) {
+  .manager {
+    padding: 1rem;
+    gap: 1rem;
+  }
+  .card {
+    padding: 1.25rem;
+  }
+  .steps {
+    padding: 4px;
+    gap: 0;
+  }
+  .step {
+    padding: 8px 6px;
+    font-size: 0.6875rem;
+  }
+  .result__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

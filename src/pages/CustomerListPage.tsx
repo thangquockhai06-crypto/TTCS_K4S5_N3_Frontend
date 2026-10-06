@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowUpDown,
   Eye,
+  FileSpreadsheet,
+  Filter,
   LayoutGrid,
   List,
   Plus,
   RotateCcw,
   SlidersHorizontal,
+  X,
 } from 'lucide-react';
 import {
   CustomerCard,
@@ -25,10 +28,13 @@ import {
   EmptyState,
   SearchBar,
 } from '../components/common';
+import { CustomSelect } from '../components/common/CustomSelect';
 import { useCRMData } from '../context/CRMDataContext';
 import { useCustomerFilter } from '../hooks/useCustomerFilter';
-import { CustomerSortFieldType, CustomerStatusType, ICustomer } from '../interfaces';
+import { CustomerSortFieldType, CustomerStatusType, ICustomer, ICustomField } from '../interfaces';
+import { sprint2Service } from '../services/sprint2Service';
 import { formatCurrency } from '../utils/formatters';
+import { useToast } from '../context/ToastContext';
 import styles from './CustomerListPage.module.css';
 
 const STATUS_FILTER_CHIPS: ReadonlyArray<{
@@ -52,6 +58,7 @@ const SORT_OPTIONS: ReadonlyArray<{ label: string; value: CustomerSortFieldType 
 
 export const CustomerListPage: React.FC = () => {
   const { customers } = useCRMData();
+  const { showToast } = useToast();
   const navigate = useNavigate();
 
   const {
@@ -74,7 +81,94 @@ export const CustomerListPage: React.FC = () => {
 
   const [inspectedCustomer, setInspectedCustomer] = useState<ICustomer | null>(null);
 
-  const totalFilteredArr = filteredCustomers.reduce((sum, c) => sum + c.dealValue, 0);
+  // Custom Fields & Filter State
+  const [customFields, setCustomFields] = useState<ICustomField[]>([]);
+  const [selectedCustomFieldKey, setSelectedCustomFieldKey] = useState<string>('all');
+  const [customFieldValue, setCustomFieldValue] = useState<string>('');
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const fields = await sprint2Service.getCustomFields('customer');
+        setCustomFields(fields);
+      } catch {
+        // Fallback
+      }
+    })();
+  }, []);
+
+  const displayCustomers = useMemo(() => {
+    if (selectedCustomFieldKey === 'all' || !customFieldValue.trim()) {
+      return filteredCustomers;
+    }
+    const q = customFieldValue.trim().toLowerCase();
+    return filteredCustomers.filter((c) => {
+      const val = c.custom_fields?.[selectedCustomFieldKey];
+      if (val === undefined || val === null) return false;
+      return String(val).toLowerCase().includes(q);
+    });
+  }, [filteredCustomers, selectedCustomFieldKey, customFieldValue]);
+
+  const activeCustomField = customFields.find((f) => f.field_name === selectedCustomFieldKey);
+
+  const totalFilteredArr = displayCustomers.reduce((sum, c) => sum + c.dealValue, 0);
+
+  const handleExportExcel = () => {
+    const headers = [
+      'Mã Khách Hàng',
+      'Họ Và Tên',
+      'Chức Vụ',
+      'Doanh Nghiệp',
+      'Email',
+      'Số Điện Thoại',
+      'Lĩnh Vực',
+      'Trụ Sở Chính',
+      'Phân Khúc',
+      'Trạng Thái',
+      'Giá Trị Hợp Đồng ARR ($)',
+      'Người Phụ Trách',
+      ...customFields.map((cf) => cf.field_label),
+    ];
+
+    const rows = displayCustomers.map((c) => [
+      `"${c.id}"`,
+      `"${(c.fullName || '').replace(/"/g, '""')}"`,
+      `"${(c.role || '').replace(/"/g, '""')}"`,
+      `"${(c.company || '').replace(/"/g, '""')}"`,
+      `"${(c.email || '').replace(/"/g, '""')}"`,
+      `"${(c.phone || '').replace(/"/g, '""')}"`,
+      `"${(c.industry || '').replace(/"/g, '""')}"`,
+      `"${(c.location || '').replace(/"/g, '""')}"`,
+      `"${(c.tier || '').replace(/"/g, '""')}"`,
+      `"${(getCustomerStatusLabel(c.status) || c.status).replace(/"/g, '""')}"`,
+      `"${c.dealValue}"`,
+      `"${(c.owner?.name || '').replace(/"/g, '""')}"`,
+      ...customFields.map((cf) => {
+        const val = c.custom_fields?.[cf.field_name] ?? '';
+        return `"${String(val).replace(/"/g, '""')}"`;
+      }),
+    ]);
+
+    const csvContent =
+      '\uFEFF' +
+      [headers.map((h) => `"${h.replace(/"/g, '""')}"`).join(','), ...rows.map((r) => r.join(','))].join('\r\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `NexusCRM_KhachHang_TruongTuyChinh_${dateStr}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showToast(
+      'success',
+      `Đã xuất ${displayCustomers.length} khách hàng kèm tất cả các cột trường tùy chỉnh ra file Excel thành công!`
+    );
+  };
 
   return (
     <div className={styles.customerListPage}>
@@ -83,19 +177,29 @@ export const CustomerListPage: React.FC = () => {
         <div>
           <h1 className={styles.pageHeader__title}>Danh bạ Khách hàng Doanh nghiệp</h1>
           <p className={styles.pageHeader__subtitle}>
-            Đang hiển thị <strong>{filteredCustomers.length}</strong> trên tổng số{' '}
+            Đang hiển thị <strong>{displayCustomers.length}</strong> trên tổng số{' '}
             {customers.length} khách hàng · Tổng giá trị danh mục:{' '}
             <strong className="tabular-nums">{formatCurrency(totalFilteredArr)}</strong>
           </p>
         </div>
 
-        <Button
-          variant="primary"
-          leftIcon={<Plus size={16} />}
-          onClick={() => navigate('/customers/new')}
-        >
-          Thêm khách hàng
-        </Button>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <Button
+            variant="secondary"
+            leftIcon={<FileSpreadsheet size={16} />}
+            onClick={handleExportExcel}
+            title="Xuất bảng dữ liệu khách hàng kèm các cột trường tùy chỉnh ra file Excel"
+          >
+            Xuất Excel
+          </Button>
+          <Button
+            variant="primary"
+            leftIcon={<Plus size={16} />}
+            onClick={() => navigate('/customers/new')}
+          >
+            Thêm khách hàng
+          </Button>
+        </div>
       </header>
 
       {/* Thanh công cụ kết hợp: Tìm kiếm + Sắp xếp + Chuyển đổi Bảng/Lưới */}
@@ -194,10 +298,107 @@ export const CustomerListPage: React.FC = () => {
             ))}
           </div>
         </div>
+
+        {/* Hàng Bộ lọc theo Trường tùy chỉnh (Custom Fields Filter) */}
+        {customFields.length > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '10px',
+              paddingTop: '10px',
+              marginTop: '10px',
+              borderTop: '1px solid #e2e8f0',
+              fontSize: '0.82rem',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#475569', fontWeight: 600 }}>
+              <Filter size={14} color="#2563eb" />
+              <span>Lọc theo trường tùy chỉnh:</span>
+            </div>
+
+            <div style={{ width: '240px' }}>
+              <CustomSelect
+                value={selectedCustomFieldKey}
+                onChange={(val) => {
+                  setSelectedCustomFieldKey(val);
+                  setCustomFieldValue('');
+                }}
+                options={[
+                  { value: 'all', label: '-- Tất cả trường tùy chỉnh --' },
+                  ...customFields.map((cf) => ({
+                    value: cf.field_name,
+                    label: cf.field_label,
+                  })),
+                ]}
+                height="34px"
+              />
+            </div>
+
+            {selectedCustomFieldKey !== 'all' && activeCustomField && (
+              <>
+                {activeCustomField.field_type === 'select' ? (
+                  <div style={{ width: '200px' }}>
+                    <CustomSelect
+                      value={customFieldValue}
+                      onChange={(val) => setCustomFieldValue(val)}
+                      placeholder="-- Chọn giá trị --"
+                      options={[
+                        { value: '', label: '-- Tất cả giá trị --' },
+                        ...(activeCustomField.options || '')
+                          .split(',')
+                          .map((opt) => opt.trim())
+                          .filter(Boolean)
+                          .map((opt) => ({ value: opt, label: opt })),
+                      ]}
+                      height="34px"
+                    />
+                  </div>
+                ) : (
+                  <input
+                    type={activeCustomField.field_type === 'number' ? 'number' : activeCustomField.field_type === 'date' ? 'date' : 'text'}
+                    placeholder={`Tìm theo ${activeCustomField.field_label.toLowerCase()}...`}
+                    value={customFieldValue}
+                    onChange={(e) => setCustomFieldValue(e.target.value)}
+                    style={{
+                      height: '34px',
+                      padding: '0 10px',
+                      borderRadius: '6px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '0.82rem',
+                      outline: 'none',
+                    }}
+                  />
+                )}
+
+                {customFieldValue && (
+                  <button
+                    type="button"
+                    onClick={() => setCustomFieldValue('')}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#dc2626',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '0.78rem',
+                    }}
+                    title="Xóa điều kiện lọc này"
+                  >
+                    <X size={14} /> Xóa lọc
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </Card>
 
       {/* Danh sách hiển thị */}
-      {filteredCustomers.length === 0 ? (
+      {displayCustomers.length === 0 ? (
         <EmptyState
           title="Không tìm thấy khách hàng phù hợp"
           description="Hãy thử xóa từ khóa tìm kiếm hoặc đặt lại bộ lọc trạng thái để xem đầy đủ 50 khách hàng doanh nghiệp."
@@ -205,7 +406,11 @@ export const CustomerListPage: React.FC = () => {
             <Button
               variant="secondary"
               leftIcon={<RotateCcw size={15} />}
-              onClick={resetFilters}
+              onClick={() => {
+                resetFilters();
+                setSelectedCustomFieldKey('all');
+                setCustomFieldValue('');
+              }}
             >
               Đặt lại Bộ lọc
             </Button>
@@ -213,7 +418,7 @@ export const CustomerListPage: React.FC = () => {
         />
       ) : viewMode === 'grid' ? (
         <div className={styles.customerGrid}>
-          {filteredCustomers.map((customer, index) => (
+          {displayCustomers.map((customer, index) => (
             <CustomerCard
               key={customer.id}
               customer={customer}
@@ -240,7 +445,7 @@ export const CustomerListPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredCustomers.map((customer) => (
+                {displayCustomers.map((customer) => (
                   <tr
                     key={customer.id}
                     className={styles.customerTable__row}

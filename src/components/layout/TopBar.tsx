@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowUpRight,
   Bell,
-  Building2,
   CheckCheck,
   LogOut,
   Menu,
@@ -16,9 +15,7 @@ import {
 } from 'lucide-react';
 import { useCRMData } from '../../context/CRMDataContext';
 import { useAuth } from '../../hooks/useAuth';
-import { formatCurrency } from '../../utils/formatters';
-import { Avatar, Badge, SearchBar } from '../common';
-import { getCustomerStatusTone } from '../customer/CustomerCard';
+import { Avatar, SearchBar } from '../common';
 import styles from './TopBar.module.css';
 
 export interface ITopBarProps {
@@ -34,7 +31,6 @@ export const TopBar: React.FC<ITopBarProps> = ({
 }) => {
   const { user, logout, triggerMockTokenRefresh, lastTokenRefresh } = useAuth();
   const {
-    customers,
     notifications,
     markAllNotificationsRead,
     appearance,
@@ -49,19 +45,6 @@ export const TopBar: React.FC<ITopBarProps> = ({
   const searchWrapRef = useRef<HTMLDivElement | null>(null);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
-
-  const quickResults =
-    globalQuery.trim().length >= 1
-      ? customers
-          .filter(
-            (c) =>
-              c.fullName.toLowerCase().includes(globalQuery.toLowerCase()) ||
-              c.company.toLowerCase().includes(globalQuery.toLowerCase()) ||
-              c.email.toLowerCase().includes(globalQuery.toLowerCase()) ||
-              c.industry.toLowerCase().includes(globalQuery.toLowerCase())
-          )
-          .slice(0, 6)
-      : [];
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent): void => {
@@ -91,10 +74,17 @@ export const TopBar: React.FC<ITopBarProps> = ({
     });
   };
 
+  const handleSearchSubmit = (): void => {
+    if (!globalQuery.trim()) return;
+    const q = globalQuery.trim();
+    setGlobalQuery('');
+    navigate(`/users?search=${encodeURIComponent(q)}`);
+  };
+
   return (
     <header className={styles.topbar}>
       <div className={styles.topbar__left}>
-        {/* Nút đóng/mở hẳn thanh Sidebar trên Desktop */}
+        {/* Nút đóng/mở thanh Sidebar trên Desktop */}
         <button
           type="button"
           className={styles.topbar__sidebarToggleBtn}
@@ -104,8 +94,8 @@ export const TopBar: React.FC<ITopBarProps> = ({
           }
           title={
             isSidebarCollapsed
-              ? 'Mở thanh điều hướng (Thụt ra)'
-              : 'Ẩn thanh điều hướng (Thụt hẳn vào)'
+              ? 'Mở thanh điều hướng'
+              : 'Thu gọn thanh điều hướng'
           }
         >
           {isSidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
@@ -124,73 +114,38 @@ export const TopBar: React.FC<ITopBarProps> = ({
           <Menu size={20} />
         </button>
 
+        {/* Thanh tìm kiếm toàn hệ thống */}
         <div className={styles.topbar__searchContainer} ref={searchWrapRef}>
-          <SearchBar
-            value={globalQuery}
-            onChange={setGlobalQuery}
-            placeholder="Tìm nhanh khách hàng, công ty, ngành nghề..."
-            ariaLabel="Tìm kiếm toàn hệ thống CRM"
-            enableGlobalShortcut
-          />
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSearchSubmit();
+            }}
+            style={{ width: '100%' }}
+          >
+            <SearchBar
+              value={globalQuery}
+              onChange={setGlobalQuery}
+              placeholder="Tìm nhanh người dùng theo họ tên, email..."
+              ariaLabel="Tìm kiếm người dùng hệ thống"
+              enableGlobalShortcut
+            />
+          </form>
 
           {globalQuery.trim().length >= 1 && (
             <div className={styles.topbar__searchDropdown} role="listbox">
               <div className={styles.topbar__dropdownHeaderRow}>
                 <span className={styles.topbar__dropdownHeader}>
-                  KẾT QUẢ TÌM KIẾM NHANH ({quickResults.length})
+                  TÌM KIẾM NGƯỜI DÙNG: "{globalQuery}"
                 </span>
                 <button
                   type="button"
                   className={styles.topbar__viewAllSearchBtn}
-                  onClick={() => {
-                    setGlobalQuery('');
-                    navigate('/customers');
-                  }}
+                  onClick={handleSearchSubmit}
                 >
-                  Xem tất cả danh bạ <ArrowUpRight size={12} />
+                  Tìm trong Quản lý Người dùng <ArrowUpRight size={12} />
                 </button>
               </div>
-
-              {quickResults.length === 0 ? (
-                <div className={styles.topbar__emptySearch}>
-                  Không tìm thấy khách hàng nào khớp với <strong>"{globalQuery}"</strong>
-                </div>
-              ) : (
-                <div className={styles.topbar__resultsList}>
-                  {quickResults.map((customer) => (
-                    <button
-                      key={customer.id}
-                      type="button"
-                      className={styles.topbar__searchResultItem}
-                      onClick={() => {
-                        setGlobalQuery('');
-                        navigate(`/customers/${customer.id}`);
-                      }}
-                    >
-                      <Avatar src={customer.avatarUrl} name={customer.fullName} size="sm" />
-                      <div className={styles.topbar__resultMeta}>
-                        <span className={styles.topbar__resultName}>
-                          {customer.fullName}
-                        </span>
-                        <span className={styles.topbar__resultCompany}>
-                          <Building2 size={11} /> {customer.company} · {customer.role}
-                        </span>
-                      </div>
-                      <div className={styles.topbar__resultRight}>
-                        <strong className={`${styles.topbar__resultArr} tabular-nums`}>
-                          {formatCurrency(customer.dealValue)}
-                        </strong>
-                        <Badge
-                          tone={getCustomerStatusTone(customer.status)}
-                          size="sm"
-                        >
-                          {customer.status}
-                        </Badge>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           )}
         </div>
@@ -201,7 +156,7 @@ export const TopBar: React.FC<ITopBarProps> = ({
           type="button"
           onClick={() => void handleTestRefreshToken()}
           className={styles.topbar__tokenBtn}
-          title="S1-02: Giả lập lỗi 401 & tự động làm mới Token qua Axios Interceptor"
+          title="Làm mới JWT Token"
           aria-label="Làm mới JWT Token"
         >
           <RefreshCw
@@ -282,26 +237,28 @@ export const TopBar: React.FC<ITopBarProps> = ({
         <div className={styles.topbar__profileGroup}>
           <button
             type="button"
-            onClick={() => navigate('/settings')}
+            onClick={() => navigate('/profile')}
             className={styles.topbar__avatarBtn}
-            aria-label="Mở cài đặt tài khoản"
+            aria-label="Mở hồ sơ cá nhân"
+            title="Hồ sơ cá nhân"
           >
             <Avatar
               src={user?.avatarUrl}
-              name={user?.fullName ?? 'Quản Trị Viên Hệ Thống'}
+              name={user?.fullName ?? 'Người dùng'}
               size="sm"
               status="online"
             />
             <div className={styles.topbar__profileMeta}>
               <span className={styles.topbar__profileName}>
-                {user?.fullName ?? 'Quản Trị Viên Hệ Thống'}
+                {user?.fullName ?? 'Người dùng'}
               </span>
               <span className={styles.topbar__profileRole}>
-                {user?.workspaceName ?? 'Enterprise VN'}
+                {user?.workspaceName ?? 'NexusCRM'}
               </span>
             </div>
           </button>
 
+          {/* S1-02: Nút Đăng xuất DUY NHẤT trong toàn bộ ứng dụng */}
           <button
             type="button"
             onClick={() => {
@@ -310,7 +267,7 @@ export const TopBar: React.FC<ITopBarProps> = ({
             }}
             className={styles.topbar__logoutBtn}
             aria-label="Đăng xuất và xóa bộ nhớ phiên"
-            title="S1-02: Đăng xuất & Xóa Token Storage"
+            title="Đăng xuất khỏi hệ thống"
           >
             <LogOut size={15} />
             <span className={styles.topbar__logoutLabel}>Đăng xuất</span>
@@ -318,9 +275,9 @@ export const TopBar: React.FC<ITopBarProps> = ({
 
           <button
             type="button"
-            onClick={() => navigate('/settings')}
+            onClick={() => navigate('/profile')}
             className={styles.topbar__mobileProfileBtn}
-            aria-label="Cài đặt"
+            aria-label="Hồ sơ cá nhân"
           >
             <UserIcon size={17} />
           </button>

@@ -895,5 +895,11 @@ export const MOCK_CUSTOMERS: ICustomer[] = CUSTOMER_SEEDS.map((seed, index) => {
     activities: buildCustomerActivities(id, seed, owner.name, owner.avatarUrl),
     notes: buildCustomerNotes(id, seed, owner.name, owner.avatarUrl),
     files: buildCustomerFiles(id, seed, owner.name),
+    custom_fields: {
+      tax_code: `010${String(1234567 + index * 111).slice(0, 7)}`,
+      employee_count: 25 + ((index * 45) % 750),
+      deployment_type: index % 3 === 0 ? 'Cloud SaaS' : index % 3 === 1 ? 'On-Premises' : 'Hybrid Cloud',
+      target_launch_date: `2026-${String((index % 5) + 8).padStart(2, '0')}-15`,
+    },
   };
 });

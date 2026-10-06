@@ -22,17 +22,13 @@
 }
 
 .field--focused .field__control {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px var(--color-focus-ring);
+  border-color: var(--color-border-strong, #94a3b8);
+  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.2);
 }
 
 .field--error .field__control {
   border-color: var(--color-danger);
   box-shadow: 0 0 0 3px var(--color-danger-soft);
-}
-
-.field--valid .field__control {
-  border-color: var(--color-success);
 }
 
 .field--disabled .field__control {
@@ -51,7 +47,7 @@
 }
 
 .field--focused .field__iconLeft {
-  color: var(--color-primary);
+  color: var(--color-text-secondary);
 }
 
 .field__input {
@@ -63,6 +59,29 @@
   font-size: 0.9rem;
   color: var(--color-text-primary);
   outline: none;
+}
+
+.field__input:focus,
+.field__input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.field__input::-ms-reveal,
+.field__input::-ms-clear {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.field__input:-webkit-autofill,
+.field__input:-webkit-autofill:hover, 
+.field__input:-webkit-autofill:focus, 
+.field__input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: var(--color-text-primary, #0f172a) !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 .field__input--withLeft {
@@ -113,10 +132,6 @@
 
 .field__statusError {
   color: var(--color-danger);
-}
-
-.field__statusValid {
-  color: var(--color-success);
 }
 
 .field__errorText {

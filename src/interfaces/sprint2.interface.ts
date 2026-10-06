@@ -8,7 +8,7 @@ export interface IExcelImportUserRow {
 
 export interface IInvalidRowDetail {
   row_index: number;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
   error: string;
 }
 
@@ -51,19 +51,38 @@ export interface IAuditLogResponse {
   pages: number;
 }
 
+// S2-05: Product & Price List Interfaces (SCRUM-84)
+export type ProductType = 'one_off' | 'subscription';
+
 export interface IProduct {
   id: string;
   sku: string;
   name: string;
   category: string;
+  product_type: ProductType; // 'one_off' (sản phẩm một lần) | 'subscription' (dịch vụ thuê bao)
   description?: string;
-  cost_price?: number | null; // Chỉ hiển thị cho Director
-  selling_price: number;
+  cost_price?: number | null; // Giá vốn: Chỉ Giám đốc kinh doanh có quyền xem và sửa
+  selling_price: number; // Giá bán niêm yết
+  floor_price: number; // Giá sàn: Ngưỡng xác định duyệt chiết khấu
   currency: string;
-  unit: string;
-  quote_count: number;
-  is_active: boolean;
+  unit: string; // Đơn vị tính (Gói/Năm, Buổi, License, ...)
+  quote_count: number; // Số báo giá liên kết (nếu > 0 thì không được xóa)
+  is_active: boolean; // Trạng thái: Đang kinh doanh / Ngừng kinh doanh
   created_at?: string;
+}
+
+export interface IProductFormData {
+  sku: string;
+  name: string;
+  category: string;
+  product_type: ProductType;
+  description?: string;
+  cost_price?: number;
+  selling_price: number;
+  floor_price: number;
+  currency?: string;
+  unit: string;
+  is_active?: boolean;
 }
 
 export interface IPriceList {

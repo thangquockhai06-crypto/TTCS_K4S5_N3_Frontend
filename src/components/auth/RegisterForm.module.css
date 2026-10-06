@@ -1,45 +1,36 @@
 .registerCard {
   width: 100%;
   max-width: 520px;
-  background-color: var(--color-bg-surface);
+  background-color: #ffffff;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-md);
   padding: 32px 30px;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   gap: 20px;
+  box-sizing: border-box;
 }
 
 .registerCard__header {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
-
-.registerCard__badge {
-  display: inline-flex;
   align-items: center;
+  text-align: center;
   gap: 6px;
-  align-self: flex-start;
-  padding: 4px 10px;
-  border-radius: var(--radius-full);
-  background-color: var(--color-accent-soft);
-  color: var(--color-accent);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
 }
 
 .registerCard__title {
-  font-size: 1.6rem;
-  font-weight: 800;
+  font-size: 1.45rem;
+  font-weight: 700;
   color: var(--color-text-primary);
+  margin: 0;
 }
 
 .registerCard__subtitle {
-  font-size: 0.86rem;
+  font-size: 0.85rem;
   color: var(--color-text-secondary);
+  margin: 0;
 }
 
 .errorAlert {
@@ -50,7 +41,7 @@
   border-radius: var(--radius-sm);
   background-color: var(--color-danger-soft);
   border: 1px solid rgba(239, 68, 68, 0.28);
-  color: #B91C1C;
+  color: #b91c1c;
   font-size: 0.82rem;
   font-weight: 500;
 }
@@ -58,7 +49,7 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 16px;
 }
 
 .grid2 {
@@ -72,31 +63,38 @@
   align-items: center;
   justify-content: center;
   color: var(--color-text-muted);
+  background: none;
+  border: none;
   padding: 4px;
+  cursor: pointer;
+}
+
+.eyeBtn:hover {
+  color: var(--color-text-primary);
 }
 
 .strengthBox {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 10px 12px;
+  padding: 10px 14px;
   border-radius: var(--radius-sm);
-  background-color: var(--color-bg-subtle);
+  background-color: #f1f5f9;
 }
 
 .strengthBox__row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.76rem;
+  font-size: 0.8rem;
   color: var(--color-text-secondary);
 }
 
 .strengthBox__track {
   width: 100%;
-  height: 5px;
+  height: 4px;
   border-radius: var(--radius-full);
-  background-color: var(--color-border);
+  background-color: #e2e8f0;
   overflow: hidden;
 }
 
@@ -109,9 +107,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding-top: 14px;
-  border-top: 1px solid var(--color-border-subtle);
+  gap: 6px;
+  margin-top: 4px;
   font-size: 0.84rem;
   color: var(--color-text-secondary);
 }
@@ -119,9 +116,10 @@
 .switchLink {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-weight: 700;
-  color: var(--color-primary);
+  gap: 4px;
+  font-weight: 600;
+  color: var(--color-primary, #2563eb);
+  text-decoration: none;
 }
 
 .switchLink:hover {
@@ -130,15 +128,10 @@
 
 @media (max-width: 600px) {
   .registerCard {
-    padding: 22px 16px;
+    padding: 24px 18px;
   }
 
   .grid2 {
     grid-template-columns: 1fr;
-  }
-
-  .switchRow {
-    flex-direction: column;
-    gap: 4px;
   }
 }
