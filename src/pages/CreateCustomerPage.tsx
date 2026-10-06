@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -19,12 +19,8 @@ import {
   CreateCustomerDTO,
   CustomerStatusType,
   CustomerTierType,
-  ICustomField,
 } from '../interfaces';
 import { createAvatarSvgDataUri, formatCurrency } from '../utils/formatters';
-import { sprint2Service } from '../services/sprint2Service';
-import { CustomFieldRenderer } from '../components/custom-fields/CustomFieldRenderer';
-import { useToast } from '../context/ToastContext';
 import styles from './CreateCustomerPage.module.css';
 
 interface IFormErrors {
@@ -39,7 +35,6 @@ interface IFormErrors {
 
 export const CreateCustomerPage: React.FC = () => {
   const { addCustomer } = useCRMData();
-  const { showToast } = useToast();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState<CreateCustomerDTO>({
@@ -61,29 +56,6 @@ export const CreateCustomerPage: React.FC = () => {
 
   const [tagInput, setTagInput] = useState<string>('');
   const [errors, setErrors] = useState<IFormErrors>({});
-
-  // Custom Fields State
-  const [customFields, setCustomFields] = useState<ICustomField[]>([]);
-  const [customFieldValues, setCustomFieldValues] = useState<Record<string, string | number>>({});
-  const [customFieldErrors, setCustomFieldErrors] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    void (async () => {
-      try {
-        const fields = await sprint2Service.getCustomFields('customer');
-        setCustomFields(fields);
-        const initialValues: Record<string, string | number> = {};
-        fields.forEach((f) => {
-          if (f.default_value) {
-            initialValues[f.field_name] = f.default_value;
-          }
-        });
-        setCustomFieldValues(initialValues);
-      } catch {
-        // Fallback
-      }
-    })();
-  }, []);
 
   const validateSingleField = (
     field: keyof CreateCustomerDTO,
@@ -172,14 +144,7 @@ export const CreateCustomerPage: React.FC = () => {
       summary:
         'Triển khai hệ thống quản trị doanh thu cho 450 tài khoản khối khách hàng doanh nghiệp với tiêu chuẩn bảo mật SOC2.',
     });
-    setCustomFieldValues({
-      tax_code: '0108923456',
-      employee_count: 450,
-      deployment_type: 'Cloud SaaS',
-      target_launch_date: '2026-11-20',
-    });
     setErrors({});
-    setCustomFieldErrors({});
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
@@ -195,27 +160,10 @@ export const CreateCustomerPage: React.FC = () => {
     };
     setErrors(nextErrors);
 
-    // Validate required custom fields
-    const nextCustomErrors: Record<string, string> = {};
-    customFields.forEach((cf) => {
-      if (cf.is_required) {
-        const val = customFieldValues[cf.field_name];
-        if (val === undefined || val === null || String(val).trim() === '') {
-          nextCustomErrors[cf.field_name] = `Vui lòng nhập ${cf.field_label.toLowerCase()}.`;
-        }
-      }
-    });
-    setCustomFieldErrors(nextCustomErrors);
-
     const hasError = Object.values(nextErrors).some((msg) => Boolean(msg));
-    const hasCustomError = Object.keys(nextCustomErrors).length > 0;
-    if (hasError || hasCustomError) return;
+    if (hasError) return;
 
-    const created = addCustomer({
-      ...formData,
-      custom_fields: customFieldValues,
-    });
-    showToast('success', `Tạo hồ sơ khách hàng "${formData.fullName}" thành công!`);
+    const created = addCustomer(formData);
     navigate(`/customers/${created.id}`);
   };
 
@@ -443,16 +391,16 @@ export const CreateCustomerPage: React.FC = () => {
                     handleFieldChange('status', e.target.value as CustomerStatusType)
                   }
                 >
-                  <option value="New Lead">Tiềm năng mới</option>
-                  <option value="Negotiation">Đang đàm phán</option>
-                  <option value="Active">Đang hợp tác</option>
-                  <option value="At Risk">Cần chú ý</option>
+                  <option value="New Lead">Tiềm năng mới (New Lead)</option>
+                  <option value="Negotiation">Đang đàm phán (Negotiation)</option>
+                  <option value="Active">Đang hợp tác (Active)</option>
+                  <option value="At Risk">Cần chú ý (At Risk)</option>
                 </select>
               </div>
             </div>
 
             <div className={styles.tagsEditor}>
-              <label htmlFor="tag-adder">Nhãn phân loại</label>
+              <label htmlFor="tag-adder">Nhãn phân loại (Tags)</label>
               <div className={styles.tagsEditor__row}>
                 <input
                   id="tag-adder"
@@ -498,43 +446,6 @@ export const CreateCustomerPage: React.FC = () => {
             </div>
           </Card>
         </motion.section>
-
-        {/* PHẦN 4: Trường Thông tin Tùy chỉnh (Custom Fields) */}
-        {customFields.length > 0 && (
-          <motion.section
-            className={styles.formSection}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, delay: 0.18 }}
-          >
-            <div className={styles.formSection__meta}>
-              <span className={styles.formSection__step}>PHẦN 04</span>
-              <h2 className={styles.formSection__title}>Trường Thông tin Tùy chỉnh</h2>
-              <p className={styles.formSection__desc}>
-                Các trường dữ liệu tùy biến được cấu hình bởi Quản trị hệ thống, tự động đồng bộ trên Biểu mẫu, Bộ lọc và Xuất Excel.
-              </p>
-            </div>
-
-            <Card padding="lg" className={styles.formSection__fieldsCard}>
-              <CustomFieldRenderer
-                fields={customFields}
-                values={customFieldValues}
-                onChange={(fieldNameKey, val) => {
-                  setCustomFieldValues((prev) => ({ ...prev, [fieldNameKey]: val }));
-                  if (customFieldErrors[fieldNameKey]) {
-                    setCustomFieldErrors((prev) => {
-                      const updated = { ...prev };
-                      delete updated[fieldNameKey];
-                      return updated;
-                    });
-                  }
-                }}
-                errors={customFieldErrors}
-                layout="grid"
-              />
-            </Card>
-          </motion.section>
-        )}
 
         <footer className={styles.stickyFooter}>
           <Button variant="secondary" onClick={() => navigate('/customers')}>

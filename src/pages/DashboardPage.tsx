@@ -1,143 +1,38 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { ArrowRight, CalendarCheck2, Kanban, Plus, Sparkles } from 'lucide-react';
 import {
-  ArrowRight,
-  Building2,
-  FileText,
-  FolderTree,
-  GitCommit,
-  Package,
-  RefreshCw,
-  ShieldCheck,
-  Sliders,
-  Target,
-  UserCheck,
-  Users,
-} from 'lucide-react';
-import { Card } from '../components/common';
+  getCustomerStatusLabel,
+  getCustomerStatusTone,
+} from '../components/customer/CustomerCard';
+import { ActivityFeed } from '../components/dashboard/ActivityFeed';
+import { MiniCharts } from '../components/dashboard/MiniCharts';
+import { Avatar, Badge, Button, Card, StatCard } from '../components/common';
+import { useCRMData } from '../context/CRMDataContext';
 import { useAuth } from '../hooks/useAuth';
-import { userService } from '../services/userService';
-import { sprint2Service } from '../services/sprint2Service';
-import { IAuditLogItem } from '../interfaces/sprint2.interface';
+import { DASHBOARD_KPI_CARDS } from '../mock/dashboard.mock';
+import { formatCurrency } from '../utils/formatters';
 import styles from './DashboardPage.module.css';
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
+  const { customers } = useCRMData();
   const navigate = useNavigate();
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalProducts: 0,
-    totalCategories: 0,
-    totalAuditLogs: 0,
-  });
-  const [recentLogs, setRecentLogs] = useState<IAuditLogItem[]>([]);
+  const recentActivities = useMemo(() => {
+    return customers.flatMap((c) => c.activities).slice(0, 6);
+  }, [customers]);
 
-  useEffect(() => {
-    let isMounted = true;
-    const loadRealData = async () => {
-      setIsLoading(true);
-      try {
-        const [usersRes, productsRes, categoriesRes, auditRes] = await Promise.allSettled([
-          userService.getUsers({
-            search: '',
-            role: 'all',
-            status: 'all',
-            group: 'all',
-            page: 1,
-            limit: 1,
-          }),
-          sprint2Service.getProducts(),
-          sprint2Service.getCategories(),
-          sprint2Service.getAuditLogs({ limit: 5 }),
-        ]);
+  const topAccounts = useMemo(() => {
+    return [...customers].sort((a, b) => b.dealValue - a.dealValue).slice(0, 5);
+  }, [customers]);
 
-        if (!isMounted) return;
-
-        const totalUsers = usersRes.status === 'fulfilled' ? usersRes.value.total : 0;
-        const totalProducts = productsRes.status === 'fulfilled' ? productsRes.value.length : 0;
-        const totalCategories = categoriesRes.status === 'fulfilled' ? categoriesRes.value.length : 0;
-        const totalAuditLogs = auditRes.status === 'fulfilled' ? auditRes.value.total : 0;
-        const logs = auditRes.status === 'fulfilled' ? auditRes.value.items : [];
-
-        setStats({
-          totalUsers,
-          totalProducts,
-          totalCategories,
-          totalAuditLogs,
-        });
-        setRecentLogs(logs);
-      } catch (err) {
-        console.error('Lỗi tải dữ liệu tổng quan:', err);
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-
-    loadRealData();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const displayName = user?.fullName ?? 'Quản Trị Viên';
-
-  const quickNavModules = [
-    {
-      title: 'Quản lý Người dùng & Phân quyền',
-      desc: 'Quản trị tài khoản, phân vai trò, nhóm làm việc và kiểm soát đăng nhập',
-      icon: <UserCheck size={22} style={{ color: '#2563eb' }} />,
-      path: '/users',
-    },
-    {
-      title: 'Cơ cấu Tổ chức',
-      desc: 'Sơ đồ cây phòng ban, phân cấp nhân sự và quản lý đơn vị tổ chức',
-      icon: <Building2 size={22} style={{ color: '#0891b2' }} />,
-      path: '/organization',
-    },
-    {
-      title: 'Danh mục Dùng chung',
-      desc: 'Quản lý các danh mục tra cứu chuẩn hóa dùng chung toàn hệ thống CRM',
-      icon: <FolderTree size={22} style={{ color: '#7c3aed' }} />,
-      path: '/categories',
-    },
-    {
-      title: 'Sản phẩm & Bảng giá',
-      desc: 'Danh mục sản phẩm, dịch vụ và chính sách giá niêm yết bảo mật',
-      icon: <Package size={22} style={{ color: '#059669' }} />,
-      path: '/products',
-    },
-    {
-      title: 'Cấu hình Pipeline & Xác suất',
-      desc: 'Thiết lập các giai đoạn phễu bán hàng và tỷ lệ xác suất thành công',
-      icon: <GitCommit size={22} style={{ color: '#ea580c' }} />,
-      path: '/pipeline',
-    },
-    {
-      title: 'Lý do Thắng/Thua & Đối thủ',
-      desc: 'Chuẩn hóa lý do chốt thành công, thất bại và theo dõi đối thủ cạnh tranh',
-      icon: <Target size={22} style={{ color: '#d97706' }} />,
-      path: '/win-loss',
-    },
-    {
-      title: 'Trường Tùy chỉnh (Custom Fields)',
-      desc: 'Định nghĩa các thuộc tính mở rộng cho đối tượng dữ liệu hệ thống',
-      icon: <Sliders size={22} style={{ color: '#4f46e5' }} />,
-      path: '/custom-fields',
-    },
-    {
-      title: 'Nhật ký Kiểm toán Hệ thống',
-      desc: 'Theo dõi chi tiết các biến động dữ liệu và so sánh thay đổi Diff Viewer',
-      icon: <FileText size={22} style={{ color: '#dc2626' }} />,
-      path: '/audit-logs',
-    },
-  ];
+  const displayName = user?.fullName ?? 'Quản Trị Viên Hệ Thống';
 
   return (
     <div className={styles.dashboard}>
-      {/* Hero Banner */}
+      {/* Hero Section */}
       <motion.section
         className={styles.heroBanner}
         initial={{ opacity: 0, y: 12 }}
@@ -146,178 +41,131 @@ export const DashboardPage: React.FC = () => {
       >
         <div className={styles.heroBanner__left}>
           <div className={styles.heroBanner__pill}>
-            <ShieldCheck size={14} />
-            <span>HỆ THỐNG QUẢN TRỊ DOANH NGHIỆP NEXUSCRM</span>
+            <Sparkles size={13} />
+            <span>BÁO CÁO TỔNG QUAN DOANH THU QUÝ 3</span>
           </div>
           <h1 className={styles.heroBanner__greeting}>Xin chào, {displayName}.</h1>
           <p className={styles.heroBanner__summary}>
-            Hệ thống CRM sẵn sàng hoạt động với đầy đủ tính năng Quản lý người dùng, phân quyền bảo mật,
-            sản phẩm, cơ cấu tổ chức và cấu hình quy trình.
+            Hệ thống đang theo dõi tổng giá trị cơ hội <strong>$4.86M</strong> trên{' '}
+            <strong>42 hợp đồng đang triển khai</strong>. Hôm nay bạn có{' '}
+            <strong>4 cuộc họp gia hạn cấp cao</strong> cần phê duyệt.
           </p>
         </div>
 
         <div className={styles.heroBanner__actions}>
-          <button
-            type="button"
-            className={styles.heroActionBtn}
-            onClick={() => navigate('/users')}
+          <Button
+            variant="secondary"
+            leftIcon={<Kanban size={16} />}
+            onClick={() => navigate('/deals')}
           >
-            <Users size={16} />
-            <span>Quản lý Người dùng</span>
-          </button>
+            Mở Phễu Cơ hội
+          </Button>
+          <Button
+            variant="primary"
+            leftIcon={<Plus size={16} />}
+            onClick={() => navigate('/customers/new')}
+          >
+            Thêm khách hàng
+          </Button>
         </div>
       </motion.section>
 
-      {/* KPI System Cards from Real Backend */}
-      <section className={styles.kpiGrid} aria-label="Chỉ số hệ thống thực tế">
-        <div className={styles.realStatCard}>
-          <div className={styles.realStatHeader}>
-            <span className={styles.realStatLabel}>Người dùng hệ thống</span>
-            <div className={`${styles.realStatIcon} ${styles.statIconBlue}`}>
-              <Users size={18} />
-            </div>
-          </div>
-          <strong className={styles.realStatValue}>
-            {isLoading ? <RefreshCw size={20} className="spin" /> : stats.totalUsers}
-          </strong>
-          <span className={styles.realStatDesc}>Tài khoản đã đăng ký trong CSDL</span>
-        </div>
-
-        <div className={styles.realStatCard}>
-          <div className={styles.realStatHeader}>
-            <span className={styles.realStatLabel}>Sản phẩm & Dịch vụ</span>
-            <div className={`${styles.realStatIcon} ${styles.statIconGreen}`}>
-              <Package size={18} />
-            </div>
-          </div>
-          <strong className={styles.realStatValue}>
-            {isLoading ? <RefreshCw size={20} className="spin" /> : stats.totalProducts}
-          </strong>
-          <span className={styles.realStatDesc}>Mặt hàng trong bảng giá</span>
-        </div>
-
-        <div className={styles.realStatCard}>
-          <div className={styles.realStatHeader}>
-            <span className={styles.realStatLabel}>Danh mục Dùng chung</span>
-            <div className={`${styles.realStatIcon} ${styles.statIconPurple}`}>
-              <FolderTree size={18} />
-            </div>
-          </div>
-          <strong className={styles.realStatValue}>
-            {isLoading ? <RefreshCw size={20} className="spin" /> : stats.totalCategories}
-          </strong>
-          <span className={styles.realStatDesc}>Danh mục tra cứu chuẩn hóa</span>
-        </div>
-
-        <div className={styles.realStatCard}>
-          <div className={styles.realStatHeader}>
-            <span className={styles.realStatLabel}>Nhật ký Kiểm toán</span>
-            <div className={`${styles.realStatIcon} ${styles.statIconRed}`}>
-              <FileText size={18} />
-            </div>
-          </div>
-          <strong className={styles.realStatValue}>
-            {isLoading ? <RefreshCw size={20} className="spin" /> : stats.totalAuditLogs}
-          </strong>
-          <span className={styles.realStatDesc}>Lịch sử thao tác được ghi vết</span>
-        </div>
+      {/* 4 KPI Cards */}
+      <section className={styles.kpiGrid} aria-label="Chỉ số hiệu suất chính (KPI)">
+        {DASHBOARD_KPI_CARDS.map((stat, idx) => (
+          <StatCard key={stat.id} stat={stat} index={idx} />
+        ))}
       </section>
 
-      {/* Grid: Phân hệ chức năng & Nhật ký kiểm toán gần đây */}
+      {/* Mini Charts Section */}
+      <section aria-label="Phân tích doanh thu và phễu bán hàng">
+        <MiniCharts />
+      </section>
+
+      {/* Bottom Split: Activity Feed + Priority Enterprise Accounts */}
       <section className={styles.bottomGrid}>
-        {/* Phân hệ Sprint 1 & 2 */}
-        <Card padding="md">
+        <Card padding="md" className={styles.feedCard}>
           <div className={styles.sectionHeader}>
             <div>
-              <h2 className={styles.sectionTitle}>Phân hệ Quản trị & Cấu hình</h2>
+              <h2 className={styles.sectionTitle}>Nhật ký Hoạt động Mới nhất</h2>
               <p className={styles.sectionSubtitle}>
-                Truy cập nhanh các phân hệ chức năng trong hệ thống
+                Cập nhật tương tác thời gian thực với các doanh nghiệp lớn
               </p>
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              rightIcon={<ArrowRight size={14} />}
+              onClick={() => navigate('/activities')}
+            >
+              Xem tất cả
+            </Button>
+          </div>
+          <ActivityFeed activities={recentActivities} />
+        </Card>
+
+        <Card padding="md" className={styles.accountsCard}>
+          <div className={styles.sectionHeader}>
+            <div>
+              <h2 className={styles.sectionTitle}>Khách hàng Doanh nghiệp Trọng điểm</h2>
+              <p className={styles.sectionSubtitle}>
+                Các hợp đồng có giá trị ARR cao nhất trong danh mục
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              rightIcon={<ArrowRight size={14} />}
+              onClick={() => navigate('/customers')}
+            >
+              Tất cả ({customers.length})
+            </Button>
           </div>
 
-          <div className={styles.moduleGrid}>
-            {quickNavModules.map((m) => (
+          <div className={styles.topAccountsList}>
+            {topAccounts.map((customer) => (
               <div
-                key={m.path}
-                className={styles.moduleCard}
-                onClick={() => navigate(m.path)}
+                key={customer.id}
+                className={styles.accountRow}
+                onClick={() => navigate(`/customers/${customer.id}`)}
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    navigate(m.path);
+                    navigate(`/customers/${customer.id}`);
                   }
                 }}
               >
-                <div className={styles.moduleCardTop}>
-                  <div className={styles.moduleIconBox}>{m.icon}</div>
+                <Avatar src={customer.avatarUrl} name={customer.fullName} size="md" />
+                <div className={styles.accountRow__info}>
+                  <strong className={styles.accountRow__company}>{customer.company}</strong>
+                  <span className={styles.accountRow__contact}>
+                    {customer.fullName} · {customer.role}
+                  </span>
                 </div>
-                <h3 className={styles.moduleTitle}>{m.title}</h3>
-                <p className={styles.moduleDesc}>{m.desc}</p>
-                <div className={styles.moduleAction}>
-                  <span>Truy cập</span>
-                  <ArrowRight size={14} />
+                <div className={styles.accountRow__right}>
+                  <strong className={`${styles.accountRow__arr} tabular-nums`}>
+                    {formatCurrency(customer.dealValue)}
+                  </strong>
+                  <Badge
+                    tone={getCustomerStatusTone(customer.status)}
+                    size="sm"
+                    dot
+                  >
+                    {getCustomerStatusLabel(customer.status)}
+                  </Badge>
                 </div>
               </div>
             ))}
           </div>
-        </Card>
 
-        {/* Nhật ký kiểm toán gần đây từ Backend */}
-        <Card padding="md">
-          <div className={styles.sectionHeader}>
+          <div className={styles.upcomingCallBox}>
+            <CalendarCheck2 size={18} className={styles.upcomingCallBox__icon} />
             <div>
-              <h2 className={styles.sectionTitle}>Nhật ký Hoạt động Kiểm toán</h2>
-              <p className={styles.sectionSubtitle}>
-                Các thao tác hệ thống ghi nhận gần đây nhất
-              </p>
+              <strong>Lịch họp Cấp cao tiếp theo · 14:00 Hôm nay</strong>
+              <p>Attio Cloud ($240K ARR) — Ký duyệt Pháp lý & Kiến trúc Bảo mật SOC2</p>
             </div>
-            <button
-              type="button"
-              className={styles.viewAllBtn}
-              onClick={() => navigate('/audit-logs')}
-            >
-              Xem tất cả <ArrowRight size={13} />
-            </button>
-          </div>
-
-          <div className={styles.auditList}>
-            {isLoading ? (
-              <div className={styles.loadingBox}>
-                <RefreshCw size={20} className="spin" />
-                <span>Đang tải nhật ký...</span>
-              </div>
-            ) : recentLogs.length === 0 ? (
-              <div className={styles.emptyBox}>
-                <FileText size={32} style={{ color: '#94a3b8' }} />
-                <span>Chưa có bản ghi nhật ký mới</span>
-              </div>
-            ) : (
-              recentLogs.map((log) => (
-                <div key={log.id} className={styles.auditItem}>
-                  <div className={styles.auditDot} />
-                  <div className={styles.auditContent}>
-                    <div className={styles.auditTopRow}>
-                      <strong className={styles.auditAction}>{log.action}</strong>
-                      <span className={styles.auditTime}>
-                        {log.timestamp
-                          ? new Date(log.timestamp).toLocaleTimeString('vi-VN', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })
-                          : 'Vừa xong'}
-                      </span>
-                    </div>
-                    <p className={styles.auditTarget}>
-                      Đối tượng: <code>{log.target_type}</code> · Thực hiện bởi:{' '}
-                      <span className={styles.auditUser}>{log.user_name || log.performed_by}</span>
-                    </p>
-                  </div>
-                </div>
-              ))
-            )}
           </div>
         </Card>
       </section>

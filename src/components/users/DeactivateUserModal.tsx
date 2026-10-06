@@ -98,7 +98,7 @@ export const DeactivateUserModal: React.FC<IDeactivateUserModalProps> = ({
     if (!selectedNewOwnerId.trim()) {
       setIsPickerOpen(true);
       setValidationError(
-        'Bắt buộc chọn người tiếp nhận từ danh sách nhân sự đang hoạt động trước khi khóa tài khoản.'
+        'Bắt buộc chọn người tiếp nhận (New Owner) từ danh sách nhân sự đang hoạt động trước khi khóa tài khoản.'
       );
       return;
     }

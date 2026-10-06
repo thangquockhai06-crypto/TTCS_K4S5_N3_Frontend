@@ -12,7 +12,6 @@ import {
   Phone,
   Tag,
   UserCheck,
-  Sliders,
 } from 'lucide-react';
 import { ICustomer } from '../../interfaces';
 import { formatCurrency } from '../../utils/formatters';
@@ -141,7 +140,7 @@ export const CustomerDetailPanel: React.FC<ICustomerDetailPanelProps> = ({
       <Card padding="md" className={styles.panelSection}>
         <div className={styles.panelSection__titleRow}>
           <Tag size={15} className={styles.panelSection__icon} />
-          <h3 className={styles.panelSection__heading}>Nhãn phân loại</h3>
+          <h3 className={styles.panelSection__heading}>Nhãn phân loại (Tags)</h3>
         </div>
         <div className={styles.tagsWrap}>
           <Badge tone="accent" size="md">
@@ -154,45 +153,6 @@ export const CustomerDetailPanel: React.FC<ICustomerDetailPanelProps> = ({
           ))}
         </div>
       </Card>
-
-      {/* Thẻ Trường Thông tin Tùy chỉnh (Custom Fields) */}
-      {customer.custom_fields && Object.keys(customer.custom_fields).length > 0 && (
-        <Card padding="md" className={styles.panelSection}>
-          <div className={styles.panelSection__titleRow}>
-            <Sliders size={15} className={styles.panelSection__icon} />
-            <h3 className={styles.panelSection__heading}>Trường Thông tin Tùy chỉnh</h3>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.82rem' }}>
-            {Object.entries(customer.custom_fields).map(([key, value]) => {
-              const labelMap: Record<string, string> = {
-                tax_code: 'Mã số thuế',
-                employee_count: 'Quy mô nhân sự',
-                deployment_type: 'Hình thức triển khai',
-                target_launch_date: 'Ngày dự kiến vận hành',
-              };
-              const displayLabel = labelMap[key] || key.replace(/_/g, ' ');
-              return (
-                <div
-                  key={key}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '6px 8px',
-                    borderRadius: '4px',
-                    backgroundColor: 'rgba(100, 116, 139, 0.08)',
-                  }}
-                >
-                  <span style={{ color: '#64748b', textTransform: 'capitalize' }}>
-                    {displayLabel}
-                  </span>
-                  <strong style={{ fontWeight: 600 }}>{String(value)}</strong>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-      )}
 
       {/* Người phụ trách Tài khoản */}
       <Card padding="md" className={styles.panelSection}>
