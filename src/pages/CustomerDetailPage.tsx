@@ -34,24 +34,22 @@ import { useCRMData } from '../context/CRMDataContext';
 import { useAuth } from '../hooks/useAuth';
 import { ActivityType, CustomerStatusType } from '../interfaces';
 import { formatCurrency } from '../utils/formatters';
-import { useToast } from '../context/ToastContext';
 import styles from './CustomerDetailPage.module.css';
 
 type DetailTabType = 'overview' | 'activities' | 'notes' | 'files';
 
 const STATUS_OPTIONS: ReadonlyArray<{ label: string; value: CustomerStatusType }> = [
-  { label: 'Đang hợp tác', value: 'Active' },
-  { label: 'Đang đàm phán', value: 'Negotiation' },
-  { label: 'Tiềm năng mới', value: 'New Lead' },
-  { label: 'Cần chú ý', value: 'At Risk' },
-  { label: 'Đã ngừng hợp tác', value: 'Churned' },
+  { label: 'Đang hợp tác (Active)', value: 'Active' },
+  { label: 'Đang đàm phán (Negotiation)', value: 'Negotiation' },
+  { label: 'Tiềm năng mới (New Lead)', value: 'New Lead' },
+  { label: 'Cần chú ý (At Risk)', value: 'At Risk' },
+  { label: 'Đã ngừng (Churned)', value: 'Churned' },
 ];
 
 export const CustomerDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { showToast } = useToast();
   const {
     customers,
     updateCustomerStatus,
@@ -83,7 +81,6 @@ export const CustomerDetailPage: React.FC = () => {
       user?.fullName ?? 'Quản Trị Viên Hệ Thống'
     );
     setNoteInput('');
-    showToast('success', 'Đã thêm ghi chú khách hàng thành công!');
   };
 
   const handleCreateActivity = (e: React.FormEvent<HTMLFormElement>): void => {
@@ -100,7 +97,6 @@ export const CustomerDetailPage: React.FC = () => {
     setActivityForm({ type: 'call', title: '', description: '' });
     setIsActivityModalOpen(false);
     setActiveTab('activities');
-    showToast('success', 'Đã ghi nhận hoạt động chăm sóc khách hàng thành công!');
   };
 
   return (
@@ -121,10 +117,7 @@ export const CustomerDetailPage: React.FC = () => {
             label="Trạng thái"
             value={customer.status}
             options={STATUS_OPTIONS}
-            onChange={(nextStatus) => {
-              updateCustomerStatus(customer.id, nextStatus);
-              showToast('success', 'Đã cập nhật trạng thái khách hàng!');
-            }}
+            onChange={(nextStatus) => updateCustomerStatus(customer.id, nextStatus)}
             ariaLabel="Thay đổi trạng thái khách hàng"
           />
         </div>
@@ -298,7 +291,7 @@ export const CustomerDetailPage: React.FC = () => {
               {/* Dòng thời gian hoạt động */}
               <Card padding="md">
                 <div className={styles.cardSectionHeader}>
-                  <h3>Dòng thời gian Hoạt động</h3>
+                  <h3>Dòng thời gian Hoạt động (Timeline)</h3>
                   <Button
                     variant="ghost"
                     size="sm"

@@ -112,7 +112,6 @@ export const CRMDataProvider: React.FC<ICRMDataProviderProps> = ({ children }) =
       ],
       notes: [],
       files: [],
-      custom_fields: dto.custom_fields || {},
     };
 
     setCustomers((prev) => [newCustomer, ...prev]);
@@ -217,7 +216,6 @@ export const CRMDataProvider: React.FC<ICRMDataProviderProps> = ({ children }) =
         companyAvatar: createAvatarSvgDataUri(newDeal.company, 2),
         ownerAvatar: createAvatarSvgDataUri(newDeal.ownerName, 0),
         daysInStage: 1,
-        custom_fields: newDeal.custom_fields || {},
       };
       setDeals((prev) => [created, ...prev]);
     },
