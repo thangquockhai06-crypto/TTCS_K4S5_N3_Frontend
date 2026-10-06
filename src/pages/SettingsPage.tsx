@@ -24,7 +24,7 @@ import { useAuth } from '../hooks/useAuth';
 import { INotificationPreference, ISecuritySession } from '../interfaces';
 import { ChangePasswordForm } from '../features/change-password';
 import { OrgTreeView } from '../components/org/OrgTreeView';
-import { CategoryManager } from '../components/categories/CategoryManager';
+import { SalesCatalogManager } from '../features/sales-catalog';
 import { CustomFieldBuilder } from '../components/custom-fields/CustomFieldBuilder';
 import { PipelineConfigView } from '../components/pipeline/PipelineConfigView';
 import { WinLossConfig } from '../components/win-loss/WinLossConfig';
@@ -299,7 +299,7 @@ export const SettingsPage: React.FC = () => {
 
           {activeSection === 'org_tree' && <OrgTreeView />}
 
-          {activeSection === 'categories' && <CategoryManager />}
+          {activeSection === 'categories' && <SalesCatalogManager />}
 
           {activeSection === 'custom_fields' && <CustomFieldBuilder />}
 
