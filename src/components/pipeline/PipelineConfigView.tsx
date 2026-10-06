@@ -5,18 +5,17 @@ import {
   ArrowDown,
   Trash2,
   Edit2,
-  Check,
-  AlertCircle,
   CheckSquare,
   X,
 } from 'lucide-react';
 import { IPipelineStage, IExitRules } from '../../interfaces';
 import { sprint2Service } from '../../services/sprint2Service';
+import { useToast } from '../../context/ToastContext';
 
 export const PipelineConfigView: React.FC = () => {
+  const { showToast } = useToast();
   const [stages, setStages] = useState<IPipelineStage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Modal create/edit
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -35,16 +34,15 @@ export const PipelineConfigView: React.FC = () => {
 
   const fetchStages = useCallback(async () => {
     setIsLoading(true);
-    setStatusMsg(null);
     try {
       const data = await sprint2Service.getPipelineStages();
       setStages(data);
     } catch (err: any) {
-      setStatusMsg({ type: 'error', text: 'Không thể tải danh sách giai đoạn phễu.' });
+      showToast('error', 'Không thể tải danh sách giai đoạn phễu.');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     fetchStages();
@@ -94,7 +92,7 @@ export const PipelineConfigView: React.FC = () => {
           color,
           exit_rules: JSON.stringify(exitRules),
         });
-        setStatusMsg({ type: 'success', text: 'Cập nhật giai đoạn phễu thành công!' });
+        showToast('success', `Cập nhật giai đoạn phễu "${name.trim()}" thành công!`);
       } else {
         await sprint2Service.createPipelineStage({
           name,
@@ -104,12 +102,12 @@ export const PipelineConfigView: React.FC = () => {
           exit_rules: JSON.stringify(exitRules),
           order_index: stages.length,
         });
-        setStatusMsg({ type: 'success', text: 'Thêm giai đoạn mới vào phễu thành công!' });
+        showToast('success', `Thêm giai đoạn mới "${name.trim()}" vào phễu thành công!`);
       }
       setIsModalOpen(false);
       fetchStages();
     } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.response?.data?.detail || 'Lỗi lưu giai đoạn.' });
+      showToast('error', err.response?.data?.detail || 'Lỗi lưu giai đoạn.');
     }
   };
 
@@ -119,10 +117,10 @@ export const PipelineConfigView: React.FC = () => {
     }
     try {
       await sprint2Service.deletePipelineStage(s.id);
-      setStatusMsg({ type: 'success', text: 'Đã xóa giai đoạn thành công.' });
+      showToast('success', `Đã xóa giai đoạn "${s.name}" thành công.`);
       fetchStages();
     } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.response?.data?.detail || 'Lỗi khi xóa giai đoạn.' });
+      showToast('error', err.response?.data?.detail || 'Lỗi khi xóa giai đoạn.');
     }
   };
 
@@ -138,19 +136,21 @@ export const PipelineConfigView: React.FC = () => {
     setStages(newStages);
     try {
       await sprint2Service.reorderPipelineStages(newStages.map((s) => s.id));
+      showToast('success', 'Đã cập nhật thứ tự giai đoạn phễu.');
     } catch {
+      showToast('error', 'Lỗi sắp xếp lại thứ tự giai đoạn.');
       fetchStages();
     }
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
         <div>
-          <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-            Cấu hình Phễu Bán hàng (Pipeline Stages - S2-09)
-          </h2>
-          <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 0' }}>
+          <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-text-primary, #0f172a)', margin: 0, lineHeight: 1.3 }}>
+            Cấu hình Phễu Bán hàng
+          </h1>
+          <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted, #64748b)', marginTop: '4px', lineHeight: 1.5 }}>
             Thiết lập các chặng phễu, xác suất thành công (0-100%) và quy tắc điều kiện chuyển bước (Exit-rule). Cơ hội đang hoạt động luôn được bảo toàn an toàn.
           </p>
         </div>
@@ -175,25 +175,6 @@ export const PipelineConfigView: React.FC = () => {
           <Plus size={14} /> Thêm giai đoạn
         </button>
       </div>
-
-      {statusMsg && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 14px',
-            backgroundColor: statusMsg.type === 'success' ? '#f0fdf4' : '#fef2f2',
-            border: `1px solid ${statusMsg.type === 'success' ? '#bbf7d0' : '#fecaca'}`,
-            borderRadius: '6px',
-            color: statusMsg.type === 'success' ? '#166534' : '#991b1b',
-            fontSize: '0.82rem',
-          }}
-        >
-          {statusMsg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}
-          <span>{statusMsg.text}</span>
-        </div>
-      )}
 
       {/* Pipeline Preview Strip */}
       <div
@@ -248,7 +229,7 @@ export const PipelineConfigView: React.FC = () => {
               <th style={{ padding: '10px 14px', color: '#64748b' }}>Tên giai đoạn phễu</th>
               <th style={{ padding: '10px 14px', color: '#64748b' }}>Mã trạng thái</th>
               <th style={{ padding: '10px 14px', color: '#64748b' }}>Xác suất chốt</th>
-              <th style={{ padding: '10px 14px', color: '#64748b' }}>Điều kiện chuyển tiếp (Exit Rules)</th>
+              <th style={{ padding: '10px 14px', color: '#64748b' }}>Điều kiện chuyển tiếp</th>
               <th style={{ padding: '10px 14px', textAlign: 'right', color: '#64748b' }}>Thao tác</th>
             </tr>
           </thead>
@@ -402,7 +383,7 @@ export const PipelineConfigView: React.FC = () => {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
-                {editingStage ? 'Chỉnh sửa Giai đoạn' : 'Thêm mới Giai đoạn phễu (S2-09)'}
+                {editingStage ? 'Chỉnh sửa Giai đoạn' : 'Thêm mới Giai đoạn phễu'}
               </h3>
               <button
                 type="button"

@@ -9,7 +9,6 @@ import {
   IUser,
 } from '../interfaces';
 import {
-  ADMIN_ACCOUNT,
   AUTH_STORAGE_KEYS,
   authenticateWithMock,
   authenticateWithSocialMock,
@@ -38,40 +37,20 @@ interface ITokenRefreshedEventDetail {
 export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<IUser | null>(() => {
     const raw = window.localStorage.getItem(AUTH_STORAGE_KEYS.USER);
-    if (!raw) return ADMIN_ACCOUNT.user;
+    if (!raw) return null;
     try {
-      const parsed = JSON.parse(raw) as IUser;
-      if (parsed.id === 'usr-admin-01' && parsed.email !== ADMIN_ACCOUNT.user.email) {
-        window.localStorage.setItem(
-          AUTH_STORAGE_KEYS.USER,
-          JSON.stringify(ADMIN_ACCOUNT.user)
-        );
-        return ADMIN_ACCOUNT.user;
-      }
-      return parsed;
+      return JSON.parse(raw) as IUser;
     } catch {
-      return ADMIN_ACCOUNT.user;
+      return null;
     }
   });
 
   const [accessToken, setAccessToken] = useState<string | null>(() => {
-    const stored = window.localStorage.getItem(AUTH_STORAGE_KEYS.ACCESS_TOKEN);
-    if (stored) return stored;
-    const initialToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.nexus_admin_session_token';
-    window.localStorage.setItem(AUTH_STORAGE_KEYS.ACCESS_TOKEN, initialToken);
-    window.localStorage.setItem(
-      AUTH_STORAGE_KEYS.REFRESH_TOKEN,
-      'nexus_admin_refresh_token_2026'
-    );
-    window.localStorage.setItem(
-      AUTH_STORAGE_KEYS.USER,
-      JSON.stringify(ADMIN_ACCOUNT.user)
-    );
-    return initialToken;
+    return window.localStorage.getItem(AUTH_STORAGE_KEYS.ACCESS_TOKEN) || null;
   });
 
   const [refreshToken, setRefreshToken] = useState<string | null>(() =>
-    window.localStorage.getItem(AUTH_STORAGE_KEYS.REFRESH_TOKEN)
+    window.localStorage.getItem(AUTH_STORAGE_KEYS.REFRESH_TOKEN) || null
   );
 
   const [isLoading, setIsLoading] = useState<boolean>(false);

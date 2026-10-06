@@ -58,7 +58,7 @@ export const ActivitiesPage: React.FC = () => {
             }`}
             onClick={() => setActiveTab('audit')}
           >
-            📋 Nhật ký thay đổi (Audit Log S2-04)
+            📋 Nhật ký thay đổi
           </button>
           <button
             type="button"

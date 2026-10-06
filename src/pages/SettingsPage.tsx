@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Bell,
   KeyRound,
   Laptop,
-  LogOut,
   Palette,
   RefreshCw,
   ShieldCheck,
@@ -105,10 +103,8 @@ export const SettingsPage: React.FC = () => {
     refreshToken,
     lastTokenRefresh,
     triggerMockTokenRefresh,
-    logout,
   } = useAuth();
   const { appearance, updateAppearance } = useCRMData();
-  const navigate = useNavigate();
 
   const [activeSection, setActiveSection] = useState<SettingsSectionType>('profile');
 
@@ -145,7 +141,7 @@ export const SettingsPage: React.FC = () => {
         <h1 className={styles.header__title}>Cài đặt hệ thống & Tài khoản</h1>
         <p className={styles.header__subtitle}>
           Quản lý hồ sơ quản trị viên, giao diện hiển thị, kênh thông báo và chính sách bảo mật phiên
-          JWT (S1-02).
+          JWT.
         </p>
       </header>
 
@@ -175,7 +171,7 @@ export const SettingsPage: React.FC = () => {
           >
             <Building2 size={17} />
             <div>
-              <strong>Sơ đồ Cây Tổ chức (S2-06)</strong>
+              <strong>Sơ đồ Cây Tổ chức</strong>
               <span>Cây đa cấp, Trưởng bộ phận & Địa bàn</span>
             </div>
           </button>
@@ -189,7 +185,7 @@ export const SettingsPage: React.FC = () => {
           >
             <FolderTree size={17} />
             <div>
-              <strong>Danh mục dùng chung (S2-07)</strong>
+              <strong>Danh mục dùng chung</strong>
               <span>Nguồn khách hàng & Ngành nghề</span>
             </div>
           </button>
@@ -203,8 +199,8 @@ export const SettingsPage: React.FC = () => {
           >
             <Sliders size={17} />
             <div>
-              <strong>Trường tùy biến (S2-08)</strong>
-              <span>Text, Number, Date, Select & Dynamic Form</span>
+              <strong>Trường tùy biến</strong>
+              <span>Văn bản, Số, Ngày tháng, Danh sách chọn</span>
             </div>
           </button>
 
@@ -217,7 +213,7 @@ export const SettingsPage: React.FC = () => {
           >
             <GitCommit size={17} />
             <div>
-              <strong>Cấu hình Phễu (S2-09)</strong>
+              <strong>Cấu hình Phễu</strong>
               <span>Chặng bán hàng, Xác suất & Exit-rule</span>
             </div>
           </button>
@@ -231,7 +227,7 @@ export const SettingsPage: React.FC = () => {
           >
             <Trophy size={17} />
             <div>
-              <strong>Thắng/Thua & Đối thủ (S2-10)</strong>
+              <strong>Thắng/Thua & Đối thủ</strong>
               <span>Nguyên nhân WON/LOST & Điểm mạnh/yếu</span>
             </div>
           </button>
@@ -246,7 +242,7 @@ export const SettingsPage: React.FC = () => {
             <ShieldCheck size={17} />
             <div>
               <strong>Bảo mật & Phiên JWT</strong>
-              <span>Xác thực 2 lớp & Token S1-02</span>
+              <span>Xác thực 2 lớp & Quản lý Token</span>
             </div>
           </button>
 
@@ -349,7 +345,7 @@ export const SettingsPage: React.FC = () => {
 
                 <div className={styles.settingRow}>
                   <div>
-                    <strong>Màu nhấn thương hiệu (Accent Color)</strong>
+                    <strong>Màu nhấn thương hiệu</strong>
                     <p>Màu chủ đạo trên các nút bấm, biểu đồ và trạng thái đang chọn</p>
                   </div>
                   <div className={styles.colorSwatches}>
@@ -379,7 +375,7 @@ export const SettingsPage: React.FC = () => {
 
                 <div className={styles.settingRow}>
                   <div>
-                    <strong>Mật độ bảng thu gọn (Compact Density)</strong>
+                    <strong>Mật độ bảng thu gọn</strong>
                     <p>Thu hẹp khoảng cách dòng để hiển thị nhiều dữ liệu hơn trên màn hình lớn</p>
                   </div>
                   <button
@@ -468,7 +464,7 @@ export const SettingsPage: React.FC = () => {
                 <div className={styles.securityHeader}>
                   <div>
                     <Badge tone="success" dot>
-                      S1-02 · AXIOS INTERCEPTOR ĐANG HOẠT ĐỘNG
+                      AXIOS INTERCEPTOR ĐANG HOẠT ĐỘNG
                     </Badge>
                     <h2 className={styles.cardHeading}>
                       Trình kiểm tra Phiên JWT & Tự động làm mới Token
@@ -543,17 +539,6 @@ export const SettingsPage: React.FC = () => {
                       Danh sách các phiên thiết bị đang kết nối vào tài khoản quản trị của bạn.
                     </p>
                   </div>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    leftIcon={<LogOut size={14} />}
-                    onClick={() => {
-                      logout();
-                      navigate('/login');
-                    }}
-                  >
-                    Đăng xuất & Xóa Token (S1-02)
-                  </Button>
                 </div>
 
                 <div className={styles.sessionList}>

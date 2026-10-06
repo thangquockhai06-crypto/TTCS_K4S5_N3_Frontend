@@ -1,0 +1,11 @@
+.bulkImportPage {
+  min-height: 100%;
+  background: #f1f5f9;
+  padding: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .bulkImportPage {
+    padding: 0.75rem;
+  }
+}

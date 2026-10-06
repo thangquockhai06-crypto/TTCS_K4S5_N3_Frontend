@@ -1,14 +1,19 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Plus, TrendingUp } from 'lucide-react';
 import { DealPipeline } from '../components/customer/DealPipeline';
 import { Badge, Button, Card, Input, Modal, SearchBar } from '../components/common';
+import { CustomSelect } from '../components/common/CustomSelect';
 import { useCRMData } from '../context/CRMDataContext';
-import { DealStageType } from '../interfaces';
+import { DealStageType, ICustomField, IDeal, IWinLossReason, ICompetitor } from '../interfaces';
 import { formatCompactCurrency, formatCurrency } from '../utils/formatters';
+import { sprint2Service } from '../services/sprint2Service';
+import { CustomFieldRenderer } from '../components/custom-fields/CustomFieldRenderer';
+import { useToast } from '../context/ToastContext';
 import styles from './DealPipelinePage.module.css';
 
 export const DealPipelinePage: React.FC = () => {
   const { deals, moveDealStage, addDeal } = useCRMData();
+  const { showToast } = useToast();
 
   const [query, setQuery] = useState<string>('');
   const [isNewDealModalOpen, setIsNewDealModalOpen] = useState<boolean>(false);
@@ -25,6 +30,49 @@ export const DealPipelinePage: React.FC = () => {
     value: 165000,
     stage: 'New',
   });
+
+  const [dealCustomFields, setDealCustomFields] = useState<ICustomField[]>([]);
+  const [dealCustomValues, setDealCustomValues] = useState<Record<string, string | number>>({});
+
+  // Win/Loss & Competitor integration (Sprint 5 Requirement)
+  const [winReasons, setWinReasons] = useState<IWinLossReason[]>([]);
+  const [competitors, setCompetitors] = useState<ICompetitor[]>([]);
+  const [closingDeal, setClosingDeal] = useState<{
+    deal: IDeal;
+    targetStage: DealStageType;
+  } | null>(null);
+  const [closeDealForm, setCloseDealForm] = useState<{
+    reasonId: string;
+    competitorId: string;
+    closeNotes: string;
+  }>({
+    reasonId: '',
+    competitorId: '',
+    closeNotes: '',
+  });
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const [fields, rData, cData] = await Promise.all([
+          sprint2Service.getCustomFields('deal'),
+          sprint2Service.getWinLossReasons('WON'),
+          sprint2Service.getCompetitors(),
+        ]);
+        setDealCustomFields(fields);
+        setWinReasons(rData);
+        setCompetitors(cData);
+
+        const initVal: Record<string, string | number> = {};
+        fields.forEach((f) => {
+          if (f.default_value) initVal[f.field_name] = f.default_value;
+        });
+        setDealCustomValues(initVal);
+      } catch {
+        // Fallback
+      }
+    })();
+  }, []);
 
   const filteredDeals = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -74,8 +122,10 @@ export const DealPipelinePage: React.FC = () => {
       expectedCloseDate: '15/11/2026',
       ownerName: 'Quản Trị Viên Hệ Thống',
       tags: ['Doanh nghiệp', 'Mục tiêu Q4'],
+      custom_fields: dealCustomValues,
     });
 
+    const createdTitle = newDealForm.title.trim();
     setNewDealForm({
       title: '',
       company: '',
@@ -83,7 +133,33 @@ export const DealPipelinePage: React.FC = () => {
       value: 165000,
       stage: 'New',
     });
+    setDealCustomValues({});
     setIsNewDealModalOpen(false);
+    showToast('success', `Đã tạo cơ hội bán hàng "${createdTitle}" thành công!`);
+  };
+
+  const handleConfirmCloseDeal = (e: React.FormEvent<HTMLFormElement>): void => {
+    e.preventDefault();
+    if (!closingDeal) return;
+    if (!closeDealForm.reasonId) {
+      showToast('warning', 'Vui lòng chọn lý do thắng theo quy chuẩn Sprint 5.');
+      return;
+    }
+    if (!closeDealForm.competitorId) {
+      showToast('warning', 'Vui lòng chọn đối thủ cạnh tranh đã gặp trong thương vụ.');
+      return;
+    }
+
+    const selectedReason = winReasons.find((r) => r.id === closeDealForm.reasonId);
+    const selectedComp = competitors.find((c) => c.id === closeDealForm.competitorId);
+
+    moveDealStage(closingDeal.deal.id, closingDeal.targetStage);
+    const dealTitle = closingDeal.deal.title;
+    setClosingDeal(null);
+    showToast(
+      'success',
+      `Đã chốt thành công thương vụ "${dealTitle}"! Ghi nhận lý do: ${selectedReason?.reason || ''}, đối thủ: ${selectedComp?.name || ''}`
+    );
   };
 
   return (
@@ -95,7 +171,7 @@ export const DealPipelinePage: React.FC = () => {
               BẢNG KANBAN TƯƠNG TÁC · KÉO THẢ TRỰC TIẾP
             </Badge>
           </div>
-          <h1 className={styles.header__title}>Phễu cơ hội bán hàng (Deal Pipeline)</h1>
+          <h1 className={styles.header__title}>Phễu cơ hội bán hàng</h1>
           <p className={styles.header__subtitle}>
             Kéo thả thẻ cơ hội giữa các cột hoặc dùng nút mũi tên để cập nhật dự báo doanh thu theo
             thời gian thực.
@@ -145,7 +221,23 @@ export const DealPipelinePage: React.FC = () => {
       </Card>
 
       {/* Kanban Board */}
-      <DealPipeline deals={filteredDeals} onMoveDeal={moveDealStage} />
+      <DealPipeline
+        deals={filteredDeals}
+        onMoveDeal={(dealId, newStage) => {
+          const targetDeal = deals.find((d) => d.id === dealId);
+          if (newStage === 'Won' && targetDeal) {
+            setClosingDeal({ deal: targetDeal, targetStage: newStage });
+            setCloseDealForm({
+              reasonId: winReasons[0]?.id || '',
+              competitorId: competitors[0]?.id || '',
+              closeNotes: '',
+            });
+            return;
+          }
+          moveDealStage(dealId, newStage);
+          showToast('success', 'Đã chuyển giai đoạn cơ hội bán hàng thành công!');
+        }}
+      />
 
       {/* Create New Deal Modal */}
       <Modal
@@ -193,23 +285,43 @@ export const DealPipelinePage: React.FC = () => {
             }
           />
           <div className={styles.modalForm__selectWrap}>
-            <label htmlFor="deal-stage-select">Giai đoạn khởi tạo</label>
-            <select
-              id="deal-stage-select"
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
+              Giai đoạn khởi tạo
+            </label>
+            <CustomSelect<DealStageType>
               value={newDealForm.stage}
-              onChange={(e) =>
+              onChange={(val) =>
                 setNewDealForm((prev) => ({
                   ...prev,
-                  stage: e.target.value as DealStageType,
+                  stage: val,
                 }))
               }
-            >
-              <option value="New">Cơ hội mới (New)</option>
-              <option value="Contacted">Đã liên hệ (Contacted)</option>
-              <option value="Negotiation">Đang đàm phán (Negotiation)</option>
-              <option value="Won">Chốt thành công (Won)</option>
-            </select>
+              options={[
+                { value: 'New', label: 'Cơ hội mới' },
+                { value: 'Contacted', label: 'Đã liên hệ' },
+                { value: 'Negotiation', label: 'Đang đàm phán' },
+                { value: 'Won', label: 'Chốt thành công' },
+              ]}
+              height="38px"
+            />
           </div>
+
+          {/* Trường tùy chỉnh của thương vụ */}
+          {dealCustomFields.length > 0 && (
+            <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #e2e8f0' }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>
+                Trường thông tin tùy chỉnh thương vụ
+              </label>
+              <CustomFieldRenderer
+                fields={dealCustomFields}
+                values={dealCustomValues}
+                onChange={(fieldNameKey, val) =>
+                  setDealCustomValues((prev) => ({ ...prev, [fieldNameKey]: val }))
+                }
+                layout="stack"
+              />
+            </div>
+          )}
           <div className={styles.modalForm__footer}>
             <Button variant="secondary" onClick={() => setIsNewDealModalOpen(false)}>
               Hủy bỏ
@@ -219,6 +331,159 @@ export const DealPipelinePage: React.FC = () => {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Modal Đóng cơ hội bán hàng */}
+      <Modal
+        isOpen={Boolean(closingDeal)}
+        onClose={() => setClosingDeal(null)}
+        title="Đóng cơ hội bán hàng"
+        subtitle="Khai báo lý do thành công và đối thủ cạnh tranh thị trường để hoàn tất chốt thương vụ."
+      >
+        {closingDeal && (
+          <form onSubmit={handleConfirmCloseDeal} className={styles.modalForm}>
+            <div
+              style={{
+                backgroundColor: 'var(--color-bg-app, #f8fafc)',
+                padding: '12px 14px',
+                borderRadius: '8px',
+                border: '1px solid var(--color-border, #e2e8f0)',
+                fontSize: '0.84rem',
+              }}
+            >
+              <div style={{ fontWeight: 700, color: 'var(--color-text-primary, #0f172a)' }}>
+                {closingDeal.deal.title}
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '16px',
+                  marginTop: '6px',
+                  color: 'var(--color-text-secondary, #475569)',
+                  fontSize: '0.8rem',
+                }}
+              >
+                <span>
+                  Doanh nghiệp: <strong>{closingDeal.deal.company}</strong>
+                </span>
+                <span>
+                  Giá trị: <strong>{formatCurrency(closingDeal.deal.value)}</strong>
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  color: 'var(--color-text-secondary, #334155)',
+                  marginBottom: '6px',
+                }}
+              >
+                Lý do chốt thương vụ thành công *
+              </label>
+              <select
+                required
+                value={closeDealForm.reasonId}
+                onChange={(e) =>
+                  setCloseDealForm((prev) => ({ ...prev, reasonId: e.target.value }))
+                }
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.84rem',
+                  backgroundColor: '#ffffff',
+                }}
+              >
+                <option value="">-- Chọn lý do thành công đã khai báo --</option>
+                {winReasons.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    [{r.code}] {r.reason}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  color: 'var(--color-text-secondary, #334155)',
+                  marginBottom: '6px',
+                }}
+              >
+                Đối thủ cạnh tranh trực tiếp *
+              </label>
+              <select
+                required
+                value={closeDealForm.competitorId}
+                onChange={(e) =>
+                  setCloseDealForm((prev) => ({ ...prev, competitorId: e.target.value }))
+                }
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.84rem',
+                  backgroundColor: '#ffffff',
+                }}
+              >
+                <option value="">-- Chọn đối thủ cạnh tranh trực tiếp --</option>
+                {competitors.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({c.pricing_tier || 'Trung cấp'}) — Tỷ lệ thắng đối đầu {c.win_rate}%
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  color: 'var(--color-text-secondary, #334155)',
+                  marginBottom: '6px',
+                }}
+              >
+                Ghi chú bài học kinh nghiệm / Phân tích
+              </label>
+              <textarea
+                rows={3}
+                placeholder="Ghi nhận điều giúp chúng ta chiến thắng hoặc điểm khác biệt so với đối thủ..."
+                value={closeDealForm.closeNotes}
+                onChange={(e) =>
+                  setCloseDealForm((prev) => ({ ...prev, closeNotes: e.target.value }))
+                }
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.84rem',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+
+            <div className={styles.modalForm__footer}>
+              <Button variant="secondary" onClick={() => setClosingDeal(null)}>
+                Hủy bỏ
+              </Button>
+              <Button type="submit" variant="primary">
+                Xác nhận chốt thương vụ
+              </Button>
+            </div>
+          </form>
+        )}
       </Modal>
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useId, useState } from 'react';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import styles from './Input.module.css';
 
 export interface IInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -54,7 +54,6 @@ export const Input: React.FC<IInputProps> = ({
     isFocused ? styles['field--focused'] : '',
     hasValue ? styles['field--filled'] : '',
     error ? styles['field--error'] : '',
-    isValid && !error ? styles['field--valid'] : '',
     disabled ? styles['field--disabled'] : '',
     className,
   ]
@@ -102,9 +101,6 @@ export const Input: React.FC<IInputProps> = ({
           {rightElement}
           {!rightElement && error && (
             <AlertCircle size={16} className={styles.field__statusError} aria-hidden="true" />
-          )}
-          {!rightElement && !error && isValid && (
-            <CheckCircle2 size={16} className={styles.field__statusValid} aria-hidden="true" />
           )}
         </div>
       </div>

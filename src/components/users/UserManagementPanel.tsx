@@ -323,7 +323,7 @@ export const UserManagementPanel: React.FC = () => {
 
             <div className={styles.userManage__addField}>
               <label className={styles.userManage__addLabel} htmlFor="add-user-role">
-                Vai trò hệ thống (Role)
+                Vai trò hệ thống
               </label>
               <select
                 id="add-user-role"
@@ -426,7 +426,7 @@ export const UserManagementPanel: React.FC = () => {
           }`}
         >
           <div className={styles.userManage__statLabel}>
-            <span>Nhân sự Đang hoạt động (Active)</span>
+            <span>Nhân sự Đang hoạt động</span>
             <UserCheck size={15} />
           </div>
           <strong className={styles.userManage__statValue}>{activeUsers.length}</strong>
@@ -757,7 +757,7 @@ export const UserManagementPanel: React.FC = () => {
                   {/* Box 1: Custom Role Selector */}
                   <div className={styles.userManage__controlBox} data-custom-dropdown="true">
                     <span className={styles.userManage__controlLabel}>
-                      <Shield size={12} /> Vai trò hệ thống (Role)
+                      <Shield size={12} /> Vai trò hệ thống
                     </span>
                     <button
                       type="button"

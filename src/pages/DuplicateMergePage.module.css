@@ -1,0 +1,16 @@
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .pageContainer {
+    padding: 1rem;
+    gap: 1rem;
+  }
+}

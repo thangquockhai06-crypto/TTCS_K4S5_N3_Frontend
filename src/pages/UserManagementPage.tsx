@@ -1,17 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  AlertCircle,
   Briefcase,
-  CheckCircle2,
   Clock,
-  Compass,
   Plus,
   RefreshCw,
-  ShieldAlert,
   ShieldCheck,
   Users,
-  X,
   FileSpreadsheet,
 } from 'lucide-react';
 import { UserActivationModal } from '../components/users/UserActivationModal';
@@ -28,27 +23,37 @@ import {
   IUserCreateInput,
   IUserFilterState,
   IUserItem,
-  IUserUpdateInput,
 } from '../interfaces/user-management.interface';
 import { userService } from '../services/userService';
+import { useToast } from '../context/ToastContext';
 import styles from './UserManagementPage.module.css';
 
 export const UserManagementPage: React.FC = () => {
   const { user: currentAuthUser } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const urlSearch = searchParams.get('search') || '';
 
   // Chuyển tab giữa Quản lý tài khoản (CRUD) và Bàn giao tài khoản
   const [activeTab, setActiveTab] = useState<'crud' | 'handover'>('crud');
 
   // Filter & Pagination state (Mặc định 20 dòng)
   const [filter, setFilter] = useState<IUserFilterState>({
-    search: '',
+    search: urlSearch,
     role: 'all',
     status: 'all',
     group: 'all',
     page: 1,
     limit: 20,
   });
+
+  // Sync search filter if URL param changes
+  useEffect(() => {
+    if (urlSearch !== filter.search) {
+      setFilter((prev) => ({ ...prev, search: urlSearch, page: 1 }));
+    }
+  }, [urlSearch]);
 
   const [users, setUsers] = useState<IUserItem[]>([]);
   const [totalFiltered, setTotalFiltered] = useState(0);
@@ -58,18 +63,11 @@ export const UserManagementPage: React.FC = () => {
   // Modals state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isExcelModalOpen, setIsExcelModalOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<IUserItem | null>(null);
   const [assignRoleUser, setAssignRoleUser] = useState<IUserItem | null>(null);
   const [selectedUserDetail, setSelectedUserDetail] = useState<IUserItem | null>(null);
   const [createdUserSuccess, setCreatedUserSuccess] = useState<{
     user: IUserItem;
     tempPassword: string;
-  } | null>(null);
-
-  // Toast feedback state
-  const [toast, setToast] = useState<{
-    type: 'success' | 'error';
-    message: string;
   } | null>(null);
 
   // Stats
@@ -79,11 +77,6 @@ export const UserManagementPage: React.FC = () => {
     managers: 0,
     pending: 0,
   });
-
-  const showToast = (type: 'success' | 'error', message: string): void => {
-    setToast({ type, message });
-    window.setTimeout(() => setToast(null), 4000);
-  };
 
   const fetchUsers = useCallback(async (): Promise<void> => {
     setIsLoading(true);
@@ -140,21 +133,6 @@ export const UserManagementPage: React.FC = () => {
     fetchUsers();
   };
 
-  // Cập nhật người dùng
-  const handleUpdateUser = async (
-    userId: string,
-    data: IUserUpdateInput
-  ): Promise<void> => {
-    const result = await userService.updateUser(
-      userId,
-      data,
-      currentAuthUser?.id,
-      currentAuthUser?.email
-    );
-    showToast('success', result.message);
-    setEditingUser(null);
-    fetchUsers();
-  };
 
   // Khóa / Mở khóa tài khoản
   const handleToggleStatus = async (targetUser: IUserItem): Promise<void> => {
@@ -206,31 +184,6 @@ export const UserManagementPage: React.FC = () => {
 
   return (
     <div className={styles.pageContainer}>
-      {/* Toast thông báo */}
-      {toast && (
-        <div
-          className={`${styles.toastBanner} ${
-            toast.type === 'success' ? styles.toastSuccess : styles.toastError
-          }`}
-        >
-          <div className={styles.toastMessage}>
-            {toast.type === 'success' ? (
-              <CheckCircle2 size={18} />
-            ) : (
-              <AlertCircle size={18} />
-            )}
-            <span>{toast.message}</span>
-          </div>
-          <button
-            type="button"
-            className={styles.toastCloseBtn}
-            onClick={() => setToast(null)}
-          >
-            <X size={16} />
-          </button>
-        </div>
-      )}
-
       {/* Tab điều hướng phân hệ */}
       <div
         style={{
@@ -255,7 +208,7 @@ export const UserManagementPage: React.FC = () => {
             color: activeTab === 'crud' ? '#ffffff' : '#475569',
           }}
         >
-          Quản lý &amp; Cấp quyền Địa bàn (45 Người dùng)
+          Danh sách Người dùng &amp; Phân quyền
         </button>
         <button
           type="button"
@@ -282,10 +235,9 @@ export const UserManagementPage: React.FC = () => {
           {/* Header section */}
           <div className={styles.headerSection}>
         <div className={styles.headerText}>
-          <h1 className={styles.pageTitle}>Quản lý Người dùng & Cấp quyền Địa bàn</h1>
+          <h1 className={styles.pageTitle}>Quản lý Người dùng &amp; Phân quyền</h1>
           <p className={styles.pageSubtitle}>
-            Là Quản trị hệ thống, bạn có thể tạo, chỉnh sửa và tìm kiếm tài khoản người dùng,
-            để cấp quyền cho nhân viên kinh doanh mới ngay ngày đầu nhận địa bàn.
+            Quản trị danh sách người dùng, phân vai trò, nhóm làm việc và kiểm soát trạng thái hoạt động trong hệ thống CRM
           </p>
         </div>
 
@@ -305,35 +257,11 @@ export const UserManagementPage: React.FC = () => {
             type="button"
             className={styles.btnSecondary}
             onClick={() => setIsExcelModalOpen(true)}
-            title="Nhập danh sách người dùng từ tệp Excel / CSV (S2-01)"
+            title="Nhập danh sách người dùng từ tệp Excel / CSV"
           >
             <FileSpreadsheet size={16} style={{ color: '#16a34a' }} />
             <span>Nhập Excel</span>
           </button>
-
-          {/* Nút thử nghiệm màn hình 403 Forbidden */}
-          <button
-            type="button"
-            className={styles.btnSecondary}
-            onClick={() => navigate('/forbidden')}
-            title="Kiểm tra thông báo khi không đủ quyền hạn (403)"
-          >
-            <ShieldAlert size={15} style={{ color: '#dc2626' }} />
-            <span>Thử lỗi 403</span>
-          </button>
-
-          {/* Nút thử nghiệm màn hình 404 Not Found */}
-          <button
-            type="button"
-            className={styles.btnSecondary}
-            onClick={() => navigate('/duong-dan-khong-ton-tai')}
-            title="Kiểm tra thông báo khi truy cập nhầm chỗ (404)"
-          >
-            <Compass size={15} style={{ color: '#2563eb' }} />
-            <span>Thử lỗi 404</span>
-          </button>
-
-
         </div>
       </div>
 
@@ -401,7 +329,7 @@ export const UserManagementPage: React.FC = () => {
               users={users}
               currentUserId={currentAuthUser?.id}
               currentUserEmail={currentAuthUser?.email}
-              onEdit={(u) => setEditingUser(u)}
+              onEdit={(u) => navigate(`/users/${u.id}/edit`)}
               onViewDetails={(u) => setSelectedUserDetail(u)}
               onToggleStatus={handleToggleStatus}
               onDelete={handleDeleteUser}
@@ -450,16 +378,6 @@ export const UserManagementPage: React.FC = () => {
         allExistingEmails={allEmails}
       />
 
-      {/* Modal Chỉnh sửa người dùng */}
-      <UserModal
-        isOpen={Boolean(editingUser)}
-        onClose={() => setEditingUser(null)}
-        editingUser={editingUser}
-        onSubmitUpdate={handleUpdateUser}
-        currentUserId={currentAuthUser?.id}
-        currentUserEmail={currentAuthUser?.email}
-        allExistingEmails={allEmails}
-      />
 
       {/* Modal Thông báo gửi email kích hoạt kèm mật khẩu tạm */}
       <UserActivationModal

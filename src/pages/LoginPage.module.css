@@ -1,77 +1,80 @@
+.authContainer,
 .loginContainer {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: #f8fafc;
-  padding: 16px;
+  background: linear-gradient(180deg, #e8f2fe 0%, #f0f6ff 45%, #f8faff 100%);
+  padding: 40px 16px;
   box-sizing: border-box;
 }
 
-.loginCard {
-  width: 100%;
-  max-width: 480px;
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 32px 28px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  box-sizing: border-box;
+.brandHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 24px;
 }
 
-.loginHeader {
+.brandLogoRow {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #f1f5f9;
+  gap: 10px;
+  margin-bottom: 4px;
 }
 
 .logo {
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
 }
 
 .brandTitle {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #0f172a;
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #0068ff;
+  letter-spacing: -0.02em;
 }
 
 .brandSubtitle {
-  margin: 2px 0 0;
-  font-size: 0.78rem;
+  margin: 4px 0 2px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #334155;
+}
+
+.brandDomain {
+  font-size: 0.825rem;
+  font-weight: 600;
   color: #64748b;
+  letter-spacing: 0.02em;
 }
 
 .formWrapper {
   width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
+.authFooter,
 .loginFooter {
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
+  margin-top: 28px;
   text-align: center;
-  font-size: 0.75rem;
+  font-size: 0.775rem;
   color: #94a3b8;
 }
 
 @media (max-width: 480px) {
+  .authContainer,
   .loginContainer {
-    padding: 12px;
-    align-items: flex-start;
-  }
-
-  .loginCard {
-    padding: 20px 16px;
-    border-radius: 6px;
+    padding: 24px 12px;
+    justify-content: flex-start;
   }
 
   .brandTitle {
-    font-size: 1.15rem;
+    font-size: 1.6rem;
   }
 }

@@ -78,7 +78,7 @@ export const ChangePasswordForm: React.FC = () => {
               aria-label={visibleFields.currentPassword ? 'Ẩn mật khẩu hiện tại' : 'Hiện mật khẩu hiện tại'}
               aria-pressed={visibleFields.currentPassword}
             >
-              {visibleFields.currentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              {visibleFields.currentPassword ? <Eye size={16} /> : <EyeOff size={16} />}
             </button>
           }
         />
@@ -102,7 +102,7 @@ export const ChangePasswordForm: React.FC = () => {
               aria-label={visibleFields.newPassword ? 'Ẩn mật khẩu mới' : 'Hiện mật khẩu mới'}
               aria-pressed={visibleFields.newPassword}
             >
-              {visibleFields.newPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              {visibleFields.newPassword ? <Eye size={16} /> : <EyeOff size={16} />}
             </button>
           }
         />
@@ -125,7 +125,7 @@ export const ChangePasswordForm: React.FC = () => {
               aria-label={visibleFields.confirmPassword ? 'Ẩn mật khẩu xác nhận' : 'Hiện mật khẩu xác nhận'}
               aria-pressed={visibleFields.confirmPassword}
             >
-              {visibleFields.confirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              {visibleFields.confirmPassword ? <Eye size={16} /> : <EyeOff size={16} />}
             </button>
           }
         />

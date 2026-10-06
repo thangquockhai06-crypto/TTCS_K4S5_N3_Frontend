@@ -79,7 +79,7 @@ export const UserActivationModal: React.FC<UserActivationModalProps> = ({
           {/* Hộp hiển thị mật khẩu tạm */}
           <div className={styles.passwordBox}>
             <div className={styles.passwordHeader}>
-              <span>Mật khẩu tạm thời (Temporary Password)</span>
+              <span>Mật khẩu tạm thời</span>
               <span>Dùng để kích hoạt lần đầu</span>
             </div>
             <div className={styles.passwordDisplay}>
