@@ -15,10 +15,10 @@ export const DiffViewerModal: React.FC<IDiffViewerModalProps> = ({
 }) => {
   if (!isOpen || !logItem) return null;
 
-  let metadataObj: Record<string, unknown> | null = null;
+  let metadataObj: any = null;
   if (logItem.metadata) {
     try {
-      metadataObj = JSON.parse(logItem.metadata) as Record<string, unknown>;
+      metadataObj = JSON.parse(logItem.metadata);
     } catch {
       metadataObj = null;
     }
@@ -79,7 +79,7 @@ export const DiffViewerModal: React.FC<IDiffViewerModalProps> = ({
             <ShieldCheck size={20} color="#2563eb" />
             <div>
               <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>
-                Chi tiết Biến động Dữ liệu
+                Chi tiết Biến động Dữ liệu (Audit Log Diff - S2-04)
               </h2>
               <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Mã bản ghi: {logItem.id}</span>
             </div>
@@ -166,7 +166,7 @@ export const DiffViewerModal: React.FC<IDiffViewerModalProps> = ({
                     marginBottom: '6px',
                   }}
                 >
-                  Giá trị cũ
+                  Giá trị cũ (Before)
                 </span>
                 <div
                   style={{
@@ -205,7 +205,7 @@ export const DiffViewerModal: React.FC<IDiffViewerModalProps> = ({
                     marginBottom: '6px',
                   }}
                 >
-                  Giá trị mới
+                  Giá trị mới (After)
                 </span>
                 <div
                   style={{
@@ -231,7 +231,7 @@ export const DiffViewerModal: React.FC<IDiffViewerModalProps> = ({
           {metadataObj && (
             <div style={{ marginTop: '8px' }}>
               <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', marginBottom: '4px' }}>
-                Thông tin ngữ cảnh bổ sung
+                Thông tin ngữ cảnh bổ sung (Context Metadata)
               </span>
               <pre
                 style={{

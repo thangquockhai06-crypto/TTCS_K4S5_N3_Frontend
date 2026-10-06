@@ -7,8 +7,8 @@
 .heroBanner {
   position: relative;
   overflow: hidden;
-  background: radial-gradient(circle at 88% 20%, rgba(37, 99, 235, 0.08), transparent 45%),
-    radial-gradient(circle at 12% 80%, rgba(139, 92, 246, 0.08), transparent 50%),
+  background: radial-gradient(circle at 88% 20%, rgba(139, 92, 246, 0.16), transparent 45%),
+    radial-gradient(circle at 12% 80%, rgba(37, 99, 235, 0.12), transparent 50%),
     var(--color-bg-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
@@ -24,7 +24,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-width: 720px;
+  max-width: 680px;
 }
 
 .heroBanner__pill {
@@ -36,23 +36,19 @@
   border-radius: var(--radius-full);
   background-color: var(--color-primary-soft);
   color: var(--color-primary);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
 
 .heroBanner__greeting {
-  font-size: clamp(1.4rem, 2vw, 1.85rem);
+  font-size: clamp(1.45rem, 2.2vw, 1.95rem);
   font-weight: 800;
-  color: var(--color-text-primary);
-  margin: 0;
 }
 
 .heroBanner__summary {
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   color: var(--color-text-secondary);
-  line-height: 1.5;
-  margin: 0;
 }
 
 .heroBanner__actions {
@@ -62,98 +58,15 @@
   flex-shrink: 0;
 }
 
-.heroActionBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
-  border-radius: 6px;
-  background-color: #2563eb;
-  color: #ffffff;
-  font-size: 0.875rem;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.heroActionBtn:hover {
-  background-color: #1d4ed8;
-}
-
 .kpiGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
-.realStatCard {
-  background-color: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-}
-
-.realStatHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.realStatLabel {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-}
-
-.realStatIcon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.statIconBlue {
-  background-color: #eff6ff;
-  color: #2563eb;
-}
-
-.statIconGreen {
-  background-color: #f0fdf4;
-  color: #16a34a;
-}
-
-.statIconPurple {
-  background-color: #faf5ff;
-  color: #7c3aed;
-}
-
-.statIconRed {
-  background-color: #fef2f2;
-  color: #dc2626;
-}
-
-.realStatValue {
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: var(--color-text-primary);
-  line-height: 1.2;
-}
-
-.realStatDesc {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
+  gap: 18px;
 }
 
 .bottomGrid {
   display: grid;
-  grid-template-columns: 1.35fr 0.85fr;
+  grid-template-columns: 1.2fr 0.8fr;
   gap: 20px;
 }
 
@@ -168,8 +81,6 @@
 .sectionTitle {
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--color-text-primary);
-  margin: 0;
 }
 
 .sectionSubtitle {
@@ -178,176 +89,94 @@
   margin-top: 2px;
 }
 
-.viewAllBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: none;
-  border: none;
-  color: #2563eb;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 4px 6px;
-}
-
-.viewAllBtn:hover {
-  text-decoration: underline;
-}
-
-.moduleGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
-}
-
-.moduleCard {
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 16px;
-  background-color: var(--color-bg-surface);
-  cursor: pointer;
+.topAccountsList {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+}
+
+.accountRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-subtle);
+  background-color: var(--color-bg-app);
+  cursor: pointer;
   transition: all 0.16s ease;
 }
 
-.moduleCard:hover {
-  border-color: #2563eb;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
-  transform: translateY(-1px);
+.accountRow:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-bg-hover);
+  transform: translateX(2px);
 }
 
-.moduleCardTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.moduleIconBox {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background-color: #f8fafc;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.moduleBadge {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: #64748b;
-  background-color: #f1f5f9;
-  padding: 2px 8px;
-  border-radius: 12px;
-}
-
-.moduleTitle {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  margin: 0;
-}
-
-.moduleDesc {
-  font-size: 0.78rem;
-  color: var(--color-text-secondary);
-  line-height: 1.4;
-  margin: 0;
-  flex-grow: 1;
-}
-
-.moduleAction {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #2563eb;
-  margin-top: 4px;
-}
-
-.auditList {
+.accountRow__info {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
+}
+
+.accountRow__company {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.accountRow__contact {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.accountRow__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.accountRow__arr {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.upcomingCallBox {
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--color-primary-soft), var(--color-accent-soft));
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  display: flex;
+  align-items: flex-start;
   gap: 12px;
 }
 
-.auditItem {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 6px;
-  background-color: #f8fafc;
-  border: 1px solid #f1f5f9;
-}
-
-.auditDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: #2563eb;
-  margin-top: 6px;
+.upcomingCallBox__icon {
+  color: var(--color-primary);
   flex-shrink: 0;
+  margin-top: 2px;
 }
 
-.auditContent {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  width: 100%;
-}
-
-.auditTopRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.auditAction {
-  font-size: 0.8125rem;
+.upcomingCallBox strong {
+  display: block;
+  font-size: 0.82rem;
   color: var(--color-text-primary);
 }
 
-.auditTime {
-  font-size: 0.72rem;
-  color: var(--color-text-muted);
-}
-
-.auditTarget {
-  font-size: 0.75rem;
+.upcomingCallBox p {
+  font-size: 0.76rem;
   color: var(--color-text-secondary);
-  margin: 0;
+  margin-top: 2px;
 }
 
-.auditTarget code {
-  background-color: #e2e8f0;
-  padding: 1px 4px;
-  border-radius: 3px;
-  font-size: 0.72rem;
-}
-
-.auditUser {
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-.loadingBox,
-.emptyBox {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 40px 0;
-  color: var(--color-text-muted);
-  font-size: 0.8125rem;
-}
-
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
   .kpiGrid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -357,17 +186,21 @@
   }
 }
 
-@media (max-width: 640px) {
-  .kpiGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .moduleGrid {
-    grid-template-columns: 1fr;
-  }
-
+@media (max-width: 767px) {
   .heroBanner {
     flex-direction: column;
     align-items: flex-start;
+    padding: 20px 18px;
+  }
+
+  .heroBanner__actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpiGrid {
+    grid-template-columns: 1fr;
   }
 }
