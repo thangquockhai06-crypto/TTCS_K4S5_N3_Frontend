@@ -5,30 +5,32 @@ import {
   UserCheck,
   MapPin,
   Edit2,
+  Check,
+  AlertCircle,
   X,
   RefreshCw,
   Building2,
 } from 'lucide-react';
 import { IOrgNode } from '../../interfaces';
 import { sprint2Service } from '../../services/sprint2Service';
-import { useToast } from '../../context/ToastContext';
 
 export const OrgTreeView: React.FC = () => {
-  const { showToast } = useToast();
   const [treeData, setTreeData] = useState<IOrgNode[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [collapsedNodes, setCollapsedNodes] = useState<Record<string, boolean>>({});
   const [editingNode, setEditingNode] = useState<IOrgNode | null>(null);
   const [leaderName, setLeaderName] = useState('');
   const [region, setRegion] = useState('');
+  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const fetchTree = async () => {
     setIsLoading(true);
+    setStatusMsg(null);
     try {
       const data = await sprint2Service.getOrgTree();
       setTreeData(data);
     } catch (err: any) {
-      showToast('error', 'Không thể tải cây tổ chức.');
+      setStatusMsg({ type: 'error', text: 'Không thể tải cây tổ chức.' });
     } finally {
       setIsLoading(false);
     }
@@ -57,11 +59,11 @@ export const OrgTreeView: React.FC = () => {
         leader_name: leaderName,
         region,
       });
-      showToast('success', `Cập nhật đơn vị "${editingNode.name}" thành công!`);
+      setStatusMsg({ type: 'success', text: `Cập nhật đơn vị "${editingNode.name}" thành công!` });
       setEditingNode(null);
       fetchTree();
     } catch (err: any) {
-      showToast('error', err.response?.data?.detail || 'Lỗi khi cập nhật đơn vị.');
+      setStatusMsg({ type: 'error', text: err.response?.data?.detail || 'Lỗi khi cập nhật đơn vị.' });
     }
   };
 
@@ -185,22 +187,19 @@ export const OrgTreeView: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-text-primary, #0f172a)', margin: 0, lineHeight: 1.3 }}>
-            Sơ đồ Cây Tổ chức Đa cấp
-          </h1>
-          <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted, #64748b)', marginTop: '4px', lineHeight: 1.5 }}>
+          <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+            Sơ đồ Cây Tổ chức Đa cấp (Organization Tree - S2-06)
+          </h2>
+          <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 0' }}>
             Phân định quyền phân cấp, bổ nhiệm Trưởng bộ phận phụ trách và thiết lập địa bàn quản lý (Region)
           </p>
         </div>
 
         <button
           type="button"
-          onClick={() => {
-            fetchTree();
-            showToast('info', 'Đã làm mới dữ liệu sơ đồ tổ chức.');
-          }}
+          onClick={fetchTree}
           disabled={isLoading}
           style={{
             display: 'inline-flex',
@@ -219,6 +218,25 @@ export const OrgTreeView: React.FC = () => {
           Làm mới
         </button>
       </div>
+
+      {statusMsg && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 14px',
+            backgroundColor: statusMsg.type === 'success' ? '#f0fdf4' : '#fef2f2',
+            border: `1px solid ${statusMsg.type === 'success' ? '#bbf7d0' : '#fecaca'}`,
+            borderRadius: '6px',
+            color: statusMsg.type === 'success' ? '#166534' : '#991b1b',
+            fontSize: '0.82rem',
+          }}
+        >
+          {statusMsg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}
+          <span>{statusMsg.text}</span>
+        </div>
+      )}
 
       {/* Tree container */}
       <div
@@ -267,7 +285,7 @@ export const OrgTreeView: React.FC = () => {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
-                Phân bổ Lãnh đạo & Địa bàn
+                Phân bổ Lãnh đạo & Địa bàn (S2-06)
               </h3>
               <button
                 type="button"

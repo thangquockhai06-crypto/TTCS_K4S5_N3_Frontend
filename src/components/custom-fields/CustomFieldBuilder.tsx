@@ -3,45 +3,23 @@ import {
   Plus,
   Trash2,
   Edit2,
+  Check,
+  AlertCircle,
   Type,
   Hash,
   Calendar,
   List,
   Eye,
   X,
-  RotateCcw,
 } from 'lucide-react';
 import { ICustomField } from '../../interfaces';
 import { sprint2Service } from '../../services/sprint2Service';
-import { useCRMData } from '../../context/CRMDataContext';
-import { CustomSelect, ICustomSelectOption } from '../common/CustomSelect';
-import { ConfirmModal } from '../common/ConfirmModal';
-import { ToastNotification, IToastItem } from '../common/ToastNotification';
-import { CustomFieldRenderer } from './CustomFieldRenderer';
 
 export const CustomFieldBuilder: React.FC = () => {
-  const { appearance } = useCRMData();
-  const isDark = appearance.theme === 'dark';
-
   const [entityType, setEntityType] = useState<'customer' | 'deal'>('customer');
   const [fields, setFields] = useState<ICustomField[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Toast notifications state
-  const [toasts, setToasts] = useState<IToastItem[]>([]);
-
-  const addToast = (type: IToastItem['type'], message: string) => {
-    const newToast: IToastItem = {
-      id: `toast-${Date.now()}-${Math.random()}`,
-      type,
-      message,
-    };
-    setToasts((prev) => [...prev, newToast]);
-  };
-
-  const handleDismissToast = (id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
+  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Form modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -51,27 +29,18 @@ export const CustomFieldBuilder: React.FC = () => {
   const [fieldType, setFieldType] = useState<'text' | 'number' | 'date' | 'select'>('text');
   const [optionsStr, setOptionsStr] = useState('');
   const [isRequired, setIsRequired] = useState(false);
-  const [defaultValue, setDefaultValue] = useState('');
-
-  // Delete Confirm Modal State
-  const [deleteModal, setDeleteModal] = useState<{
-    isOpen: boolean;
-    field: ICustomField | null;
-  }>({
-    isOpen: false,
-    field: null,
-  });
 
   // Interactive dynamic preview values state
-  const [previewValues, setPreviewValues] = useState<Record<string, string | number>>({});
+  const [previewValues, setPreviewValues] = useState<Record<string, any>>({});
 
   const fetchFields = useCallback(async () => {
     setIsLoading(true);
+    setStatusMsg(null);
     try {
       const data = await sprint2Service.getCustomFields(entityType);
       setFields(data);
-    } catch {
-      addToast('error', 'Không thể tải danh sách trường tùy chỉnh.');
+    } catch (err: any) {
+      setStatusMsg({ type: 'error', text: 'Không thể tải danh sách trường tùy chỉnh.' });
     } finally {
       setIsLoading(false);
     }
@@ -79,7 +48,6 @@ export const CustomFieldBuilder: React.FC = () => {
 
   useEffect(() => {
     fetchFields();
-    setPreviewValues({});
   }, [fetchFields]);
 
   const handleOpenCreate = () => {
@@ -89,7 +57,6 @@ export const CustomFieldBuilder: React.FC = () => {
     setFieldType('text');
     setOptionsStr('');
     setIsRequired(false);
-    setDefaultValue('');
     setIsModalOpen(true);
   };
 
@@ -100,203 +67,139 @@ export const CustomFieldBuilder: React.FC = () => {
     setFieldType(f.field_type);
     setOptionsStr(f.options || '');
     setIsRequired(f.is_required);
-    setDefaultValue(f.default_value || '');
     setIsModalOpen(true);
   };
 
   const handleSubmitForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fieldLabel.trim()) {
-      addToast('warning', 'Vui lòng nhập tên nhãn hiển thị.');
-      return;
-    }
-
     try {
       if (editingField) {
         await sprint2Service.updateCustomField(editingField.id, {
-          field_label: fieldLabel.trim(),
+          field_label: fieldLabel,
           field_type: fieldType,
-          options: fieldType === 'select' ? optionsStr.trim() : undefined,
+          options: fieldType === 'select' ? optionsStr : undefined,
           is_required: isRequired,
-          default_value: defaultValue.trim() || undefined,
         });
-        addToast('success', 'Cập nhật trường dữ liệu thành công!');
+        setStatusMsg({ type: 'success', text: 'Cập nhật trường dữ liệu thành công!' });
       } else {
-        const generatedName = fieldName.trim()
-          ? fieldName.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_')
-          : fieldLabel
-              .toLowerCase()
-              .normalize('NFD')
-              .replace(/[\u0300-\u036f]/g, '')
-              .replace(/[^a-z0-9]/g, '_');
-
         await sprint2Service.createCustomField({
           entity_type: entityType,
-          field_name: generatedName,
-          field_label: fieldLabel.trim(),
+          field_name: fieldName.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_'),
+          field_label: fieldLabel,
           field_type: fieldType,
-          options: fieldType === 'select' ? optionsStr.trim() : undefined,
+          options: fieldType === 'select' ? optionsStr : undefined,
           is_required: isRequired,
-          default_value: defaultValue.trim() || undefined,
         });
-        addToast('success', 'Thêm trường tùy chỉnh mới thành công!');
+        setStatusMsg({ type: 'success', text: 'Thêm trường tùy chỉnh mới thành công!' });
       }
       setIsModalOpen(false);
       fetchFields();
-    } catch (err: unknown) {
-      const errorMsg =
-        err instanceof Error ? err.message : 'Lỗi khi lưu cấu hình trường dữ liệu.';
-      addToast('error', errorMsg);
+    } catch (err: any) {
+      setStatusMsg({ type: 'error', text: err.response?.data?.detail || 'Lỗi lưu trường dữ liệu.' });
     }
   };
 
-  const handleRequestDelete = (f: ICustomField) => {
-    setDeleteModal({
-      isOpen: true,
-      field: f,
-    });
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!deleteModal.field) return;
+  const handleDelete = async (f: ICustomField) => {
+    if (!window.confirm(`Bạn có chắc muốn xóa trường "${f.field_label}"? Các dữ liệu đã nhập trước đó có thể bị ảnh hưởng.`)) {
+      return;
+    }
     try {
-      await sprint2Service.deleteCustomField(deleteModal.field.id);
-      addToast('success', `Đã xóa trường "${deleteModal.field.field_label}" thành công.`);
-      setDeleteModal({ isOpen: false, field: null });
+      await sprint2Service.deleteCustomField(f.id);
+      setStatusMsg({ type: 'success', text: 'Đã xóa trường tùy chỉnh thành công.' });
       fetchFields();
-    } catch (err: unknown) {
-      const errorMsg =
-        err instanceof Error ? err.message : 'Lỗi khi xóa trường tùy chỉnh.';
-      addToast('error', errorMsg);
+    } catch (err: any) {
+      setStatusMsg({ type: 'error', text: err.response?.data?.detail || 'Lỗi khi xóa trường tùy chỉnh.' });
     }
   };
 
   const renderFieldTypeIcon = (type: string) => {
     switch (type) {
       case 'number':
-        return <Hash size={14} color="#0891b2" />;
+        return <Hash size={13} color="#0891b2" />;
       case 'date':
-        return <Calendar size={14} color="#f59e0b" />;
+        return <Calendar size={13} color="#f59e0b" />;
       case 'select':
-        return <List size={14} color="#8b5cf6" />;
+        return <List size={13} color="#8b5cf6" />;
       default:
-        return <Type size={14} color="#2563eb" />;
+        return <Type size={13} color="#2563eb" />;
     }
   };
-
-  const getFieldTypeLabel = (type: string): string => {
-    switch (type) {
-      case 'number':
-        return 'Số';
-      case 'date':
-        return 'Ngày tháng';
-      case 'select':
-        return 'Danh sách chọn';
-      default:
-        return 'Văn bản';
-    }
-  };
-
-  const fieldTypeSelectOptions: ICustomSelectOption<string>[] = [
-    { value: 'text', label: 'Văn bản ngắn' },
-    { value: 'number', label: 'Số / Tiền tệ' },
-    { value: 'date', label: 'Ngày tháng' },
-    { value: 'select', label: 'Danh sách lựa chọn' },
-  ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Page Header */}
-      <header style={{ marginBottom: '20px' }}>
-        <h1
-          style={{
-            fontSize: '1.4rem',
-            fontWeight: 700,
-            color: isDark ? '#f8fafc' : 'var(--color-text-primary, #0f172a)',
-            margin: 0,
-            lineHeight: 1.3,
-          }}
-        >
-          Trình thiết kế Trường Tùy chỉnh
-        </h1>
-        <p
-          style={{
-            fontSize: '0.875rem',
-            color: isDark ? '#94a3b8' : 'var(--color-text-muted, #64748b)',
-            marginTop: '4px',
-            lineHeight: 1.5,
-          }}
-        >
-          Khai báo các trường dữ liệu tùy biến (Văn bản, Số, Ngày tháng, Danh sách chọn) cho Khách hàng &amp; Cơ hội bán hàng, tự động đồng bộ trên Biểu mẫu, Bộ lọc và Xuất Excel.
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div>
+        <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+          Trình thiết kế Trường Tùy chỉnh (Custom Field Builder - S2-08)
+        </h2>
+        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 0' }}>
+          Tạo các trường dữ liệu tùy biến (Text, Number, Date, Select) và xem trước trực quan cơ chế hiển thị trên form khách hàng / cơ hội
         </p>
-      </header>
+      </div>
 
-      {/* Entity Switcher Tabs */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '8px',
-          borderBottom: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
-          paddingBottom: '8px',
-        }}
-      >
+      {/* Entity switcher */}
+      <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>
         <button
           type="button"
           onClick={() => setEntityType('customer')}
           style={{
-            padding: '7px 16px',
+            padding: '6px 14px',
             borderRadius: '6px',
             border: 'none',
-            backgroundColor: entityType === 'customer' ? '#2563eb' : isDark ? '#1e293b' : '#f1f5f9',
-            color: entityType === 'customer' ? '#ffffff' : isDark ? '#cbd5e1' : '#475569',
-            fontSize: '0.84rem',
+            backgroundColor: entityType === 'customer' ? '#2563eb' : '#f1f5f9',
+            color: entityType === 'customer' ? '#ffffff' : '#475569',
+            fontSize: '0.82rem',
             fontWeight: 600,
             cursor: 'pointer',
-            transition: 'all 0.15s ease',
-            whiteSpace: 'nowrap',
           }}
         >
-          Trường tùy chỉnh Khách hàng
+          Trường mở rộng Khách hàng (Customer Fields)
         </button>
         <button
           type="button"
           onClick={() => setEntityType('deal')}
           style={{
-            padding: '7px 16px',
+            padding: '6px 14px',
             borderRadius: '6px',
             border: 'none',
-            backgroundColor: entityType === 'deal' ? '#2563eb' : isDark ? '#1e293b' : '#f1f5f9',
-            color: entityType === 'deal' ? '#ffffff' : isDark ? '#cbd5e1' : '#475569',
-            fontSize: '0.84rem',
+            backgroundColor: entityType === 'deal' ? '#2563eb' : '#f1f5f9',
+            color: entityType === 'deal' ? '#ffffff' : '#475569',
+            fontSize: '0.82rem',
             fontWeight: 600,
             cursor: 'pointer',
-            transition: 'all 0.15s ease',
-            whiteSpace: 'nowrap',
           }}
         >
-          Trường tùy chỉnh Cơ hội bán hàng
+          Trường mở rộng Cơ hội bán hàng (Deal Fields)
         </button>
       </div>
 
-      {/* Main Grid: Left = Table of fields, Right = Dynamic Field Renderer Preview */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-          gap: '20px',
-          alignItems: 'start',
-        }}
-      >
-        {/* Left Column: Configured Fields List */}
+      {statusMsg && (
         <div
           style={{
-            backgroundColor: isDark ? '#1e293b' : '#ffffff',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 14px',
+            backgroundColor: statusMsg.type === 'success' ? '#f0fdf4' : '#fef2f2',
+            border: `1px solid ${statusMsg.type === 'success' ? '#bbf7d0' : '#fecaca'}`,
+            borderRadius: '6px',
+            color: statusMsg.type === 'success' ? '#166534' : '#991b1b',
+            fontSize: '0.82rem',
+          }}
+        >
+          {statusMsg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}
+          <span>{statusMsg.text}</span>
+        </div>
+      )}
+
+      {/* Main Grid: Left = Table of fields, Right = Dynamic Field Renderer Preview */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
+        {/* Left: Fields List */}
+        <div
+          style={{
+            backgroundColor: '#ffffff',
             borderRadius: '8px',
-            border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
-            boxShadow: isDark
-              ? '0 1px 3px rgba(0, 0, 0, 0.4)'
-              : '0 1px 3px rgba(0, 0, 0, 0.05)',
-            overflow: 'hidden',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
           }}
         >
           <div
@@ -305,17 +208,10 @@ export const CustomFieldBuilder: React.FC = () => {
               justifyContent: 'space-between',
               alignItems: 'center',
               padding: '12px 16px',
-              borderBottom: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
-              backgroundColor: isDark ? '#111827' : '#ffffff',
+              borderBottom: '1px solid #e2e8f0',
             }}
           >
-            <span
-              style={{
-                fontSize: '0.86rem',
-                fontWeight: 600,
-                color: isDark ? '#f1f5f9' : '#334155',
-              }}
-            >
+            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
               Danh sách trường cấu hình ({fields.length})
             </span>
             <button
@@ -324,223 +220,100 @@ export const CustomFieldBuilder: React.FC = () => {
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '5px',
-                padding: '6px 12px',
+                gap: '4px',
+                padding: '5px 10px',
                 borderRadius: '6px',
                 border: 'none',
                 backgroundColor: '#2563eb',
                 color: '#ffffff',
-                fontSize: '0.8rem',
+                fontSize: '0.78rem',
                 fontWeight: 600,
                 cursor: 'pointer',
-                transition: 'background-color 0.15s',
               }}
             >
-              <Plus size={14} /> Thêm trường mới
+              <Plus size={13} /> Thêm trường
             </button>
           </div>
 
-          <div style={{ overflowX: 'auto' }}>
-            <table
-              style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                fontSize: '0.82rem',
-                textAlign: 'left',
-              }}
-            >
-              <thead
-                style={{
-                  backgroundColor: isDark ? '#0f172a' : '#f8fafc',
-                  borderBottom: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
-                }}
-              >
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left' }}>
+            <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+              <tr>
+                <th style={{ padding: '8px 12px', color: '#64748b' }}>Nhãn (Label)</th>
+                <th style={{ padding: '8px 12px', color: '#64748b' }}>Mã trường</th>
+                <th style={{ padding: '8px 12px', color: '#64748b' }}>Kiểu dữ liệu</th>
+                <th style={{ padding: '8px 12px', textAlign: 'right', color: '#64748b' }}>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
                 <tr>
-                  <th style={{ padding: '10px 14px', color: isDark ? '#94a3b8' : '#64748b', whiteSpace: 'nowrap' }}>
-                    Nhãn hiển thị
-                  </th>
-                  <th style={{ padding: '10px 14px', color: isDark ? '#94a3b8' : '#64748b', whiteSpace: 'nowrap' }}>
-                    Mã trường
-                  </th>
-                  <th style={{ padding: '10px 14px', color: isDark ? '#94a3b8' : '#64748b', whiteSpace: 'nowrap' }}>
-                    Kiểu dữ liệu
-                  </th>
-                  <th style={{ padding: '10px 14px', color: isDark ? '#94a3b8' : '#64748b', textAlign: 'center', whiteSpace: 'nowrap', minWidth: '100px' }}>
-                    Bắt buộc
-                  </th>
-                  <th
-                    style={{
-                      padding: '10px 14px',
-                      textAlign: 'right',
-                      color: isDark ? '#94a3b8' : '#64748b',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    Thao tác
-                  </th>
+                  <td colSpan={4} style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>
+                    Đang nạp trường tùy chỉnh...
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      style={{
-                        padding: '28px',
-                        textAlign: 'center',
-                        color: isDark ? '#94a3b8' : '#64748b',
-                      }}
-                    >
-                      Đang nạp trường tùy chỉnh...
+              ) : fields.length === 0 ? (
+                <tr>
+                  <td colSpan={4} style={{ padding: '24px', textAlign: 'center', color: '#94a3b8' }}>
+                    Chưa có trường tùy biến nào.
+                  </td>
+                </tr>
+              ) : (
+                fields.map((f) => (
+                  <tr key={f.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <td style={{ padding: '8px 12px', fontWeight: 500, color: '#1e293b' }}>
+                      {f.field_label}
+                      {f.is_required && <span style={{ color: '#dc2626', marginLeft: '2px' }}>*</span>}
                     </td>
-                  </tr>
-                ) : fields.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      style={{
-                        padding: '28px',
-                        textAlign: 'center',
-                        color: isDark ? '#64748b' : '#94a3b8',
-                      }}
-                    >
-                      Chưa có trường tùy biến nào. Hãy nhấn "Thêm trường mới".
+                    <td style={{ padding: '8px 12px', color: '#64748b' }}>
+                      <code>{f.field_name}</code>
                     </td>
-                  </tr>
-                ) : (
-                  fields.map((f) => (
-                    <tr
-                      key={f.id}
-                      style={{
-                        borderBottom: `1px solid ${isDark ? '#334155' : '#f1f5f9'}`,
-                      }}
-                    >
-                      <td
+                    <td style={{ padding: '8px 12px' }}>
+                      <span
                         style={{
-                          padding: '10px 14px',
-                          fontWeight: 500,
-                          color: isDark ? '#f8fafc' : '#1e293b',
-                          whiteSpace: 'nowrap',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          textTransform: 'capitalize',
+                          fontSize: '0.75rem',
+                          color: '#334155',
                         }}
                       >
-                        {f.field_label}
-                      </td>
-                      <td style={{ padding: '10px 14px', color: isDark ? '#cbd5e1' : '#64748b', whiteSpace: 'nowrap' }}>
-                        <code
-                          style={{
-                            backgroundColor: isDark ? '#0f172a' : '#f1f5f9',
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                            fontSize: '0.78rem',
-                          }}
+                        {renderFieldTypeIcon(f.field_type)}
+                        {f.field_type}
+                      </span>
+                    </td>
+                    <td style={{ padding: '8px 12px', textAlign: 'right' }}>
+                      <div style={{ display: 'inline-flex', gap: '6px' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEdit(f)}
+                          style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', padding: '2px' }}
                         >
-                          {f.field_name}
-                        </code>
-                      </td>
-                      <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                        <span
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '5px',
-                            fontSize: '0.78rem',
-                            color: isDark ? '#e2e8f0' : '#334155',
-                            whiteSpace: 'nowrap',
-                          }}
+                          <Edit2 size={13} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(f)}
+                          style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', padding: '2px' }}
                         >
-                          {renderFieldTypeIcon(f.field_type)}
-                          {getFieldTypeLabel(f.field_type)}
-                        </span>
-                      </td>
-                      <td style={{ padding: '10px 14px', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                        {f.is_required ? (
-                          <span
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              whiteSpace: 'nowrap',
-                              padding: '3px 10px',
-                              borderRadius: '999px',
-                              backgroundColor: isDark ? 'rgba(239, 68, 68, 0.2)' : '#fee2e2',
-                              color: isDark ? '#f87171' : '#dc2626',
-                              fontSize: '0.74rem',
-                              fontWeight: 600,
-                            }}
-                          >
-                            Bắt buộc
-                          </span>
-                        ) : (
-                          <span
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              whiteSpace: 'nowrap',
-                              padding: '3px 10px',
-                              borderRadius: '999px',
-                              backgroundColor: isDark ? 'rgba(100, 116, 139, 0.2)' : '#f1f5f9',
-                              color: isDark ? '#94a3b8' : '#64748b',
-                              fontSize: '0.74rem',
-                            }}
-                          >
-                            Không
-                          </span>
-                        )}
-                      </td>
-                      <td style={{ padding: '10px 14px', textAlign: 'right', whiteSpace: 'nowrap' }}>
-                        <div style={{ display: 'inline-flex', gap: '8px' }}>
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEdit(f)}
-                            title="Chỉnh sửa trường"
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              color: isDark ? '#60a5fa' : '#2563eb',
-                              cursor: 'pointer',
-                              padding: '4px',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                            }}
-                          >
-                            <Edit2 size={15} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleRequestDelete(f)}
-                            title="Xóa trường"
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              color: isDark ? '#f87171' : '#dc2626',
-                              cursor: 'pointer',
-                              padding: '4px',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                            }}
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
 
-        {/* Right Column: Dynamic Field Renderer Preview */}
+        {/* Right: Dynamic Field Renderer Preview */}
         <div
           style={{
-            backgroundColor: isDark ? '#1e293b' : '#ffffff',
+            backgroundColor: '#ffffff',
             borderRadius: '8px',
-            border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
-            boxShadow: isDark
-              ? '0 1px 3px rgba(0, 0, 0, 0.4)'
-              : '0 1px 3px rgba(0, 0, 0, 0.05)',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
             display: 'flex',
             flexDirection: 'column',
           }}
@@ -548,61 +321,74 @@ export const CustomFieldBuilder: React.FC = () => {
           <div
             style={{
               padding: '12px 16px',
-              borderBottom: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+              borderBottom: '1px solid #e2e8f0',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between',
-              backgroundColor: isDark ? '#111827' : '#ffffff',
+              gap: '6px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Eye size={16} color="#2563eb" />
-              <span
-                style={{
-                  fontSize: '0.86rem',
-                  fontWeight: 600,
-                  color: isDark ? '#f1f5f9' : '#334155',
-                }}
-              >
-                Khung xem trước Biểu mẫu Động
-              </span>
-            </div>
-
-            {Object.keys(previewValues).length > 0 && (
-              <button
-                type="button"
-                onClick={() => setPreviewValues({})}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  background: 'none',
-                  border: 'none',
-                  color: isDark ? '#94a3b8' : '#64748b',
-                  fontSize: '0.76rem',
-                  cursor: 'pointer',
-                }}
-                title="Xóa giá trị đã nhập thử"
-              >
-                <RotateCcw size={12} />
-                <span>Làm mới</span>
-              </button>
-            )}
+            <Eye size={15} color="#2563eb" />
+            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
+              Khung xem trước Form Động (Dynamic Field Renderer)
+            </span>
           </div>
 
           <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <span style={{ fontSize: '0.8rem', color: isDark ? '#94a3b8' : '#64748b' }}>
-              Trình tạo biểu mẫu động tự động sinh các ô nhập theo đúng kiểu dữ liệu (Văn bản, Số, Ngày tháng, Danh sách chọn). Thử nhập dữ liệu trực tiếp dưới đây:
+            <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
+              Các trường tùy chỉnh sẽ tự động hiển thị trong chi tiết {entityType === 'customer' ? 'Khách hàng' : 'Cơ hội'} tương ứng:
             </span>
 
-            <CustomFieldRenderer
-              fields={fields}
-              values={previewValues}
-              onChange={(fieldNameKey, val) =>
-                setPreviewValues((prev) => ({ ...prev, [fieldNameKey]: val }))
-              }
-              layout="stack"
-            />
+            {fields.map((f) => (
+              <div key={`preview-field-${f.id}`} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155' }}>
+                  {f.field_label} {f.is_required && <span style={{ color: '#dc2626' }}>*</span>}
+                </label>
+
+                {f.field_type === 'text' && (
+                  <input
+                    type="text"
+                    placeholder={`Nhập ${f.field_label.toLowerCase()}...`}
+                    value={previewValues[f.field_name] || ''}
+                    onChange={(e) => setPreviewValues({ ...previewValues, [f.field_name]: e.target.value })}
+                    style={{ padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem' }}
+                  />
+                )}
+
+                {f.field_type === 'number' && (
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={previewValues[f.field_name] || ''}
+                    onChange={(e) => setPreviewValues({ ...previewValues, [f.field_name]: e.target.value })}
+                    style={{ padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem' }}
+                  />
+                )}
+
+                {f.field_type === 'date' && (
+                  <input
+                    type="date"
+                    value={previewValues[f.field_name] || ''}
+                    onChange={(e) => setPreviewValues({ ...previewValues, [f.field_name]: e.target.value })}
+                    style={{ padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem' }}
+                  />
+                )}
+
+                {f.field_type === 'select' && (
+                  <select
+                    value={previewValues[f.field_name] || ''}
+                    onChange={(e) => setPreviewValues({ ...previewValues, [f.field_name]: e.target.value })}
+                    style={{ padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', backgroundColor: '#ffffff' }}
+                  >
+                    <option value="">-- Chọn {f.field_label.toLowerCase()} --</option>
+                    {(f.options ? f.options.split(',') : []).map((opt) => (
+                      <option key={opt.trim()} value={opt.trim()}>
+                        {opt.trim()}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -613,296 +399,133 @@ export const CustomFieldBuilder: React.FC = () => {
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: isDark ? 'rgba(0, 0, 0, 0.75)' : 'rgba(15, 23, 42, 0.5)',
+            backgroundColor: 'rgba(15, 23, 42, 0.45)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 9999,
             padding: '16px',
-            animation: 'fadeIn 0.15s ease-out',
           }}
         >
           <div
             style={{
-              backgroundColor: isDark ? '#111827' : '#ffffff',
+              backgroundColor: '#ffffff',
               borderRadius: '8px',
-              border: isDark ? '1px solid #1e293b' : 'none',
               width: '100%',
-              maxWidth: '480px',
-              padding: '24px',
+              maxWidth: '460px',
+              padding: '20px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '16px',
-              boxShadow: isDark
-                ? '0 20px 25px -5px rgba(0, 0, 0, 0.5)'
-                : '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+              gap: '14px',
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: '1.05rem',
-                  fontWeight: 700,
-                  color: isDark ? '#f8fafc' : '#0f172a',
-                }}
-              >
-                {editingField ? 'Chỉnh sửa Trường tùy biến' : 'Thêm mới Trường tùy biến'}
+              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
+                {editingField ? 'Chỉnh sửa Trường tùy biến' : 'Thêm mới Trường tùy biến (S2-08)'}
               </h3>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: isDark ? '#94a3b8' : '#64748b',
-                  display: 'inline-flex',
-                }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
               >
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmitForm} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <form onSubmit={handleSubmitForm} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '0.8rem',
-                    fontWeight: 600,
-                    color: isDark ? '#cbd5e1' : '#475569',
-                    marginBottom: '5px',
-                  }}
-                >
-                  Tên nhãn hiển thị <span style={{ color: '#dc2626' }}>*</span>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
+                  Tên nhãn hiển thị (Field Label) *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="Ví dụ: Mã số thuế doanh nghiệp, Ngân sách dự kiến"
+                  placeholder="Ví dụ: Mã số thuế doanh nghiệp"
                   value={fieldLabel}
                   onChange={(e) => setFieldLabel(e.target.value)}
-                  style={{
-                    width: '100%',
-                    height: '38px',
-                    padding: '0 12px',
-                    borderRadius: '6px',
-                    border: `1px solid ${isDark ? '#334155' : '#cbd5e1'}`,
-                    backgroundColor: isDark ? '#1e293b' : '#ffffff',
-                    color: isDark ? '#f8fafc' : '#0f172a',
-                    fontSize: '0.84rem',
-                    boxSizing: 'border-box',
-                    outline: 'none',
-                  }}
+                  style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', boxSizing: 'border-box' }}
                 />
               </div>
 
               {!editingField && (
                 <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      fontSize: '0.8rem',
-                      fontWeight: 600,
-                      color: isDark ? '#cbd5e1' : '#475569',
-                      marginBottom: '5px',
-                    }}
-                  >
-                    Mã trường kỹ thuật
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="ma_so_thue, ngan_sach (tự động tạo nếu để trống)"
-                    value={fieldName}
-                    onChange={(e) => setFieldName(e.target.value)}
-                    style={{
-                      width: '100%',
-                      height: '38px',
-                      padding: '0 12px',
-                      borderRadius: '6px',
-                      border: `1px solid ${isDark ? '#334155' : '#cbd5e1'}`,
-                      backgroundColor: isDark ? '#1e293b' : '#ffffff',
-                      color: isDark ? '#f8fafc' : '#0f172a',
-                      fontSize: '0.84rem',
-                      boxSizing: 'border-box',
-                      outline: 'none',
-                    }}
-                  />
-                  <span style={{ fontSize: '0.74rem', color: isDark ? '#94a3b8' : '#64748b' }}>
-                    Dùng làm định danh cột khi xuất Excel và liên kết hệ thống
-                  </span>
-                </div>
-              )}
-
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '0.8rem',
-                    fontWeight: 600,
-                    color: isDark ? '#cbd5e1' : '#475569',
-                    marginBottom: '5px',
-                  }}
-                >
-                  Kiểu dữ liệu <span style={{ color: '#dc2626' }}>*</span>
-                </label>
-                <CustomSelect
-                  value={fieldType}
-                  options={fieldTypeSelectOptions}
-                  onChange={(val) => setFieldType(val as 'text' | 'number' | 'date' | 'select')}
-                  height="38px"
-                />
-              </div>
-
-              {fieldType === 'select' && (
-                <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      fontSize: '0.8rem',
-                      fontWeight: 600,
-                      color: isDark ? '#cbd5e1' : '#475569',
-                      marginBottom: '5px',
-                    }}
-                  >
-                    Các tùy chọn (Phân cách bằng dấu phẩy) <span style={{ color: '#dc2626' }}>*</span>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
+                    Tên biến kỹ thuật (Field Name) *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="Lựa chọn 1, Lựa chọn 2, Lựa chọn 3"
-                    value={optionsStr}
-                    onChange={(e) => setOptionsStr(e.target.value)}
-                    style={{
-                      width: '100%',
-                      height: '38px',
-                      padding: '0 12px',
-                      borderRadius: '6px',
-                      border: `1px solid ${isDark ? '#334155' : '#cbd5e1'}`,
-                      backgroundColor: isDark ? '#1e293b' : '#ffffff',
-                      color: isDark ? '#f8fafc' : '#0f172a',
-                      fontSize: '0.84rem',
-                      boxSizing: 'border-box',
-                      outline: 'none',
-                    }}
+                    placeholder="tax_code"
+                    value={fieldName}
+                    onChange={(e) => setFieldName(e.target.value)}
+                    style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', boxSizing: 'border-box' }}
                   />
                 </div>
               )}
 
               <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '0.8rem',
-                    fontWeight: 600,
-                    color: isDark ? '#cbd5e1' : '#475569',
-                    marginBottom: '5px',
-                  }}
-                >
-                  Giá trị mặc định (Tùy chọn)
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
+                  Kiểu dữ liệu (Field Type) *
                 </label>
-                <input
-                  type="text"
-                  placeholder="Để trống nếu không có giá trị mặc định"
-                  value={defaultValue}
-                  onChange={(e) => setDefaultValue(e.target.value)}
-                  style={{
-                    width: '100%',
-                    height: '38px',
-                    padding: '0 12px',
-                    borderRadius: '6px',
-                    border: `1px solid ${isDark ? '#334155' : '#cbd5e1'}`,
-                    backgroundColor: isDark ? '#1e293b' : '#ffffff',
-                    color: isDark ? '#f8fafc' : '#0f172a',
-                    fontSize: '0.84rem',
-                    boxSizing: 'border-box',
-                    outline: 'none',
-                  }}
-                />
+                <select
+                  value={fieldType}
+                  onChange={(e) => setFieldType(e.target.value as any)}
+                  style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', backgroundColor: '#ffffff', boxSizing: 'border-box' }}
+                >
+                  <option value="text">Văn bản ngắn (Text)</option>
+                  <option value="number">Số / Tiền tệ (Number)</option>
+                  <option value="date">Ngày tháng (Date)</option>
+                  <option value="select">Danh sách lựa chọn (Select Dropdown)</option>
+                </select>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+              {fieldType === 'select' && (
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
+                    Các tùy chọn (Phân cách bằng dấu phẩy) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Loại A, Loại B, Loại C"
+                    value={optionsStr}
+                    onChange={(e) => setOptionsStr(e.target.value)}
+                    style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', boxSizing: 'border-box' }}
+                  />
+                </div>
+              )}
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <input
                   type="checkbox"
                   id="isRequiredField"
                   checked={isRequired}
                   onChange={(e) => setIsRequired(e.target.checked)}
-                  style={{ width: '16px', height: '16px', cursor: 'pointer' }}
                 />
-                <label
-                  htmlFor="isRequiredField"
-                  style={{
-                    fontSize: '0.84rem',
-                    color: isDark ? '#cbd5e1' : '#334155',
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                  }}
-                >
-                  Bắt buộc nhập trên biểu mẫu
+                <label htmlFor="isRequiredField" style={{ fontSize: '0.8rem', color: '#334155', cursor: 'pointer' }}>
+                  Bắt buộc nhập (Required)
                 </label>
               </div>
 
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  gap: '10px',
-                  marginTop: '10px',
-                  borderTop: `1px solid ${isDark ? '#1e293b' : '#f1f5f9'}`,
-                  paddingTop: '14px',
-                }}
-              >
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '6px' }}>
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  style={{
-                    padding: '7px 14px',
-                    borderRadius: '6px',
-                    border: `1px solid ${isDark ? '#334155' : '#cbd5e1'}`,
-                    backgroundColor: isDark ? '#1e293b' : '#ffffff',
-                    color: isDark ? '#cbd5e1' : '#475569',
-                    fontSize: '0.84rem',
-                    cursor: 'pointer',
-                  }}
+                  style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #cbd5e1', backgroundColor: '#ffffff', fontSize: '0.8rem', cursor: 'pointer' }}
                 >
-                  Hủy bỏ
+                  Hủy
                 </button>
                 <button
                   type="submit"
-                  style={{
-                    padding: '7px 18px',
-                    borderRadius: '6px',
-                    border: 'none',
-                    backgroundColor: '#2563eb',
-                    color: '#ffffff',
-                    fontSize: '0.84rem',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
+                  style={{ padding: '6px 14px', borderRadius: '4px', border: 'none', backgroundColor: '#2563eb', color: '#ffffff', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
                 >
-                  {editingField ? 'Lưu cập nhật' : 'Tạo trường mới'}
+                  Lưu cấu hình
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-
-      {/* Delete Confirmation Modal */}
-      <ConfirmModal
-        isOpen={deleteModal.isOpen}
-        title="Xác nhận xóa trường tùy chỉnh"
-        message={`Bạn có chắc chắn muốn xóa trường "${deleteModal.field?.field_label}"? Các dữ liệu đã lưu trữ tương ứng trong Khách hàng / Cơ hội và file xuất Excel có thể bị ảnh hưởng.`}
-        confirmLabel="Xóa vĩnh viễn"
-        cancelLabel="Hủy bỏ"
-        isDanger={true}
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setDeleteModal({ isOpen: false, field: null })}
-      />
-
-      {/* Toast Notification Container in bottom-right corner */}
-      <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />
     </div>
   );
 };

@@ -74,7 +74,6 @@ export interface ICustomer {
   activities: ICustomerActivity[];
   notes: ICustomerNote[];
   files: ICustomerFile[];
-  custom_fields?: Record<string, string | number>;
 }
 
 export type CustomerSortFieldType = 'dealValue' | 'fullName' | 'company' | 'healthScore' | 'lastContactedAt';
@@ -105,5 +104,4 @@ export interface CreateCustomerDTO {
   ownerName: string;
   tags: string[];
   summary: string;
-  custom_fields?: Record<string, string | number>;
 }

@@ -22,7 +22,6 @@ import {
   normalizeVietnamPhone,
 } from '../../mock/auth.mock';
 import { createAvatarSvgDataUri } from '../../utils/formatters';
-import { useToast } from '../../context/ToastContext';
 import styles from './SocialPhoneAuthSection.module.css';
 
 export interface ISocialPhoneAuthSectionProps {
@@ -173,7 +172,6 @@ export const SocialPhoneAuthSection: React.FC<ISocialPhoneAuthSectionProps> = ({
   disabled = false,
 }) => {
   const { loginWithSocial, sendPhoneOtp, verifyPhoneOtp, isLoading } = useAuth();
-  const { showToast } = useToast();
   const navigate = useNavigate();
 
   const [activeProvider, setActiveProvider] = useState<AuthProviderType | null>(null);
@@ -325,7 +323,6 @@ export const SocialPhoneAuthSection: React.FC<ISocialPhoneAuthSectionProps> = ({
         JSON.stringify(nextList)
       );
       loadAccountsFromDataStore(activeProvider);
-      showToast('info', 'Đã xóa tài khoản khỏi danh sách lưu trữ trên trình duyệt.');
     } catch {
       // ignore
     }
@@ -374,12 +371,10 @@ export const SocialPhoneAuthSection: React.FC<ISocialPhoneAuthSectionProps> = ({
 
       setActiveProvider(null);
       setIsProcessingJwt(false);
-      showToast('success', 'Đăng nhập thành công! Chào mừng bạn vào hệ thống.');
       navigate('/dashboard');
     } catch {
       setIsProcessingJwt(false);
       setFieldError('Không thể xác minh mã thông báo nhận dạng JWT.');
-      showToast('error', 'Không thể xác thực danh tính. Vui lòng thử lại.');
     }
   };
 
@@ -575,9 +570,9 @@ export const SocialPhoneAuthSection: React.FC<ISocialPhoneAuthSectionProps> = ({
   const handleSaveToChooserListOnly = (): void => {
     const saved = verifyAndSaveAccount();
     if (!saved) return;
-    const msg = `Đã thêm tài khoản "${saved.user.fullName}" vào dữ liệu thành công! Bạn có thể chọn để đăng nhập.`;
-    setStatusNotice(msg);
-    showToast('success', msg);
+    setStatusNotice(
+      `Đã thêm tài khoản "${saved.user.fullName}" vào dữ liệu thành công! Bạn có thể chọn để đăng nhập.`
+    );
     setStage('account_chooser');
   };
 
@@ -1061,7 +1056,7 @@ export const SocialPhoneAuthSection: React.FC<ISocialPhoneAuthSectionProps> = ({
                             onClick={() => setShowSecret((p) => !p)}
                             aria-label={showSecret ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
                           >
-                            {showSecret ? <Eye size={16} /> : <EyeOff size={16} />}
+                            {showSecret ? <EyeOff size={16} /> : <Eye size={16} />}
                           </button>
                         )}
                       </div>
