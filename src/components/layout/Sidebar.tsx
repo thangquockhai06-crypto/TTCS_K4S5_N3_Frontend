@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   Building2,
+  Clock,
   FileText,
   FolderTree,
   GitCommit,
@@ -12,6 +13,7 @@ import {
   Sliders,
   Target,
   UserCheck,
+  Users,
   X,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -36,6 +38,20 @@ const ALL_MENU_ITEMS: ReadonlyArray<IMenuItem> = [
     path: '/dashboard',
     icon: <LayoutDashboard size={19} />,
     requiredPermission: 'view_dashboard',
+  },
+  {
+    id: 'customers',
+    label: 'Khách hàng Doanh nghiệp',
+    path: '/customers',
+    icon: <Users size={19} />,
+    requiredPermission: 'manage_customers',
+  },
+  {
+    id: 'stagnant-customers',
+    label: 'Chăm sóc định kỳ',
+    path: '/customers/stagnant',
+    icon: <Clock size={19} />,
+    requiredPermission: 'manage_customers',
   },
   {
     id: 'users',
