@@ -204,7 +204,7 @@ export const Sidebar: React.FC<ISidebarProps> = ({
         </nav>
 
         <div className={styles.sidebar__footer}>
-          <div className={styles.sidebar__tokenStatus} title="S1-02 Bảo vệ phiên JWT">
+          <div className={styles.sidebar__tokenStatus} title="Bảo vệ phiên JWT">
             <ShieldCheck size={14} className={styles.sidebar__tokenIcon} />
             <div className={styles.sidebar__tokenMeta}>
               <span className={styles.sidebar__tokenTitle}>Phiên JWT Hoạt động</span>

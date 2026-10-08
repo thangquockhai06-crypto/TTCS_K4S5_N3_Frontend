@@ -95,7 +95,7 @@ export const ExcelImportModal: React.FC<IExcelImportModalProps> = ({
         >
           <div>
             <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#0f172a' }}>
-              Nhập danh sách người dùng từ Excel / CSV (S2-01)
+              Nhập danh sách người dùng từ Excel / CSV
             </h2>
             <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: '#64748b' }}>
               Tải lên tệp danh sách nhân sự để thêm hàng loạt tài khoản vào hệ thống CRM

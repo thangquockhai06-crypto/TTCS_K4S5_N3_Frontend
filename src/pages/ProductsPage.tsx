@@ -6,7 +6,7 @@ export const ProductsPage: React.FC = () => {
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px 16px' }}>
       <header style={{ marginBottom: '20px' }}>
         <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-          Danh mục Sản phẩm & Dịch vụ (S2-05)
+          Danh mục Sản phẩm & Dịch vụ
         </h1>
         <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '4px' }}>
           Quản lý sản phẩm, bảng giá niêm yết, bảo mật giá vốn (Cost Price) cho Giám đốc và kiểm soát ràng buộc báo giá

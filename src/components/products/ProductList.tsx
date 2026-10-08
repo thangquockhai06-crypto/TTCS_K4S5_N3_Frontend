@@ -386,7 +386,7 @@ export const ProductList: React.FC = () => {
                         }}
                         title={
                           p.quote_count > 0
-                            ? 'Không thể xóa sản phẩm đã có báo giá liên kết (S2-05)'
+                            ? 'Không thể xóa sản phẩm đã có báo giá liên kết'
                             : 'Xóa sản phẩm'
                         }
                       >
@@ -429,7 +429,7 @@ export const ProductList: React.FC = () => {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
-                {editingProduct ? 'Chỉnh sửa Sản phẩm' : 'Thêm mới Sản phẩm (S2-05)'}
+                {editingProduct ? 'Chỉnh sửa Sản phẩm' : 'Thêm mới Sản phẩm'}
               </h3>
               <button
                 type="button"

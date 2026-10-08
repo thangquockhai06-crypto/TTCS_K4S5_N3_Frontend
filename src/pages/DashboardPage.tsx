@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
   Building2,
+  CheckCircle2,
   FileText,
   FolderTree,
   GitCommit,
@@ -14,6 +15,7 @@ import {
   Target,
   UserCheck,
   Users,
+  X,
 } from 'lucide-react';
 import { Card } from '../components/common';
 import { useAuth } from '../hooks/useAuth';
@@ -25,6 +27,11 @@ import styles from './DashboardPage.module.css';
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const [showLoginToast, setShowLoginToast] = useState<boolean>(() => {
+    return Boolean((location.state as any)?.loginSuccess);
+  });
 
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -34,6 +41,15 @@ export const DashboardPage: React.FC = () => {
     totalAuditLogs: 0,
   });
   const [recentLogs, setRecentLogs] = useState<IAuditLogItem[]>([]);
+
+  useEffect(() => {
+    if (showLoginToast) {
+      const timer = window.setTimeout(() => {
+        setShowLoginToast(false);
+      }, 5000);
+      return () => window.clearTimeout(timer);
+    }
+  }, [showLoginToast]);
 
   useEffect(() => {
     let isMounted = true;
@@ -56,11 +72,24 @@ export const DashboardPage: React.FC = () => {
 
         if (!isMounted) return;
 
-        const totalUsers = usersRes.status === 'fulfilled' ? usersRes.value.total : 0;
-        const totalProducts = productsRes.status === 'fulfilled' ? productsRes.value.length : 0;
-        const totalCategories = categoriesRes.status === 'fulfilled' ? categoriesRes.value.length : 0;
-        const totalAuditLogs = auditRes.status === 'fulfilled' ? auditRes.value.total : 0;
-        const logs = auditRes.status === 'fulfilled' ? auditRes.value.items : [];
+        const totalUsers = usersRes.status === 'fulfilled' ? (usersRes.value?.total ?? 0) : 0;
+        const totalProducts =
+          productsRes.status === 'fulfilled' && Array.isArray(productsRes.value)
+            ? productsRes.value.length
+            : 0;
+        const totalCategories =
+          categoriesRes.status === 'fulfilled' && Array.isArray(categoriesRes.value)
+            ? categoriesRes.value.length
+            : 0;
+        const totalAuditLogs = auditRes.status === 'fulfilled' ? (auditRes.value?.total ?? 0) : 0;
+
+        let logs: IAuditLogItem[] = [];
+        if (auditRes.status === 'fulfilled' && auditRes.value) {
+          const rawItems = auditRes.value.items || (auditRes.value as any).data;
+          if (Array.isArray(rawItems)) {
+            logs = rawItems;
+          }
+        }
 
         setStats({
           totalUsers,
@@ -90,61 +119,85 @@ export const DashboardPage: React.FC = () => {
       desc: 'Quản trị tài khoản, phân vai trò, nhóm làm việc và kiểm soát đăng nhập',
       icon: <UserCheck size={22} style={{ color: '#2563eb' }} />,
       path: '/users',
-      badge: 'S1-08 / S1-09',
     },
     {
       title: 'Cơ cấu Tổ chức',
       desc: 'Sơ đồ cây phòng ban, phân cấp nhân sự và quản lý đơn vị tổ chức',
       icon: <Building2 size={22} style={{ color: '#0891b2' }} />,
       path: '/organization',
-      badge: 'S2-06',
     },
     {
       title: 'Danh mục Dùng chung',
       desc: 'Quản lý các danh mục tra cứu chuẩn hóa dùng chung toàn hệ thống CRM',
       icon: <FolderTree size={22} style={{ color: '#7c3aed' }} />,
       path: '/categories',
-      badge: 'S2-07',
     },
     {
       title: 'Sản phẩm & Bảng giá',
       desc: 'Danh mục sản phẩm, dịch vụ và chính sách giá niêm yết bảo mật',
       icon: <Package size={22} style={{ color: '#059669' }} />,
       path: '/products',
-      badge: 'S2-05',
     },
     {
       title: 'Cấu hình Pipeline & Xác suất',
       desc: 'Thiết lập các giai đoạn phễu bán hàng và tỷ lệ xác suất thành công',
       icon: <GitCommit size={22} style={{ color: '#ea580c' }} />,
       path: '/pipeline',
-      badge: 'S2-09',
     },
     {
       title: 'Lý do Thắng/Thua & Đối thủ',
       desc: 'Chuẩn hóa lý do chốt thành công, thất bại và theo dõi đối thủ cạnh tranh',
       icon: <Target size={22} style={{ color: '#d97706' }} />,
       path: '/win-loss',
-      badge: 'S2-10',
     },
     {
       title: 'Trường Tùy chỉnh (Custom Fields)',
       desc: 'Định nghĩa các thuộc tính mở rộng cho đối tượng dữ liệu hệ thống',
       icon: <Sliders size={22} style={{ color: '#4f46e5' }} />,
       path: '/custom-fields',
-      badge: 'S2-08',
     },
     {
       title: 'Nhật ký Kiểm toán Hệ thống',
       desc: 'Theo dõi chi tiết các biến động dữ liệu và so sánh thay đổi Diff Viewer',
       icon: <FileText size={22} style={{ color: '#dc2626' }} />,
       path: '/audit-logs',
-      badge: 'S2-04',
     },
   ];
 
   return (
     <div className={styles.dashboard}>
+      {/* Toast thông báo đăng nhập thành công */}
+      {showLoginToast && (
+        <motion.div
+          className={styles.loginToast}
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -12 }}
+          transition={{ duration: 0.25 }}
+          role="status"
+          aria-live="polite"
+        >
+          <div className={styles.loginToast__content}>
+            <CheckCircle2 size={24} className={styles.loginToast__icon} />
+            <div>
+              <h4 className={styles.loginToast__title}>Đăng nhập thành công!</h4>
+              <p className={styles.loginToast__desc}>
+                Chào mừng <strong>{displayName}</strong> đã đăng nhập thành công vào hệ thống NexusCRM Enterprise.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowLoginToast(false)}
+            className={styles.loginToast__closeBtn}
+            aria-label="Đóng thông báo"
+            title="Đóng thông báo"
+          >
+            <X size={16} />
+          </button>
+        </motion.div>
+      )}
+
       {/* Hero Banner */}
       <motion.section
         className={styles.heroBanner}
@@ -261,7 +314,6 @@ export const DashboardPage: React.FC = () => {
               >
                 <div className={styles.moduleCardTop}>
                   <div className={styles.moduleIconBox}>{m.icon}</div>
-                  <span className={styles.moduleBadge}>{m.badge}</span>
                 </div>
                 <h3 className={styles.moduleTitle}>{m.title}</h3>
                 <p className={styles.moduleDesc}>{m.desc}</p>
@@ -298,34 +350,37 @@ export const DashboardPage: React.FC = () => {
                 <RefreshCw size={20} className="spin" />
                 <span>Đang tải nhật ký...</span>
               </div>
-            ) : recentLogs.length === 0 ? (
+            ) : (!recentLogs || recentLogs.length === 0) ? (
               <div className={styles.emptyBox}>
                 <FileText size={32} style={{ color: '#94a3b8' }} />
                 <span>Chưa có bản ghi nhật ký mới</span>
               </div>
             ) : (
-              recentLogs.map((log) => (
-                <div key={log.id} className={styles.auditItem}>
-                  <div className={styles.auditDot} />
-                  <div className={styles.auditContent}>
-                    <div className={styles.auditTopRow}>
-                      <strong className={styles.auditAction}>{log.action}</strong>
-                      <span className={styles.auditTime}>
-                        {log.timestamp
-                          ? new Date(log.timestamp).toLocaleTimeString('vi-VN', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })
-                          : 'Vừa xong'}
-                      </span>
+              (recentLogs || []).map((log) => {
+                const logTime = log.timestamp || log.created_at;
+                return (
+                  <div key={log.id} className={styles.auditItem}>
+                    <div className={styles.auditDot} />
+                    <div className={styles.auditContent}>
+                      <div className={styles.auditTopRow}>
+                        <strong className={styles.auditAction}>{log.action}</strong>
+                        <span className={styles.auditTime}>
+                          {logTime
+                            ? new Date(logTime).toLocaleTimeString('vi-VN', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })
+                            : 'Vừa xong'}
+                        </span>
+                      </div>
+                      <p className={styles.auditTarget}>
+                        Đối tượng: <code>{log.target_type}</code> · Thực hiện bởi:{' '}
+                        <span className={styles.auditUser}>{log.user_name || log.performed_by}</span>
+                      </p>
                     </div>
-                    <p className={styles.auditTarget}>
-                      Đối tượng: <code>{log.target_type}</code> · Thực hiện bởi:{' '}
-                      <span className={styles.auditUser}>{log.user_name || log.performed_by}</span>
-                    </p>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </Card>

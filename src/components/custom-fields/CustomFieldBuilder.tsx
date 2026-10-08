@@ -129,7 +129,7 @@ export const CustomFieldBuilder: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
         <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-          Trình thiết kế Trường Tùy chỉnh (Custom Field Builder - S2-08)
+          Trình thiết kế Trường Tùy chỉnh
         </h2>
         <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 0' }}>
           Tạo các trường dữ liệu tùy biến (Text, Number, Date, Select) và xem trước trực quan cơ chế hiển thị trên form khách hàng / cơ hội
@@ -421,7 +421,7 @@ export const CustomFieldBuilder: React.FC = () => {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
-                {editingField ? 'Chỉnh sửa Trường tùy biến' : 'Thêm mới Trường tùy biến (S2-08)'}
+                {editingField ? 'Chỉnh sửa Trường tùy biến' : 'Thêm mới Trường tùy biến'}
               </h3>
               <button
                 type="button"

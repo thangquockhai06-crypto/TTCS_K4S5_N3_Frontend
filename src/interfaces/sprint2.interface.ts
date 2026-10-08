@@ -40,11 +40,13 @@ export interface IAuditLogItem {
   old_value?: string;
   new_value?: string;
   metadata?: string;
-  timestamp: string;
+  timestamp?: string;
+  created_at?: string;
 }
 
 export interface IAuditLogResponse {
   items: IAuditLogItem[];
+  data?: IAuditLogItem[];
   total: number;
   page: number;
   limit: number;

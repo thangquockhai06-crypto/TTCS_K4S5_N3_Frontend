@@ -22,7 +22,7 @@ export const ProfilePage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // S2-02: Vietnamese phone validation
+    // Vietnamese phone validation
     const cleanedPhone = phone.trim().replace(/[\s-]/g, '');
     if (cleanedPhone && !VN_PHONE_REGEX.test(cleanedPhone)) {
       setPhoneError('Số điện thoại không đúng chuẩn di động Việt Nam (gồm 10 số, bắt đầu bằng 03, 05, 07, 08 hoặc 09).');
@@ -65,7 +65,7 @@ export const ProfilePage: React.FC = () => {
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px 16px' }}>
       <header style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-          Hồ sơ Cá nhân (S2-02)
+          Hồ sơ Cá nhân
         </h1>
         <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '4px' }}>
           Quản lý thông tin cá nhân, ảnh đại diện và thông tin liên hệ trong hệ thống CRM
@@ -102,10 +102,10 @@ export const ProfilePage: React.FC = () => {
         }}
       >
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* S2-03: Avatar Uploader */}
+          {/* Avatar Uploader */}
           <div>
             <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#1e293b', marginBottom: '12px' }}>
-              Ảnh đại diện cá nhân (S2-03)
+              Ảnh đại diện cá nhân
             </label>
             <AvatarUploader
               currentAvatarUrl={avatarUrl || user?.avatarUrl}
@@ -173,7 +173,7 @@ export const ProfilePage: React.FC = () => {
               )}
             </div>
 
-            {/* Email - Readonly (S2-02 requirement) */}
+            {/* Email - Readonly */}
             <div>
               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#64748b', marginBottom: '6px' }}>
                 Địa chỉ Email <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>(Chỉ đọc - Bảo mật)</span>
@@ -199,7 +199,7 @@ export const ProfilePage: React.FC = () => {
               </div>
             </div>
 
-            {/* Role - Readonly (S2-02 requirement) */}
+            {/* Role - Readonly */}
             <div>
               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#64748b', marginBottom: '6px' }}>
                 Vai trò hệ thống <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>(Chỉ đọc - Do Admin gán)</span>

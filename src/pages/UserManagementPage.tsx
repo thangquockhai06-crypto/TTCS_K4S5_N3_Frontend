@@ -101,8 +101,8 @@ export const UserManagementPage: React.FC = () => {
       // Tính toán số liệu thống kê từ danh sách hiện tại
       setStats({
         total: result.total,
-        sales: result.data.filter((u) => u.roles.some((r) => r.toLowerCase().includes('sales'))).length,
-        managers: result.data.filter((u) => u.roles.some((r) => r.toLowerCase().includes('manager') || r.toLowerCase().includes('admin') || r.toLowerCase().includes('leader'))).length,
+        sales: result.data.filter((u) => (u.roles || []).some((r) => r.toLowerCase().includes('sales'))).length,
+        managers: result.data.filter((u) => (u.roles || []).some((r) => r.toLowerCase().includes('manager') || r.toLowerCase().includes('admin') || r.toLowerCase().includes('leader'))).length,
         pending: result.data.filter((u) => u.status === 'pending_activation' || u.status === 'locked').length,
       });
     } catch (err: any) {
@@ -261,7 +261,7 @@ export const UserManagementPage: React.FC = () => {
             color: activeTab === 'handover' ? '#ffffff' : '#475569',
           }}
         >
-          Khóa tài khoản &amp; Bàn giao Khách hàng / Deals (S1-10)
+          Khóa tài khoản &amp; Bàn giao Khách hàng / Deals
         </button>
       </div>
 
@@ -289,12 +289,12 @@ export const UserManagementPage: React.FC = () => {
             <span>Thêm người dùng mới</span>
           </button>
 
-          {/* Nhập Excel (S2-01) */}
+          {/* Nhập Excel */}
           <button
             type="button"
             className={styles.btnSecondary}
             onClick={() => setIsExcelModalOpen(true)}
-            title="Nhập danh sách người dùng từ tệp Excel / CSV (S2-01)"
+            title="Nhập danh sách người dùng từ tệp Excel / CSV"
           >
             <FileSpreadsheet size={16} style={{ color: '#16a34a' }} />
             <span>Nhập Excel</span>
@@ -386,7 +386,7 @@ export const UserManagementPage: React.FC = () => {
         )}
       </div>
 
-      {/* Modal Phân vai trò & Nhóm (S1-09) */}
+      {/* Modal Phân vai trò & Nhóm */}
       <AssignRoleModal
         isOpen={Boolean(assignRoleUser)}
         onClose={() => setAssignRoleUser(null)}
@@ -432,7 +432,7 @@ export const UserManagementPage: React.FC = () => {
         user={selectedUserDetail}
       />
 
-      {/* Modal Nhập dữ liệu Excel / CSV (S2-01) */}
+      {/* Modal Nhập dữ liệu Excel / CSV */}
       <ExcelImportModal
         isOpen={isExcelModalOpen}
         onClose={() => setIsExcelModalOpen(false)}

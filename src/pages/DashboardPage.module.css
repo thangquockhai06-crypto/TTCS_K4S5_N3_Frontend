@@ -371,3 +371,59 @@
     align-items: flex-start;
   }
 }
+
+.loginToast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 1px solid #86efac;
+  border-radius: var(--radius-lg, 12px);
+  color: #166534;
+  box-shadow: 0 10px 25px -5px rgba(22, 101, 52, 0.1), 0 4px 6px -4px rgba(22, 101, 52, 0.05);
+}
+
+.loginToast__content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.loginToast__icon {
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
+.loginToast__title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #14532d;
+  margin: 0;
+}
+
+.loginToast__desc {
+  font-size: 0.8125rem;
+  color: #166534;
+  margin: 2px 0 0 0;
+}
+
+.loginToast__closeBtn {
+  background: none;
+  border: none;
+  color: #166534;
+  opacity: 0.65;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s, background-color 0.15s;
+}
+
+.loginToast__closeBtn:hover {
+  opacity: 1;
+  background-color: rgba(22, 101, 52, 0.1);
+}
+

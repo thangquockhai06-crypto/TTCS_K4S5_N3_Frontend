@@ -156,7 +156,7 @@ export const TopBar: React.FC<ITopBarProps> = ({
           type="button"
           onClick={() => void handleTestRefreshToken()}
           className={styles.topbar__tokenBtn}
-          title="S1-02: Làm mới JWT Token"
+          title="Làm mới JWT Token"
           aria-label="Làm mới JWT Token"
         >
           <RefreshCw
@@ -240,7 +240,7 @@ export const TopBar: React.FC<ITopBarProps> = ({
             onClick={() => navigate('/profile')}
             className={styles.topbar__avatarBtn}
             aria-label="Mở hồ sơ cá nhân"
-            title="Hồ sơ cá nhân (S2-02)"
+            title="Hồ sơ cá nhân"
           >
             <Avatar
               src={user?.avatarUrl}

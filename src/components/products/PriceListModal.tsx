@@ -101,7 +101,7 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({ isOpen, onClose
             <Tag size={20} color="#2563eb" />
             <div>
               <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>
-                Quản lý Bảng giá Sản phẩm (Price Lists - S2-05)
+                Quản lý Bảng giá Sản phẩm
               </h2>
               <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
                 Cấu hình hệ số nhân chiết khấu và bảng giá phân khúc

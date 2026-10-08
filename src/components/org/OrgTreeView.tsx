@@ -190,7 +190,7 @@ export const OrgTreeView: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-            Sơ đồ Cây Tổ chức Đa cấp (Organization Tree - S2-06)
+            Sơ đồ Cây Tổ chức Đa cấp
           </h2>
           <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 0' }}>
             Phân định quyền phân cấp, bổ nhiệm Trưởng bộ phận phụ trách và thiết lập địa bàn quản lý (Region)
@@ -285,7 +285,7 @@ export const OrgTreeView: React.FC = () => {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
-                Phân bổ Lãnh đạo & Địa bàn (S2-06)
+                Phân bổ Lãnh đạo & Địa bàn
               </h3>
               <button
                 type="button"

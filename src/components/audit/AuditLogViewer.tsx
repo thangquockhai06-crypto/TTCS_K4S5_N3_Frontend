@@ -30,9 +30,10 @@ export const AuditLogViewer: React.FC = () => {
         page,
         limit,
       });
-      setLogs(data.items);
-      setTotal(data.total);
-      setTotalPages(data.pages || 1);
+      const logList = data.items || (data as any).data || [];
+      setLogs(Array.isArray(logList) ? logList : []);
+      setTotal(data.total || (Array.isArray(logList) ? logList.length : 0));
+      setTotalPages(data.pages || Math.ceil((data.total || 1) / limit) || 1);
     } catch (err: any) {
       setErrorMsg(err.response?.data?.detail || err.message || 'Lỗi khi tải nhật ký kiểm toán.');
     } finally {
@@ -44,7 +45,8 @@ export const AuditLogViewer: React.FC = () => {
     fetchLogs();
   }, [fetchLogs]);
 
-  const formatDateTime = (ts: string) => {
+  const formatDateTime = (ts?: string) => {
+    if (!ts) return '—';
     try {
       const d = new Date(ts);
       return d.toLocaleString('vi-VN', {

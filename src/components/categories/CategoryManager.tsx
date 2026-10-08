@@ -125,7 +125,7 @@ export const CategoryManager: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
         <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-          Danh mục dùng chung hệ thống (Common Categories - S2-07)
+          Danh mục dùng chung hệ thống
         </h2>
         <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 0' }}>
           Quản lý nguồn khách hàng (Lead Source) và Ngành nghề kinh doanh (Industry), hỗ trợ kéo thả/sắp xếp thứ tự và kiểm soát ràng buộc dữ liệu
@@ -331,7 +331,7 @@ export const CategoryManager: React.FC = () => {
                         }}
                         title={
                           item.usage_count > 0
-                            ? 'Không thể xóa mục đang được sử dụng (S2-07)'
+                            ? 'Không thể xóa mục đang được sử dụng'
                             : 'Xóa mục này'
                         }
                       >

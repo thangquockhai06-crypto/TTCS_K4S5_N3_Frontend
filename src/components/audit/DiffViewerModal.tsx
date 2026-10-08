@@ -24,7 +24,8 @@ export const DiffViewerModal: React.FC<IDiffViewerModalProps> = ({
     }
   }
 
-  const formatDateTime = (ts: string) => {
+  const formatDateTime = (ts?: string) => {
+    if (!ts) return '—';
     try {
       const d = new Date(ts);
       return d.toLocaleString('vi-VN', {
@@ -79,7 +80,7 @@ export const DiffViewerModal: React.FC<IDiffViewerModalProps> = ({
             <ShieldCheck size={20} color="#2563eb" />
             <div>
               <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>
-                Chi tiết Biến động Dữ liệu (Audit Log Diff - S2-04)
+                Chi tiết Biến động Dữ liệu
               </h2>
               <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Mã bản ghi: {logItem.id}</span>
             </div>

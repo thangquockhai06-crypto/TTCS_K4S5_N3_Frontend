@@ -123,7 +123,7 @@ export const INITIAL_NOTIFICATIONS: ReadonlyArray<INotificationItem> = [
   },
   {
     id: 'notif-4',
-    title: 'Cơ chế tự động làm mới JWT (S1-02) đang hoạt động',
+    title: 'Cơ chế tự động làm mới JWT đang hoạt động',
     description: 'Interceptor trong axiosInstance.ts đã sẵn sàng tự động xoay vòng token.',
     timeAgo: '5 giờ trước',
     isRead: true,

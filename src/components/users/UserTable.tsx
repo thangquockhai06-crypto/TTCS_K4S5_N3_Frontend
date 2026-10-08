@@ -186,13 +186,13 @@ export const UserTable: React.FC<UserTableProps> = ({
                       <Edit3 size={16} />
                     </button>
 
-                    {/* Phân vai trò & nhóm (S1-09) */}
+                    {/* Phân vai trò & nhóm */}
                     {onAssignRole && (
                       <button
                         type="button"
                         className={styles.actionBtn}
                         onClick={() => onAssignRole(u)}
-                        title="Phân vai trò & nhóm kinh doanh (S1-09)"
+                        title="Phân vai trò & nhóm kinh doanh"
                         style={{ color: 'var(--color-primary)' }}
                       >
                         <Shield size={16} />
