@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowUpDown,
@@ -23,25 +23,12 @@ import {
   Drawer,
   Dropdown,
   EmptyState,
-  SearchBar,
 } from '../components/common';
 import { useCRMData } from '../context/CRMDataContext';
-import { useCustomerFilter } from '../hooks/useCustomerFilter';
-import { CustomerSortFieldType, CustomerStatusType, ICustomer } from '../interfaces';
+import { CustomerSortFieldType, ICustomer } from '../interfaces';
 import { formatCurrency } from '../utils/formatters';
+import { CustomerFilterCustomer, CustomerFilterFeature } from '../features/customer-filter';
 import styles from './CustomerListPage.module.css';
-
-const STATUS_FILTER_CHIPS: ReadonlyArray<{
-  value: CustomerStatusType | 'All';
-  label: string;
-}> = [
-  { value: 'All', label: 'Tất cả' },
-  { value: 'Active', label: 'Đang hợp tác' },
-  { value: 'Negotiation', label: 'Đang đàm phán' },
-  { value: 'New Lead', label: 'Tiềm năng mới' },
-  { value: 'At Risk', label: 'Cần chú ý' },
-  { value: 'Churned', label: 'Đã ngừng' },
-];
 
 const SORT_OPTIONS: ReadonlyArray<{ label: string; value: CustomerSortFieldType }> = [
   { label: 'Giá trị Hợp đồng (ARR)', value: 'dealValue' },
@@ -53,27 +40,55 @@ const SORT_OPTIONS: ReadonlyArray<{ label: string; value: CustomerSortFieldType 
 export const CustomerListPage: React.FC = () => {
   const { customers } = useCRMData();
   const navigate = useNavigate();
-
-  const {
-    searchQuery,
-    setSearchQuery,
-    selectedStatus,
-    setSelectedStatus,
-    selectedTag,
-    setSelectedTag,
-    sortField,
-    setSortField,
-    sortDirection,
-    toggleSortDirection,
-    viewMode,
-    setViewMode,
-    filteredCustomers,
-    availableTags,
-    resetFilters,
-  } = useCustomerFilter(customers);
-
+  const [filteredCustomerIds, setFilteredCustomerIds] = useState<string[] | null>(null);
+  const [filterResetKey, setFilterResetKey] = useState(0);
+  const [sortField, setSortField] = useState<CustomerSortFieldType>('dealValue');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [inspectedCustomer, setInspectedCustomer] = useState<ICustomer | null>(null);
 
+  const customerFilterRows = useMemo<CustomerFilterCustomer[]>(
+    () =>
+      customers.map((customer) => ({
+        id: customer.id,
+        fullName: customer.fullName,
+        companyName: customer.company,
+        phone: customer.phone,
+        status: customer.status,
+        industry: customer.industry,
+        companySize: customer.tier,
+        region: customer.location,
+        ownerId: customer.owner.id,
+        ownerName: customer.owner.name,
+      })),
+    [customers]
+  );
+
+  const filteredCustomers = useMemo(() => {
+    const matchingCustomers =
+      filteredCustomerIds === null
+        ? [...customers]
+        : customers.filter((customer) => filteredCustomerIds.includes(customer.id));
+    return matchingCustomers.sort((left, right) => {
+      let comparison = 0;
+      if (sortField === 'dealValue') {
+        comparison = left.dealValue - right.dealValue;
+      } else if (sortField === 'healthScore') {
+        comparison = left.healthScore - right.healthScore;
+      } else if (sortField === 'fullName') {
+        comparison = left.fullName.localeCompare(right.fullName);
+      } else if (sortField === 'company') {
+        comparison = left.company.localeCompare(right.company);
+      } else {
+        comparison = left.id.localeCompare(right.id);
+      }
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }, [customers, filteredCustomerIds, sortDirection, sortField]);
+
+  const toggleSortDirection = (): void => {
+    setSortDirection((previous) => (previous === 'asc' ? 'desc' : 'asc'));
+  };
   const totalFilteredArr = filteredCustomers.reduce((sum, c) => sum + c.dealValue, 0);
 
   return (
@@ -98,19 +113,9 @@ export const CustomerListPage: React.FC = () => {
         </Button>
       </header>
 
-      {/* Thanh công cụ kết hợp: Tìm kiếm + Sắp xếp + Chuyển đổi Bảng/Lưới */}
+      {/* Tìm kiếm, lọc, sắp xếp và bộ lọc đã lưu */}
       <Card padding="sm" className={styles.toolbarCard}>
         <div className={styles.toolbar__topRow}>
-          <div className={styles.toolbar__searchWrap}>
-            <SearchBar
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder="Tìm theo họ tên, công ty, tên miền, quốc gia hoặc nhãn tag..."
-              ariaLabel="Lọc danh sách khách hàng theo từ khóa"
-              shortcutHint="Lọc nhanh"
-            />
-          </div>
-
           <div className={styles.toolbar__controls}>
             <Dropdown<CustomerSortFieldType>
               label="Sắp xếp"
@@ -159,41 +164,11 @@ export const CustomerListPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Hàng Filter Chips */}
-        <div className={styles.toolbar__chipsRow}>
-          <div className={styles.chipGroup} role="group" aria-label="Lọc theo trạng thái">
-            {STATUS_FILTER_CHIPS.map((chip) => {
-              const isActive = selectedStatus === chip.value;
-              return (
-                <button
-                  key={chip.value}
-                  type="button"
-                  onClick={() => setSelectedStatus(chip.value)}
-                  className={`${styles.filterChip} ${
-                    isActive ? styles['filterChip--active'] : ''
-                  }`}
-                >
-                  {chip.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className={styles.tagChipsGroup} role="group" aria-label="Lọc theo nhãn tag">
-            {availableTags.slice(0, 6).map((tag) => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => setSelectedTag(tag)}
-                className={`${styles.tagChip} ${
-                  selectedTag === tag ? styles['tagChip--active'] : ''
-                }`}
-              >
-                #{tag === 'All' ? 'Tất cả Tag' : tag}
-              </button>
-            ))}
-          </div>
-        </div>
+        <CustomerFilterFeature
+          customers={customerFilterRows}
+          onFilteredCustomerIdsChange={setFilteredCustomerIds}
+          resetKey={filterResetKey}
+        />
       </Card>
 
       {/* Danh sách hiển thị */}
@@ -205,7 +180,7 @@ export const CustomerListPage: React.FC = () => {
             <Button
               variant="secondary"
               leftIcon={<RotateCcw size={15} />}
-              onClick={resetFilters}
+              onClick={() => setFilterResetKey((current) => current + 1)}
             >
               Đặt lại Bộ lọc
             </Button>

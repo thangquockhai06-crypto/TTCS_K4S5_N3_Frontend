@@ -36,11 +36,6 @@
   flex-wrap: wrap;
 }
 
-.toolbar__searchWrap {
-  flex: 1;
-  min-width: 260px;
-}
-
 .toolbar__controls {
   display: flex;
   align-items: center;
@@ -90,61 +85,6 @@
   background-color: var(--color-bg-surface);
   color: var(--color-primary);
   box-shadow: var(--shadow-xs);
-}
-
-.toolbar__chipsRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding-top: 10px;
-  border-top: 1px solid var(--color-border-subtle);
-}
-
-.chipGroup,
-.tagChipsGroup {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.filterChip {
-  padding: 5px 12px;
-  border-radius: var(--radius-full);
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  background-color: var(--color-bg-subtle);
-  border: 1px solid transparent;
-  transition: all 0.15s ease;
-}
-
-.filterChip:hover {
-  color: var(--color-text-primary);
-  border-color: var(--color-border-strong);
-}
-
-.filterChip--active {
-  background-color: var(--color-primary);
-  color: #FFFFFF;
-}
-
-.tagChip {
-  padding: 4px 9px;
-  border-radius: 6px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  border: 1px solid var(--color-border);
-  background-color: var(--color-bg-surface);
-}
-
-.tagChip--active {
-  border-color: var(--color-accent);
-  background-color: var(--color-accent-soft);
-  color: var(--color-accent);
 }
 
 .customerGrid {
@@ -310,6 +250,10 @@
 @media (max-width: 767px) {
   .pageHeader {
     flex-direction: column;
+  }
+
+  .toolbar__controls {
+    width: 100%;
   }
 
   .customerGrid {
