@@ -481,7 +481,7 @@ export const ContactListTab: React.FC<IContactListTabProps> = ({
         </Modal>
       )}
 
-      {/* MODAL: Điều chuyển người liên hệ sang doanh nghiệp khác (S3-02) */}
+      {/* MODAL: Điều chuyển người liên hệ sang doanh nghiệp khác */}
       {transferringContact && (
         <Modal
           isOpen={Boolean(transferringContact)}

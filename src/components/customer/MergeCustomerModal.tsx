@@ -98,7 +98,7 @@ export const MergeCustomerModal: React.FC<IMergeCustomerModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Gộp Khách Hàng Trùng Lặp (S3-04)"
+      title="Gộp Khách Hàng Trùng Lặp"
       subtitle="Chuyển toàn bộ Người liên hệ, Cơ hội bán hàng, và Hoạt động sang Khách hàng chính"
       maxWidth="lg"
       footer={

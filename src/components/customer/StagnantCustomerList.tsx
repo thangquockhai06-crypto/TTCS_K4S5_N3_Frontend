@@ -63,7 +63,7 @@ export const StagnantCustomerList: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
-            Danh Sách Cần Chăm Sóc Định Kỳ (S3-09)
+            Danh Sách Cần Chăm Sóc Định Kỳ
           </h1>
           <p style={{ fontSize: '0.875rem', color: '#64748B', marginTop: 4 }}>
             Tự động lọc các khách hàng chưa có tương tác trong hơn <strong>{daysThreshold} ngày</strong>.

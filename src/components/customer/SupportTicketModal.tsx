@@ -140,7 +140,7 @@ export const SupportTicketModal: React.FC<ISupportTicketModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`Yêu Cầu Hỗ Trợ & Cờ Rủi Ro (S3-08)`}
+      title="Yêu Cầu Hỗ Trợ & Cờ Rủi Ro"
       subtitle={`Khách hàng: ${customerName}`}
       maxWidth="lg"
       footer={

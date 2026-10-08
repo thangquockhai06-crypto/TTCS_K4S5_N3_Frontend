@@ -156,7 +156,7 @@ export const FilterDrawer: React.FC<IFilterDrawerProps> = ({
     <Drawer
       isOpen={isOpen}
       onClose={onClose}
-      title="Bộ Lọc Nâng Cao (S3-07)"
+      title="Bộ Lọc Nâng Cao"
       subtitle="Thiết lập tiêu chí chi tiết hoặc lưu mẫu bộ lọc cá nhân"
       position="right"
     >

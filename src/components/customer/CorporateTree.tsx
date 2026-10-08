@@ -215,7 +215,7 @@ export const CorporateTree: React.FC<ICorporateTreeProps> = ({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>
-            Mô hình Tập đoàn & Công ty Mẹ - Con (S3-05)
+            Mô hình Tập đoàn & Công ty Mẹ - Con
           </h3>
           <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>
             Tổng hợp quy mô doanh số toàn tập đoàn theo thuật toán đệ quy Recursive CTE.

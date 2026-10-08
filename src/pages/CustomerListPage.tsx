@@ -134,7 +134,7 @@ export const CustomerListPage: React.FC = () => {
       {/* Tiêu đề trang & Các nút chức năng */}
       <header className={styles.pageHeader}>
         <div>
-          <h1 className={styles.pageHeader__title}>Danh bạ Khách hàng Doanh nghiệp (S3-01)</h1>
+          <h1 className={styles.pageHeader__title}>Danh bạ Khách hàng Doanh nghiệp</h1>
           <p className={styles.pageHeader__subtitle}>
             Hiển thị <strong>{customers.length}</strong> doanh nghiệp · Tổng ARR danh mục:{' '}
             <strong className="tabular-nums" style={{ color: '#059669' }}>
@@ -148,7 +148,7 @@ export const CustomerListPage: React.FC = () => {
             variant="secondary"
             leftIcon={<Clock size={16} />}
             onClick={() => navigate('/customers/stagnant')}
-            title="Danh sách cần chăm sóc định kỳ (S3-09)"
+            title="Danh sách cần chăm sóc định kỳ"
           >
             Chăm sóc định kỳ
           </Button>
@@ -160,7 +160,7 @@ export const CustomerListPage: React.FC = () => {
               setMergePrimaryCustomer(customers[0] || null);
               setIsMergeModalOpen(true);
             }}
-            title="Gộp khách hàng trùng lặp (S3-04)"
+            title="Gộp khách hàng trùng lặp"
           >
             Gộp trùng
           </Button>
@@ -169,7 +169,7 @@ export const CustomerListPage: React.FC = () => {
             variant="secondary"
             leftIcon={<Upload size={16} />}
             onClick={() => setIsImportModalOpen(true)}
-            title="Nhập khách hàng từ Excel (S3-06)"
+            title="Nhập khách hàng từ Excel"
           >
             Nhập Excel
           </Button>
@@ -535,7 +535,7 @@ export const CustomerListPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Create Customer Modal (S3-01) */}
+      {/* Create Customer Modal */}
       {isCreateModalOpen && (
         <CustomerForm
           isOpen={isCreateModalOpen}
@@ -547,7 +547,7 @@ export const CustomerListPage: React.FC = () => {
         />
       )}
 
-      {/* Edit Customer Modal (S3-01) */}
+      {/* Edit Customer Modal */}
       {editingCustomer && (
         <CustomerForm
           isOpen={Boolean(editingCustomer)}
@@ -560,7 +560,7 @@ export const CustomerListPage: React.FC = () => {
         />
       )}
 
-      {/* Merge Customer Modal (S3-04) */}
+      {/* Merge Customer Modal */}
       {isMergeModalOpen && (
         <MergeCustomerModal
           isOpen={isMergeModalOpen}
@@ -573,7 +573,7 @@ export const CustomerListPage: React.FC = () => {
         />
       )}
 
-      {/* Excel Import Modal (S3-06) */}
+      {/* Excel Import Modal */}
       {isImportModalOpen && (
         <CustomerImportModal
           isOpen={isImportModalOpen}
@@ -584,7 +584,7 @@ export const CustomerListPage: React.FC = () => {
         />
       )}
 
-      {/* Advanced Filter Drawer (S3-07) */}
+      {/* Advanced Filter Drawer */}
       <FilterDrawer
         isOpen={isFilterDrawerOpen}
         onClose={() => setIsFilterDrawerOpen(false)}

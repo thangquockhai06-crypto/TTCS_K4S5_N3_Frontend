@@ -90,7 +90,7 @@ export const CustomerImportModal: React.FC<ICustomerImportModalProps> = ({
         resetState();
         onClose();
       }}
-      title="Nhập Khách Hàng từ Excel (S3-06)"
+      title="Nhập Khách Hàng từ Excel"
       subtitle="Tải lên tệp Excel (.xlsx/.xls) hoặc CSV để nhập hàng loạt với kiểm tra MST duy nhất"
       maxWidth="lg"
       footer={

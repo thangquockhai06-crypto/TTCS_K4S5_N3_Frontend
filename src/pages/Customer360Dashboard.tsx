@@ -367,7 +367,7 @@ export const Customer360Dashboard: React.FC = () => {
               </div>
             </Card>
 
-            {/* Corporate Tree (S3-05) */}
+            {/* Corporate Tree */}
             <Card padding="md">
               <CorporateTree
                 customerId={customer.id}
@@ -376,7 +376,7 @@ export const Customer360Dashboard: React.FC = () => {
             </Card>
           </div>
 
-          {/* Contact List Tab (S3-02) */}
+          {/* Contact List Tab */}
           <Card padding="md">
             <ContactListTab
               customerId={customer.id}
@@ -547,7 +547,7 @@ export const Customer360Dashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Tab 4: Docs & Support Tickets (S3-08) */}
+      {/* Tab 4: Docs & Support Tickets */}
       {activeTab === 'docs' && (
         <Card padding="md">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -632,7 +632,7 @@ export const Customer360Dashboard: React.FC = () => {
         />
       )}
 
-      {/* Support Ticket Modal (S3-08) */}
+      {/* Support Ticket Modal */}
       {isTicketModalOpen && (
         <SupportTicketModal
           isOpen={isTicketModalOpen}
@@ -645,7 +645,7 @@ export const Customer360Dashboard: React.FC = () => {
         />
       )}
 
-      {/* Merge Customer Modal (S3-04) */}
+      {/* Merge Customer Modal */}
       {isMergeModalOpen && (
         <MergeCustomerModal
           isOpen={isMergeModalOpen}
