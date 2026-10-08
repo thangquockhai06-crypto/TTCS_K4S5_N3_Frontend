@@ -80,7 +80,7 @@ server/
 models/
 routers/
 schemas/
-services/
+/services/
 repositories/
 tests/
 Subtask Backend/
@@ -90,3 +90,10 @@ database.py
 pytest.ini
 start-all.bat
 start-server.bat
+
+# Documentation and screenshot scripts
+NexusCRM_DacTa_ChucNang_EP02_EP03.docx
+capture_*.py
+generate_word_doc.py
+test_5173.py
+screenshots/
