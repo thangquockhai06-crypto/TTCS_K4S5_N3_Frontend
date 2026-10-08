@@ -6,6 +6,7 @@ import { DashboardPage } from '../pages/DashboardPage';
 import { ErrorPage } from '../pages/ErrorPage';
 import { ForgotPasswordPage } from '../pages/ForgotPasswordPage';
 import { LoginPage } from '../pages/LoginPage';
+import { RegisterPage } from '../pages/RegisterPage';
 import { SettingsPage } from '../pages/SettingsPage';
 import { UserManagementPage } from '../pages/UserManagementPage';
 import { UserEditPage } from '../pages/UserEditPage';
@@ -38,7 +39,7 @@ export const AppRoutes: React.FC = () => {
     <Routes>
       {/* Authentication */}
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<Navigate to="/login" replace />} />
+      <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ForgotPasswordPage />} />
 
@@ -54,16 +55,16 @@ export const AppRoutes: React.FC = () => {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
 
-        {/* User Management & Dedicated Edit (S1-08, S1-09, S1-10, S2-01) */}
+        {/* User Management & Dedicated Edit */}
         <Route path="users" element={<UserManagementPage />} />
         <Route path="users/:id/edit" element={<UserEditPage />} />
 
-        {/* EP-03 Customer Management (S3-01 to S3-09) */}
+        {/* Customer Management */}
         <Route path="customers" element={<CustomerListPage />} />
         <Route path="customers/stagnant" element={<StagnantCustomerList />} />
         <Route path="customers/:id" element={<Customer360Dashboard />} />
 
-        {/* Sprint 2 Modules */}
+        {/* Configuration & Administration Modules */}
         <Route path="profile" element={<ProfilePage />} />
         <Route path="organization" element={<OrgTreePage />} />
         <Route path="categories" element={<CategoriesPage />} />
@@ -75,7 +76,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="settings" element={<SettingsPage />} />
       </Route>
 
-      {/* Error Pages (S1-07) */}
+      {/* Error Pages */}
       <Route path="/forbidden" element={<ErrorPage code={403} />} />
       <Route path="/not-found" element={<ErrorPage code={404} />} />
       <Route path="/server-error" element={<ErrorPage code={500} />} />

@@ -132,6 +132,24 @@
   margin-top: 2px;
 }
 
+.successAlert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.successAlert__icon {
+  flex-shrink: 0;
+  color: #059669;
+}
+
 .loginForm {
   display: flex;
   flex-direction: column;
@@ -179,8 +197,37 @@
   text-decoration: underline;
 }
 
+.switchAuthRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border-subtle);
+  font-size: 0.84rem;
+  color: var(--color-text-secondary);
+}
+
+.switchAuthLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.switchAuthLink:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 480px) {
   .loginForm__title {
     font-size: 1.3rem;
+  }
+
+  .switchAuthRow {
+    flex-direction: column;
+    gap: 4px;
   }
 }

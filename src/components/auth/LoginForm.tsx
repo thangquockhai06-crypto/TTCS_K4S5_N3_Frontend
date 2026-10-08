@@ -4,17 +4,20 @@ import { motion } from 'framer-motion';
 import {
   AlertTriangle,
   ArrowRight,
+  CheckCircle2,
   Eye,
   EyeOff,
   Lock,
   Mail,
   ShieldAlert,
+  UserPlus,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useCountdown } from '../../hooks/useCountdown';
 import { ILoginPayload } from '../../interfaces';
 import { AUTH_STORAGE_KEYS } from '../../mock/auth.mock';
 import { Button, Input } from '../common';
+import { SocialPhoneAuthSection } from './SocialPhoneAuthSection';
 import styles from './LoginForm.module.css';
 
 const MAX_ATTEMPTS = 5;
@@ -46,6 +49,7 @@ export const LoginForm: React.FC = () => {
   });
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const [authError, setAuthError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const validateField = (name: 'email' | 'password', value: string): string | undefined => {
     if (name === 'email') {
@@ -64,13 +68,14 @@ export const LoginForm: React.FC = () => {
   const handleInputChange = (field: 'email' | 'password', value: string): void => {
     setFormState((prev) => ({ ...prev, [field]: value }));
     setAuthError(null);
+    setSuccessMsg(null);
     const errorMsg = validateField(field, value);
     setFieldErrors((prev) => ({ ...prev, [field]: errorMsg }));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-    if (isLockedOut) return;
+    if (isLockedOut || successMsg) return;
 
     const emailErr = validateField('email', formState.email);
     const passwordErr = validateField('password', formState.password);
@@ -81,11 +86,15 @@ export const LoginForm: React.FC = () => {
     }
 
     try {
-      await login(formState);
+      const res = await login(formState);
       setFailedAttempts(0);
       resetCountdown();
       window.localStorage.removeItem(AUTH_STORAGE_KEYS.FAILED_ATTEMPTS);
-      navigate('/dashboard');
+      setAuthError(null);
+      setSuccessMsg(`Đăng nhập thành công! Chào mừng ${res.user?.fullName || 'bạn'}, đang chuyển hướng...`);
+      window.setTimeout(() => {
+        navigate('/dashboard', { state: { loginSuccess: true } });
+      }, 700);
     } catch (err: unknown) {
       let serverMsg: string | undefined;
       let is429 = false;
@@ -186,6 +195,19 @@ export const LoginForm: React.FC = () => {
         </div>
       )}
 
+      {successMsg && (
+        <motion.div
+          className={styles.successAlert}
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          role="status"
+          aria-live="polite"
+        >
+          <CheckCircle2 size={18} className={styles.successAlert__icon} />
+          <span>{successMsg}</span>
+        </motion.div>
+      )}
+
       <form className={styles.loginForm} onSubmit={(e) => void handleSubmit(e)} noValidate>
         <Input
           label="Email công việc"
@@ -196,7 +218,7 @@ export const LoginForm: React.FC = () => {
           onChange={(e) => handleInputChange('email', e.target.value)}
           error={fieldErrors.email}
           isValid={isEmailValid}
-          disabled={isLockedOut || isLoading}
+          disabled={isLockedOut || isLoading || Boolean(successMsg)}
           leftIcon={<Mail size={17} />}
           placeholder="name@company.com"
         />
@@ -210,7 +232,7 @@ export const LoginForm: React.FC = () => {
           onChange={(e) => handleInputChange('password', e.target.value)}
           error={fieldErrors.password}
           isValid={isPasswordValid}
-          disabled={isLockedOut || isLoading}
+          disabled={isLockedOut || isLoading || Boolean(successMsg)}
           leftIcon={<Lock size={17} />}
           placeholder="••••••••••••"
           rightElement={
@@ -219,7 +241,7 @@ export const LoginForm: React.FC = () => {
               onClick={() => setShowPassword((prev) => !prev)}
               className={styles.loginForm__eyeBtn}
               aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-              disabled={isLockedOut}
+              disabled={isLockedOut || Boolean(successMsg)}
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
@@ -231,7 +253,7 @@ export const LoginForm: React.FC = () => {
             <input
               type="checkbox"
               checked={Boolean(formState.rememberMe)}
-              disabled={isLockedOut}
+              disabled={isLockedOut || Boolean(successMsg)}
               onChange={(e) =>
                 setFormState((prev) => ({ ...prev, rememberMe: e.target.checked }))
               }
@@ -251,13 +273,28 @@ export const LoginForm: React.FC = () => {
           variant="primary"
           size="lg"
           fullWidth
-          isLoading={isLoading}
-          disabled={isLockedOut}
+          isLoading={isLoading || Boolean(successMsg)}
+          disabled={isLockedOut || Boolean(successMsg)}
           rightIcon={<ArrowRight size={17} />}
         >
-          {isLockedOut ? `Đang khóa (${formattedTime})` : 'Đăng nhập vào Hệ thống'}
+          {successMsg
+            ? 'Đăng nhập thành công...'
+            : isLockedOut
+            ? `Đang khóa (${formattedTime})`
+            : 'Đăng nhập vào Hệ thống'}
         </Button>
       </form>
+
+      <SocialPhoneAuthSection mode="login" disabled={isLockedOut} />
+
+      {/* Liên kết chuyển sang trang Đăng ký */}
+      <div className={styles.switchAuthRow}>
+        <span>Chưa có tài khoản doanh nghiệp?</span>
+        <Link to="/register" className={styles.switchAuthLink}>
+          <UserPlus size={14} />
+          Đăng ký tài khoản mới
+        </Link>
+      </div>
     </motion.div>
   );
 };
