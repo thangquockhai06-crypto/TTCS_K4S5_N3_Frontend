@@ -60,6 +60,9 @@ export const PreviewDataGrid: React.FC<IPreviewDataGridProps> = ({
     });
   }, [rows]);
 
+  const [currentPage, setCurrentPage] = React.useState<number>(1);
+  const pageSize = 10;
+
   const validCount = validatedRows.filter((r) => r.isValid).length;
   const invalidCount = validatedRows.filter((r) => !r.isValid).length;
 
@@ -68,6 +71,17 @@ export const PreviewDataGrid: React.FC<IPreviewDataGridProps> = ({
     if (filterType === 'invalid') return validatedRows.filter((r) => !r.isValid);
     return validatedRows;
   }, [validatedRows, filterType]);
+
+  // Reset to page 1 on filter change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [filterType, rows]);
+
+  const totalPages = Math.max(1, Math.ceil(displayedRows.length / pageSize));
+  const paginatedRows = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return displayedRows.slice(start, start + pageSize);
+  }, [displayedRows, currentPage]);
 
   if (rows.length === 0) {
     return null;
@@ -187,7 +201,7 @@ export const PreviewDataGrid: React.FC<IPreviewDataGridProps> = ({
             </tr>
           </thead>
           <tbody>
-            {displayedRows.map((item) => (
+            {paginatedRows.map((item) => (
               <tr
                 key={`preview-row-${item.index}`}
                 style={{
@@ -252,6 +266,58 @@ export const PreviewDataGrid: React.FC<IPreviewDataGridProps> = ({
           </tbody>
         </table>
       </div>
+
+      {displayedRows.length > pageSize && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: '0.78rem',
+            color: '#64748b',
+            padding: '4px 8px',
+          }}
+        >
+          <span>
+            Hiển thị dòng {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, displayedRows.length)} / {displayedRows.length}
+          </span>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button
+              type="button"
+              disabled={currentPage <= 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              style={{
+                padding: '3px 8px',
+                borderRadius: '4px',
+                border: '1px solid #cbd5e1',
+                backgroundColor: '#ffffff',
+                cursor: currentPage <= 1 ? 'not-allowed' : 'pointer',
+                fontSize: '0.75rem',
+              }}
+            >
+              Trước
+            </button>
+            <span style={{ padding: '3px 6px' }}>
+              Trang {currentPage} / {totalPages}
+            </span>
+            <button
+              type="button"
+              disabled={currentPage >= totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              style={{
+                padding: '3px 8px',
+                borderRadius: '4px',
+                border: '1px solid #cbd5e1',
+                backgroundColor: '#ffffff',
+                cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
+                fontSize: '0.75rem',
+              }}
+            >
+              Sau
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

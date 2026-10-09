@@ -56,6 +56,7 @@ export interface IAuditLogResponse {
 export interface IProduct {
   id: string;
   sku: string;
+  code?: string;
   name: string;
   category: string;
   description?: string;
@@ -145,9 +146,10 @@ export interface IWinLossReason {
 export interface ICompetitor {
   id: string;
   name: string;
+  website?: string;
   strengths?: string;
   weaknesses?: string;
   pricing_tier?: string;
   win_rate: number;
-  is_active: boolean;
+  is_active?: boolean;
 }

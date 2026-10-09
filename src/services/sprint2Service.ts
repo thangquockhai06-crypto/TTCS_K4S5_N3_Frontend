@@ -27,6 +27,21 @@ class Sprint2Service {
     return response.data;
   }
 
+  async uploadAvatar(file: File): Promise<{ avatar_url: string; message: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await axiosInstance.post<{ avatar_url: string; message: string }>(
+      '/users/me/avatar',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  }
+
   // S2-04: Audit Logs
   async getAuditLogs(params?: {
     performed_by?: string;
@@ -74,6 +89,17 @@ class Sprint2Service {
   // S2-06: Organization Tree
   async getOrgTree(): Promise<IOrgNode[]> {
     const response = await axiosInstance.get<IOrgNode[]>('/org-tree');
+    return response.data;
+  }
+
+  async createOrgNode(data: {
+    name: string;
+    parent_id?: string | null;
+    region?: string;
+    leader_name?: string;
+    description?: string;
+  }): Promise<IOrgNode> {
+    const response = await axiosInstance.post<IOrgNode>('/org-tree', data);
     return response.data;
   }
 
@@ -130,6 +156,25 @@ class Sprint2Service {
 
   async deleteCustomField(id: string): Promise<{ message: string }> {
     const response = await axiosInstance.delete<{ message: string }>(`/custom-fields/${id}`);
+    return response.data;
+  }
+
+  async getCustomFieldValues(entityType: 'customer' | 'deal', entityId = 'sample'): Promise<{ values: Record<string, string> }> {
+    const response = await axiosInstance.get<{ values: Record<string, string> }>('/custom-fields/values', {
+      params: { entity_type: entityType, entity_id: entityId },
+    });
+    return response.data;
+  }
+
+  async saveCustomFieldValues(payload: {
+    entity_type: 'customer' | 'deal';
+    entity_id?: string;
+    values: Record<string, string>;
+  }): Promise<{ message: string; values: Record<string, string> }> {
+    const response = await axiosInstance.post<{ message: string; values: Record<string, string> }>(
+      '/custom-fields/values',
+      payload
+    );
     return response.data;
   }
 

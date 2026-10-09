@@ -7,27 +7,25 @@ import {
   Edit2,
   Check,
   AlertCircle,
-  TrendingUp,
-  TrendingDown,
   X,
+  TrendingDown,
 } from 'lucide-react';
 import { IWinLossReason, ICompetitor } from '../../interfaces';
 import { sprint2Service } from '../../services/sprint2Service';
 
 export const WinLossConfig: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'reasons' | 'competitors'>('reasons');
-  const [resultTypeFilter, setResultTypeFilter] = useState<'all' | 'WON' | 'LOST'>('all');
+  const [activeTab, setActiveTab] = useState<'WON' | 'LOST' | 'competitors'>('WON');
 
   // Reasons state
   const [reasons, setReasons] = useState<IWinLossReason[]>([]);
   const [competitors, setCompetitors] = useState<ICompetitor[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Modal reason
   const [isReasonModalOpen, setIsReasonModalOpen] = useState(false);
   const [editingReason, setEditingReason] = useState<IWinLossReason | null>(null);
-  const [reasonResultType, setReasonResultType] = useState<'WON' | 'LOST'>('WON');
   const [reasonCode, setReasonCode] = useState('');
   const [reasonText, setReasonText] = useState('');
   const [reasonDesc, setReasonDesc] = useState('');
@@ -36,30 +34,28 @@ export const WinLossConfig: React.FC = () => {
   const [isCompetitorModalOpen, setIsCompetitorModalOpen] = useState(false);
   const [editingCompetitor, setEditingCompetitor] = useState<ICompetitor | null>(null);
   const [compName, setCompName] = useState('');
+  const [compWebsite, setCompWebsite] = useState('');
   const [compStrengths, setCompStrengths] = useState('');
   const [compWeaknesses, setCompWeaknesses] = useState('');
-  const [compPricingTier, setCompPricingTier] = useState('Trung cấp');
   const [compWinRate, setCompWinRate] = useState(50);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     setStatusMsg(null);
     try {
-      if (activeTab === 'reasons') {
-        const data = await sprint2Service.getWinLossReasons(
-          resultTypeFilter !== 'all' ? resultTypeFilter : undefined
-        );
+      if (activeTab === 'WON' || activeTab === 'LOST') {
+        const data = await sprint2Service.getWinLossReasons(activeTab);
         setReasons(data);
       } else {
         const data = await sprint2Service.getCompetitors();
         setCompetitors(data);
       }
-    } catch (err: any) {
+    } catch {
       setStatusMsg({ type: 'error', text: 'Không thể tải dữ liệu cấu hình.' });
     } finally {
       setIsLoading(false);
     }
-  }, [activeTab, resultTypeFilter]);
+  }, [activeTab]);
 
   useEffect(() => {
     fetchData();
@@ -68,8 +64,8 @@ export const WinLossConfig: React.FC = () => {
   // Reason handlers
   const handleOpenCreateReason = () => {
     setEditingReason(null);
-    setReasonResultType('WON');
-    setReasonCode('');
+    const prefix = activeTab === 'WON' ? 'WIN_' : 'LOSS_';
+    setReasonCode(`${prefix}${Math.floor(100 + Math.random() * 900)}`);
     setReasonText('');
     setReasonDesc('');
     setIsReasonModalOpen(true);
@@ -77,7 +73,6 @@ export const WinLossConfig: React.FC = () => {
 
   const handleOpenEditReason = (r: IWinLossReason) => {
     setEditingReason(r);
-    setReasonResultType(r.result_type);
     setReasonCode(r.code);
     setReasonText(r.reason);
     setReasonDesc(r.description || '');
@@ -86,37 +81,83 @@ export const WinLossConfig: React.FC = () => {
 
   const handleSubmitReason = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
+    const trimmedText = reasonText.trim();
+    const trimmedCode = reasonCode.trim().toUpperCase();
+
+    if (!trimmedText) {
+      setStatusMsg({ type: 'error', text: 'Vui lòng nhập nội dung lý do.' });
+      return;
+    }
+
+    if (!editingReason && !trimmedCode) {
+      setStatusMsg({ type: 'error', text: 'Vui lòng nhập mã định danh lý do.' });
+      return;
+    }
+
+    // Check duplicate on frontend
+    if (!editingReason) {
+      const isDuplicateCode = reasons.some((r) => r.code.toUpperCase() === trimmedCode);
+      if (isDuplicateCode) {
+        setStatusMsg({ type: 'error', text: `Mã lý do "${trimmedCode}" đã tồn tại trong danh sách.` });
+        return;
+      }
+      const isDuplicateText = reasons.some((r) => r.reason.trim().toLowerCase() === trimmedText.toLowerCase());
+      if (isDuplicateText) {
+        setStatusMsg({ type: 'error', text: `Lý do "${trimmedText}" đã tồn tại trong danh sách.` });
+        return;
+      }
+    }
+
+    setIsSubmitting(true);
+    setStatusMsg(null);
     try {
       if (editingReason) {
         await sprint2Service.updateWinLossReason(editingReason.id, {
-          reason: reasonText,
-          description: reasonDesc,
+          reason: trimmedText,
+          description: reasonDesc.trim() || undefined,
         });
-        setStatusMsg({ type: 'success', text: 'Cập nhật lý do thành công!' });
+        setStatusMsg({ type: 'success', text: `Cập nhật lý do "${trimmedText}" thành công!` });
       } else {
         await sprint2Service.createWinLossReason({
-          result_type: reasonResultType,
-          code: reasonCode.toUpperCase().trim(),
-          reason: reasonText,
-          description: reasonDesc,
+          result_type: activeTab === 'WON' ? 'WON' : 'LOST',
+          code: trimmedCode,
+          reason: trimmedText,
+          description: reasonDesc.trim() || undefined,
         });
-        setStatusMsg({ type: 'success', text: 'Thêm mới lý do thành công!' });
+        const typeName = activeTab === 'WON' ? 'Thành công (Win)' : 'Thất bại (Loss)';
+        setStatusMsg({ type: 'success', text: `Thêm mới lý do ${typeName} "${trimmedText}" thành công!` });
       }
       setIsReasonModalOpen(false);
       fetchData();
-    } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.response?.data?.detail || 'Lỗi lưu lý do.' });
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        'Lỗi khi lưu lý do.';
+      setStatusMsg({ type: 'error', text: errorMsg });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDeleteReason = async (r: IWinLossReason) => {
-    if (!window.confirm(`Xóa lý do "${r.reason}"?`)) return;
+    if (isSubmitting) return;
+    if (!window.confirm(`Bạn có chắc muốn xóa lý do "${r.reason}"?`)) return;
+
+    setIsSubmitting(true);
+    setStatusMsg(null);
     try {
       await sprint2Service.deleteWinLossReason(r.id);
-      setStatusMsg({ type: 'success', text: 'Đã xóa lý do thành công.' });
+      setStatusMsg({ type: 'success', text: `Đã xóa lý do "${r.reason}" thành công.` });
       fetchData();
-    } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.response?.data?.detail || 'Lỗi khi xóa lý do.' });
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        'Lỗi khi xóa lý do.';
+      setStatusMsg({ type: 'error', text: errorMsg });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -124,9 +165,9 @@ export const WinLossConfig: React.FC = () => {
   const handleOpenCreateCompetitor = () => {
     setEditingCompetitor(null);
     setCompName('');
+    setCompWebsite('');
     setCompStrengths('');
     setCompWeaknesses('');
-    setCompPricingTier('Trung cấp');
     setCompWinRate(50);
     setIsCompetitorModalOpen(true);
   };
@@ -134,50 +175,79 @@ export const WinLossConfig: React.FC = () => {
   const handleOpenEditCompetitor = (c: ICompetitor) => {
     setEditingCompetitor(c);
     setCompName(c.name);
+    setCompWebsite(c.website || '');
     setCompStrengths(c.strengths || '');
     setCompWeaknesses(c.weaknesses || '');
-    setCompPricingTier(c.pricing_tier || 'Trung cấp');
     setCompWinRate(c.win_rate || 50);
     setIsCompetitorModalOpen(true);
   };
 
   const handleSubmitCompetitor = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
+    const trimmedName = compName.trim();
+    if (!trimmedName) {
+      setStatusMsg({ type: 'error', text: 'Vui lòng nhập tên đối thủ cạnh tranh.' });
+      return;
+    }
+
+    if (!editingCompetitor && competitors.some((c) => c.name.toLowerCase() === trimmedName.toLowerCase())) {
+      setStatusMsg({ type: 'error', text: `Đối thủ "${trimmedName}" đã tồn tại trong danh sách.` });
+      return;
+    }
+
+    setIsSubmitting(true);
+    setStatusMsg(null);
     try {
       if (editingCompetitor) {
         await sprint2Service.updateCompetitor(editingCompetitor.id, {
-          name: compName,
-          strengths: compStrengths,
-          weaknesses: compWeaknesses,
-          pricing_tier: compPricingTier,
+          name: trimmedName,
+          website: compWebsite.trim() || undefined,
+          strengths: compStrengths.trim() || undefined,
+          weaknesses: compWeaknesses.trim() || undefined,
           win_rate: Number(compWinRate),
         });
-        setStatusMsg({ type: 'success', text: 'Cập nhật đối thủ cạnh tranh thành công!' });
+        setStatusMsg({ type: 'success', text: `Cập nhật đối thủ "${trimmedName}" thành công!` });
       } else {
         await sprint2Service.createCompetitor({
-          name: compName,
-          strengths: compStrengths,
-          weaknesses: compWeaknesses,
-          pricing_tier: compPricingTier,
+          name: trimmedName,
+          website: compWebsite.trim() || undefined,
+          strengths: compStrengths.trim() || undefined,
+          weaknesses: compWeaknesses.trim() || undefined,
           win_rate: Number(compWinRate),
         });
-        setStatusMsg({ type: 'success', text: 'Thêm mới đối thủ cạnh tranh thành công!' });
+        setStatusMsg({ type: 'success', text: `Thêm mới đối thủ "${trimmedName}" thành công!` });
       }
       setIsCompetitorModalOpen(false);
       fetchData();
-    } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.response?.data?.detail || 'Lỗi lưu đối thủ.' });
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        'Lỗi lưu đối thủ cạnh tranh.';
+      setStatusMsg({ type: 'error', text: errorMsg });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDeleteCompetitor = async (c: ICompetitor) => {
+    if (isSubmitting) return;
     if (!window.confirm(`Xóa đối thủ cạnh tranh "${c.name}"?`)) return;
+
+    setIsSubmitting(true);
+    setStatusMsg(null);
     try {
       await sprint2Service.deleteCompetitor(c.id);
-      setStatusMsg({ type: 'success', text: 'Đã xóa đối thủ thành công.' });
+      setStatusMsg({ type: 'success', text: `Đã xóa đối thủ "${c.name}" thành công.` });
       fetchData();
-    } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.response?.data?.detail || 'Lỗi khi xóa đối thủ.' });
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        'Lỗi khi xóa đối thủ.';
+      setStatusMsg({ type: 'error', text: errorMsg });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -193,16 +263,16 @@ export const WinLossConfig: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>
+      <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px', flexWrap: 'wrap' }}>
         <button
           type="button"
-          onClick={() => setActiveTab('reasons')}
+          onClick={() => setActiveTab('WON')}
           style={{
             padding: '6px 14px',
             borderRadius: '6px',
             border: 'none',
-            backgroundColor: activeTab === 'reasons' ? '#2563eb' : '#f1f5f9',
-            color: activeTab === 'reasons' ? '#ffffff' : '#475569',
+            backgroundColor: activeTab === 'WON' ? '#16a34a' : '#f1f5f9',
+            color: activeTab === 'WON' ? '#ffffff' : '#475569',
             fontSize: '0.82rem',
             fontWeight: 600,
             cursor: 'pointer',
@@ -211,8 +281,29 @@ export const WinLossConfig: React.FC = () => {
             gap: '6px',
           }}
         >
-          <Trophy size={14} /> Lý do Thắng / Thua (Win/Loss Reasons)
+          <Trophy size={14} /> Lý do Thành công (Win Reasons)
         </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('LOST')}
+          style={{
+            padding: '6px 14px',
+            borderRadius: '6px',
+            border: 'none',
+            backgroundColor: activeTab === 'LOST' ? '#dc2626' : '#f1f5f9',
+            color: activeTab === 'LOST' ? '#ffffff' : '#475569',
+            fontSize: '0.82rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+          }}
+        >
+          <TrendingDown size={14} /> Lý do Thất bại (Loss Reasons)
+        </button>
+
         <button
           type="button"
           onClick={() => setActiveTab('competitors')}
@@ -253,8 +344,8 @@ export const WinLossConfig: React.FC = () => {
         </div>
       )}
 
-      {/* Tab 1: Win/Loss Reasons */}
-      {activeTab === 'reasons' && (
+      {/* Tab 1 & Tab 2: Win Reasons / Loss Reasons */}
+      {(activeTab === 'WON' || activeTab === 'LOST') && (
         <div
           style={{
             backgroundColor: '#ffffff',
@@ -270,57 +361,11 @@ export const WinLossConfig: React.FC = () => {
               alignItems: 'center',
               padding: '12px 16px',
               borderBottom: '1px solid #e2e8f0',
-              flexWrap: 'wrap',
-              gap: '8px',
             }}
           >
-            <div style={{ display: 'flex', gap: '4px' }}>
-              <button
-                type="button"
-                onClick={() => setResultTypeFilter('all')}
-                style={{
-                  padding: '4px 10px',
-                  borderRadius: '4px',
-                  border: '1px solid #cbd5e1',
-                  backgroundColor: resultTypeFilter === 'all' ? '#2563eb' : '#ffffff',
-                  color: resultTypeFilter === 'all' ? '#ffffff' : '#334155',
-                  fontSize: '0.75rem',
-                  cursor: 'pointer',
-                }}
-              >
-                Tất cả ({reasons.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setResultTypeFilter('WON')}
-                style={{
-                  padding: '4px 10px',
-                  borderRadius: '4px',
-                  border: '1px solid #cbd5e1',
-                  backgroundColor: resultTypeFilter === 'WON' ? '#16a34a' : '#ffffff',
-                  color: resultTypeFilter === 'WON' ? '#ffffff' : '#334155',
-                  fontSize: '0.75rem',
-                  cursor: 'pointer',
-                }}
-              >
-                Thành công (WON)
-              </button>
-              <button
-                type="button"
-                onClick={() => setResultTypeFilter('LOST')}
-                style={{
-                  padding: '4px 10px',
-                  borderRadius: '4px',
-                  border: '1px solid #cbd5e1',
-                  backgroundColor: resultTypeFilter === 'LOST' ? '#dc2626' : '#ffffff',
-                  color: resultTypeFilter === 'LOST' ? '#ffffff' : '#334155',
-                  fontSize: '0.75rem',
-                  cursor: 'pointer',
-                }}
-              >
-                Thất bại (LOST)
-              </button>
-            </div>
+            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
+              Danh sách {activeTab === 'WON' ? 'Lý do Thành công (Win Reasons)' : 'Lý do Thất bại (Loss Reasons)'} ({reasons.length})
+            </span>
 
             <button
               type="button"
@@ -332,24 +377,24 @@ export const WinLossConfig: React.FC = () => {
                 padding: '5px 12px',
                 borderRadius: '6px',
                 border: 'none',
-                backgroundColor: '#2563eb',
+                backgroundColor: activeTab === 'WON' ? '#16a34a' : '#dc2626',
                 color: '#ffffff',
                 fontSize: '0.8rem',
                 fontWeight: 600,
                 cursor: 'pointer',
               }}
             >
-              <Plus size={14} /> Thêm lý do
+              <Plus size={14} /> Thêm lý do {activeTab === 'WON' ? 'Thắng' : 'Thua'}
             </button>
           </div>
 
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', textAlign: 'left' }}>
             <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
               <tr>
-                <th style={{ padding: '10px 14px', width: '100px', color: '#64748b' }}>Phân loại</th>
-                <th style={{ padding: '10px 14px', color: '#64748b' }}>Mã định danh (Code)</th>
-                <th style={{ padding: '10px 14px', color: '#64748b' }}>Nguyên nhân chi tiết</th>
-                <th style={{ padding: '10px 14px', color: '#64748b' }}>Ghi chú giải thích</th>
+                <th style={{ padding: '10px 14px', width: '90px', color: '#64748b' }}>Phân loại</th>
+                <th style={{ padding: '10px 14px', color: '#64748b' }}>Mã lý do (Code)</th>
+                <th style={{ padding: '10px 14px', color: '#64748b' }}>Nội dung lý do</th>
+                <th style={{ padding: '10px 14px', color: '#64748b' }}>Mô tả giải thích</th>
                 <th style={{ padding: '10px 14px', textAlign: 'right', color: '#64748b' }}>Thao tác</th>
               </tr>
             </thead>
@@ -357,13 +402,13 @@ export const WinLossConfig: React.FC = () => {
               {isLoading ? (
                 <tr>
                   <td colSpan={5} style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>
-                    Đang tải dữ liệu...
+                    Đang nạp dữ liệu lý do...
                   </td>
                 </tr>
               ) : reasons.length === 0 ? (
                 <tr>
                   <td colSpan={5} style={{ padding: '32px', textAlign: 'center', color: '#94a3b8' }}>
-                    Chưa có lý do nào.
+                    Chưa có lý do nào trong danh mục này. Hãy bấm Thêm lý do mới!
                   </td>
                 </tr>
               ) : (
@@ -372,9 +417,6 @@ export const WinLossConfig: React.FC = () => {
                     <td style={{ padding: '10px 14px' }}>
                       <span
                         style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '3px',
                           padding: '2px 8px',
                           borderRadius: '4px',
                           fontSize: '0.72rem',
@@ -383,26 +425,31 @@ export const WinLossConfig: React.FC = () => {
                           color: r.result_type === 'WON' ? '#15803d' : '#b91c1c',
                         }}
                       >
-                        {r.result_type === 'WON' ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
                         {r.result_type}
                       </span>
                     </td>
-                    <td style={{ padding: '10px 14px', fontWeight: 600, color: '#334155' }}>{r.code}</td>
+                    <td style={{ padding: '10px 14px', fontWeight: 600, color: '#334155' }}>
+                      <code>{r.code}</code>
+                    </td>
                     <td style={{ padding: '10px 14px', fontWeight: 500, color: '#0f172a' }}>{r.reason}</td>
-                    <td style={{ padding: '10px 14px', color: '#64748b' }}>{r.description || '-'}</td>
+                    <td style={{ padding: '10px 14px', color: '#64748b' }}>{r.description || '—'}</td>
                     <td style={{ padding: '10px 14px', textAlign: 'right' }}>
                       <div style={{ display: 'inline-flex', gap: '6px' }}>
                         <button
                           type="button"
                           onClick={() => handleOpenEditReason(r)}
-                          style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', padding: '4px' }}
+                          disabled={isSubmitting}
+                          style={{ background: 'none', border: 'none', color: '#2563eb', cursor: isSubmitting ? 'not-allowed' : 'pointer', padding: '4px' }}
+                          title="Chỉnh sửa lý do"
                         >
                           <Edit2 size={14} />
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteReason(r)}
-                          style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', padding: '4px' }}
+                          disabled={isSubmitting}
+                          style={{ background: 'none', border: 'none', color: '#dc2626', cursor: isSubmitting ? 'not-allowed' : 'pointer', padding: '4px' }}
+                          title="Xóa lý do"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -416,7 +463,7 @@ export const WinLossConfig: React.FC = () => {
         </div>
       )}
 
-      {/* Tab 2: Competitors */}
+      {/* Tab 3: Competitors */}
       {activeTab === 'competitors' && (
         <div
           style={{
@@ -436,7 +483,7 @@ export const WinLossConfig: React.FC = () => {
             }}
           >
             <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
-              Danh sách đối thủ cạnh tranh thị trường ({competitors.length})
+              Danh sách Đối thủ cạnh tranh trực tiếp ({competitors.length})
             </span>
             <button
               type="button"
@@ -463,10 +510,10 @@ export const WinLossConfig: React.FC = () => {
             <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
               <tr>
                 <th style={{ padding: '10px 14px', color: '#64748b' }}>Tên đối thủ</th>
-                <th style={{ padding: '10px 14px', color: '#64748b' }}>Phân khúc giá</th>
-                <th style={{ padding: '10px 14px', color: '#64748b' }}>Điểm mạnh (Strengths)</th>
-                <th style={{ padding: '10px 14px', color: '#64748b' }}>Điểm yếu (Weaknesses)</th>
-                <th style={{ padding: '10px 14px', color: '#64748b' }}>Tỷ lệ thắng khi đối đầu</th>
+                <th style={{ padding: '10px 14px', color: '#64748b' }}>Website</th>
+                <th style={{ padding: '10px 14px', color: '#64748b' }}>Điểm mạnh</th>
+                <th style={{ padding: '10px 14px', color: '#64748b' }}>Điểm yếu</th>
+                <th style={{ padding: '10px 14px', color: '#64748b' }}>Tỷ lệ thắng ước tính</th>
                 <th style={{ padding: '10px 14px', textAlign: 'right', color: '#64748b' }}>Thao tác</th>
               </tr>
             </thead>
@@ -474,36 +521,48 @@ export const WinLossConfig: React.FC = () => {
               {isLoading ? (
                 <tr>
                   <td colSpan={6} style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>
-                    Đang nạp đối thủ...
+                    Đang nạp danh sách đối thủ...
                   </td>
                 </tr>
               ) : competitors.length === 0 ? (
                 <tr>
                   <td colSpan={6} style={{ padding: '32px', textAlign: 'center', color: '#94a3b8' }}>
-                    Chưa có đối thủ cạnh tranh nào được ghi nhận.
+                    Chưa có đối thủ nào trong danh mục.
                   </td>
                 </tr>
               ) : (
                 competitors.map((c) => (
                   <tr key={c.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                     <td style={{ padding: '10px 14px', fontWeight: 600, color: '#0f172a' }}>{c.name}</td>
-                    <td style={{ padding: '10px 14px', color: '#475569' }}>{c.pricing_tier || 'Trung cấp'}</td>
-                    <td style={{ padding: '10px 14px', color: '#166534', fontSize: '0.78rem' }}>{c.strengths || '-'}</td>
-                    <td style={{ padding: '10px 14px', color: '#991b1b', fontSize: '0.78rem' }}>{c.weaknesses || '-'}</td>
-                    <td style={{ padding: '10px 14px', fontWeight: 600, color: '#2563eb' }}>{c.win_rate}%</td>
+                    <td style={{ padding: '10px 14px', color: '#2563eb' }}>
+                      {c.website ? (
+                        <a href={c.website} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', color: '#2563eb' }}>
+                          {c.website}
+                        </a>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                    <td style={{ padding: '10px 14px', color: '#166534' }}>{c.strengths || '—'}</td>
+                    <td style={{ padding: '10px 14px', color: '#991b1b' }}>{c.weaknesses || '—'}</td>
+                    <td style={{ padding: '10px 14px', fontWeight: 600, color: '#334155' }}>{c.win_rate}%</td>
                     <td style={{ padding: '10px 14px', textAlign: 'right' }}>
                       <div style={{ display: 'inline-flex', gap: '6px' }}>
                         <button
                           type="button"
                           onClick={() => handleOpenEditCompetitor(c)}
-                          style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', padding: '4px' }}
+                          disabled={isSubmitting}
+                          style={{ background: 'none', border: 'none', color: '#2563eb', cursor: isSubmitting ? 'not-allowed' : 'pointer', padding: '4px' }}
+                          title="Chỉnh sửa"
                         >
                           <Edit2 size={14} />
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteCompetitor(c)}
-                          style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', padding: '4px' }}
+                          disabled={isSubmitting}
+                          style={{ background: 'none', border: 'none', color: '#dc2626', cursor: isSubmitting ? 'not-allowed' : 'pointer', padding: '4px' }}
+                          title="Xóa"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -517,7 +576,7 @@ export const WinLossConfig: React.FC = () => {
         </div>
       )}
 
-      {/* Modal Reason */}
+      {/* Modal Add / Edit Reason */}
       {isReasonModalOpen && (
         <div
           style={{
@@ -545,11 +604,14 @@ export const WinLossConfig: React.FC = () => {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
-                {editingReason ? 'Chỉnh sửa Lý do Thắng/Thua' : 'Thêm mới Lý do Thắng/Thua'}
+                {editingReason
+                  ? `Chỉnh sửa Lý do (${editingReason.result_type})`
+                  : `Thêm mới Lý do ${activeTab === 'WON' ? 'Thành công (Win)' : 'Thất bại (Loss)'}`}
               </h3>
               <button
                 type="button"
                 onClick={() => setIsReasonModalOpen(false)}
+                disabled={isSubmitting}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
               >
                 <X size={18} />
@@ -557,30 +619,14 @@ export const WinLossConfig: React.FC = () => {
             </div>
 
             <form onSubmit={handleSubmitReason} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {!editingReason && (
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
-                    Loại kết quả (Result Type) *
-                  </label>
-                  <select
-                    value={reasonResultType}
-                    onChange={(e) => setReasonResultType(e.target.value as any)}
-                    style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', backgroundColor: '#ffffff', boxSizing: 'border-box' }}
-                  >
-                    <option value="WON">Thành công (WON)</option>
-                    <option value="LOST">Thất bại (LOST)</option>
-                  </select>
-                </div>
-              )}
-
               <div>
                 <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
-                  Lý do chi tiết *
+                  Tiêu đề lý do *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="Khách hàng chọn vì chính sách bảo hành 24/7"
+                  placeholder={activeTab === 'WON' ? 'Giá cả cạnh tranh và dịch vụ tốt' : 'Ngân sách của khách hàng bị cắt giảm'}
                   value={reasonText}
                   onChange={(e) => setReasonText(e.target.value)}
                   style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', boxSizing: 'border-box' }}
@@ -590,12 +636,12 @@ export const WinLossConfig: React.FC = () => {
               {!editingReason && (
                 <div>
                   <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
-                    Mã lý do (Code) *
+                    Mã định danh lý do (Code) *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="W_WARRANTY"
+                    placeholder={activeTab === 'WON' ? 'WIN_PRICE' : 'LOSS_BUDGET'}
                     value={reasonCode}
                     onChange={(e) => setReasonCode(e.target.value)}
                     style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', boxSizing: 'border-box' }}
@@ -605,10 +651,11 @@ export const WinLossConfig: React.FC = () => {
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
-                  Mô tả / Hướng dẫn phân loại
+                  Mô tả giải thích chi tiết
                 </label>
                 <textarea
                   rows={2}
+                  placeholder="Ghi chú chi tiết cho Sales khi phân loại cơ hội..."
                   value={reasonDesc}
                   onChange={(e) => setReasonDesc(e.target.value)}
                   style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', boxSizing: 'border-box' }}
@@ -619,15 +666,26 @@ export const WinLossConfig: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsReasonModalOpen(false)}
+                  disabled={isSubmitting}
                   style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #cbd5e1', backgroundColor: '#ffffff', fontSize: '0.8rem', cursor: 'pointer' }}
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  style={{ padding: '6px 14px', borderRadius: '4px', border: 'none', backgroundColor: '#2563eb', color: '#ffffff', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
+                  disabled={isSubmitting}
+                  style={{
+                    padding: '6px 14px',
+                    borderRadius: '4px',
+                    border: 'none',
+                    backgroundColor: activeTab === 'WON' ? '#16a34a' : '#dc2626',
+                    color: '#ffffff',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                  }}
                 >
-                  Lưu lý do
+                  {isSubmitting ? 'Đang lưu...' : 'Lưu lý do'}
                 </button>
               </div>
             </form>
@@ -635,7 +693,7 @@ export const WinLossConfig: React.FC = () => {
         </div>
       )}
 
-      {/* Modal Competitor */}
+      {/* Modal Add / Edit Competitor */}
       {isCompetitorModalOpen && (
         <div
           style={{
@@ -668,6 +726,7 @@ export const WinLossConfig: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsCompetitorModalOpen(false)}
+                disabled={isSubmitting}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
               >
                 <X size={18} />
@@ -689,34 +748,31 @@ export const WinLossConfig: React.FC = () => {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
-                    Phân khúc giá
-                  </label>
-                  <select
-                    value={compPricingTier}
-                    onChange={(e) => setCompPricingTier(e.target.value)}
-                    style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', backgroundColor: '#ffffff', boxSizing: 'border-box' }}
-                  >
-                    <option value="Cao cấp">Cao cấp (Premium)</option>
-                    <option value="Trung cấp">Trung cấp (Mid-tier)</option>
-                    <option value="Giá rẻ">Giá rẻ (Low-cost)</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
-                    Tỷ lệ thắng ước tính (%)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={compWinRate}
-                    onChange={(e) => setCompWinRate(Number(e.target.value))}
-                    style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', boxSizing: 'border-box' }}
-                  />
-                </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
+                  Website
+                </label>
+                <input
+                  type="text"
+                  placeholder="https://example.com"
+                  value={compWebsite}
+                  onChange={(e) => setCompWebsite(e.target.value)}
+                  style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
+                  Tỷ lệ thắng ước tính (%)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={compWinRate}
+                  onChange={(e) => setCompWinRate(Number(e.target.value))}
+                  style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', boxSizing: 'border-box' }}
+                />
               </div>
 
               <div>
@@ -749,15 +805,17 @@ export const WinLossConfig: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsCompetitorModalOpen(false)}
+                  disabled={isSubmitting}
                   style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #cbd5e1', backgroundColor: '#ffffff', fontSize: '0.8rem', cursor: 'pointer' }}
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  style={{ padding: '6px 14px', borderRadius: '4px', border: 'none', backgroundColor: '#2563eb', color: '#ffffff', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
+                  disabled={isSubmitting}
+                  style={{ padding: '6px 14px', borderRadius: '4px', border: 'none', backgroundColor: '#2563eb', color: '#ffffff', fontSize: '0.8rem', fontWeight: 600, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
                 >
-                  Lưu đối thủ
+                  {isSubmitting ? 'Đang lưu...' : 'Lưu đối thủ'}
                 </button>
               </div>
             </form>

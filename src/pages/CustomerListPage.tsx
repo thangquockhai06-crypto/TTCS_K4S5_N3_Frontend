@@ -14,6 +14,8 @@ import {
   RefreshCw,
   Trash2,
   Upload,
+  Check,
+  X,
 } from 'lucide-react';
 import {
   ICustomer,
@@ -57,6 +59,7 @@ export const CustomerListPage: React.FC = () => {
   const limit = 20;
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // Filters & View
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -89,9 +92,12 @@ export const CustomerListPage: React.FC = () => {
 
       const res = await customerService.getCustomers(criteria);
       setCustomers(res || []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Lỗi khi tải danh sách khách hàng:', err);
-      setError(err.response?.data?.detail || 'Không thể tải danh sách khách hàng từ máy chủ.');
+      const errorMsg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        'Không thể tải danh sách khách hàng từ máy chủ.';
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -107,12 +113,20 @@ export const CustomerListPage: React.FC = () => {
   const handleDeleteCustomer = async () => {
     if (!deletingCustomerId) return;
     setIsDeleting(true);
+    setNotification(null);
     try {
       await customerService.deleteCustomer(deletingCustomerId);
       setDeletingCustomerId(null);
+      setNotification({
+        type: 'success',
+        message: 'Đã xóa mềm khách hàng thành công khỏi hệ thống.',
+      });
       fetchCustomers();
-    } catch (err: any) {
-      alert(err.response?.data?.detail || 'Lỗi khi xóa khách hàng');
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        'Lỗi khi xóa khách hàng';
+      setNotification({ type: 'error', message: errorMsg });
     } finally {
       setIsDeleting(false);
     }
@@ -131,6 +145,36 @@ export const CustomerListPage: React.FC = () => {
 
   return (
     <div className={styles.customerListPage}>
+      {/* Toast / Notification Banner */}
+      {notification && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 10,
+            padding: '12px 16px',
+            backgroundColor: notification.type === 'success' ? '#f0fdf4' : '#fef2f2',
+            border: `1px solid ${notification.type === 'success' ? '#bbf7d0' : '#fecaca'}`,
+            borderRadius: 8,
+            color: notification.type === 'success' ? '#166534' : '#991b1b',
+            fontSize: '0.875rem',
+            marginBottom: 16,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {notification.type === 'success' ? <Check size={18} /> : <AlertTriangle size={18} />}
+            <span>{notification.message}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setNotification(null)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 2 }}
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
       {/* Tiêu đề trang & Các nút chức năng */}
       <header className={styles.pageHeader}>
         <div>
@@ -388,6 +432,17 @@ export const CustomerListPage: React.FC = () => {
                   >
                     <GitMerge size={13} />
                   </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeletingCustomerId(c.id);
+                    }}
+                    title="Xóa hồ sơ"
+                  >
+                    <Trash2 size={13} color="#DC2626" />
+                  </Button>
                 </div>
               </div>
             </div>
@@ -540,8 +595,12 @@ export const CustomerListPage: React.FC = () => {
         <CustomerForm
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
-          onSuccess={() => {
+          onSuccess={(cust) => {
             setIsCreateModalOpen(false);
+            setNotification({
+              type: 'success',
+              message: `Thêm mới khách hàng "${cust.company || cust.fullName}" thành công!`,
+            });
             fetchCustomers();
           }}
         />
@@ -553,8 +612,12 @@ export const CustomerListPage: React.FC = () => {
           isOpen={Boolean(editingCustomer)}
           onClose={() => setEditingCustomer(null)}
           customerToEdit={editingCustomer}
-          onSuccess={() => {
+          onSuccess={(cust) => {
             setEditingCustomer(null);
+            setNotification({
+              type: 'success',
+              message: `Cập nhật hồ sơ khách hàng "${cust.company || cust.fullName}" thành công!`,
+            });
             fetchCustomers();
           }}
         />
@@ -566,8 +629,12 @@ export const CustomerListPage: React.FC = () => {
           isOpen={isMergeModalOpen}
           onClose={() => setIsMergeModalOpen(false)}
           primaryCustomer={mergePrimaryCustomer}
-          onMerged={() => {
+          onMerged={(masterCust) => {
             setIsMergeModalOpen(false);
+            setNotification({
+              type: 'success',
+              message: `Gộp dữ liệu khách hàng thành công vào tài khoản chính "${masterCust?.company || masterCust?.fullName || 'doanh nghiệp'}"!`,
+            });
             fetchCustomers();
           }}
         />
@@ -579,6 +646,10 @@ export const CustomerListPage: React.FC = () => {
           isOpen={isImportModalOpen}
           onClose={() => setIsImportModalOpen(false)}
           onSuccess={() => {
+            setNotification({
+              type: 'success',
+              message: 'Nhập dữ liệu khách hàng từ tệp Excel thành công!',
+            });
             fetchCustomers();
           }}
         />

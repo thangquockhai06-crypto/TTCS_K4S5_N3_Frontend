@@ -16,6 +16,7 @@ export const CategoryManager: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'lead_source' | 'industry'>('lead_source');
   const [categories, setCategories] = useState<ICategory[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Form add/edit
@@ -30,7 +31,7 @@ export const CategoryManager: React.FC = () => {
     try {
       const data = await sprint2Service.getCategories(activeTab);
       setCategories(data);
-    } catch (err: any) {
+    } catch {
       setStatusMsg({ type: 'error', text: 'Không thể tải danh mục.' });
     } finally {
       setIsLoading(false);
@@ -57,31 +58,50 @@ export const CategoryManager: React.FC = () => {
 
   const handleSubmitForm = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
+    const trimmedName = name.trim();
+    const trimmedCode = code.toUpperCase().trim();
+
+    if (!trimmedName || !trimmedCode) {
+      setStatusMsg({ type: 'error', text: 'Vui lòng điền đầy đủ Tên và Mã danh mục.' });
+      return;
+    }
+
+    setIsSubmitting(true);
+    setStatusMsg(null);
     try {
       if (editingItem) {
         await sprint2Service.updateCategory(editingItem.id, {
-          name,
-          code: code.toUpperCase().trim(),
+          name: trimmedName,
+          code: trimmedCode,
         });
-        setStatusMsg({ type: 'success', text: 'Cập nhật danh mục thành công!' });
+        setStatusMsg({ type: 'success', text: `Cập nhật danh mục "${trimmedName}" thành công!` });
       } else {
         await sprint2Service.createCategory({
           type: activeTab,
-          name,
-          code: code.toUpperCase().trim(),
+          name: trimmedName,
+          code: trimmedCode,
           order_index: categories.length,
         });
-        setStatusMsg({ type: 'success', text: 'Thêm mới danh mục thành công!' });
+        setStatusMsg({ type: 'success', text: `Thêm mới danh mục "${trimmedName}" thành công!` });
       }
       setIsFormOpen(false);
       fetchCategories();
-    } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.response?.data?.detail || 'Lỗi lưu danh mục.' });
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        'Lỗi lưu danh mục.';
+      setStatusMsg({ type: 'error', text: errorMsg });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   // S2-07: Prevent deletion if usage_count > 0
   const handleDelete = async (item: ICategory) => {
+    if (isSubmitting) return;
+
     if (item.usage_count > 0) {
       setStatusMsg({
         type: 'error',
@@ -92,17 +112,26 @@ export const CategoryManager: React.FC = () => {
 
     if (!window.confirm(`Bạn có chắc muốn xóa "${item.name}"?`)) return;
 
+    setIsSubmitting(true);
+    setStatusMsg(null);
     try {
       await sprint2Service.deleteCategory(item.id);
-      setStatusMsg({ type: 'success', text: 'Đã xóa danh mục thành công.' });
+      setStatusMsg({ type: 'success', text: `Đã xóa danh mục "${item.name}" thành công!` });
       fetchCategories();
-    } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.response?.data?.detail || 'Lỗi khi xóa danh mục.' });
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        'Lỗi khi xóa danh mục.';
+      setStatusMsg({ type: 'error', text: errorMsg });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   // Reorder
   const handleMove = async (index: number, direction: 'up' | 'down') => {
+    if (isSubmitting) return;
+
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= categories.length) return;
 
@@ -113,11 +142,20 @@ export const CategoryManager: React.FC = () => {
 
     setCategories(newCategories);
 
+    setIsSubmitting(true);
+    setStatusMsg(null);
     try {
       await sprint2Service.reorderCategories(newCategories.map((c) => c.id));
-    } catch (err: any) {
-      setStatusMsg({ type: 'error', text: 'Lỗi sắp xếp lại thứ tự.' });
+      setStatusMsg({ type: 'success', text: 'Cập nhật thứ tự sắp xếp danh mục thành công!' });
       fetchCategories();
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        'Lỗi sắp xếp lại thứ tự danh mục.';
+      setStatusMsg({ type: 'error', text: errorMsg });
+      fetchCategories();
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -259,13 +297,13 @@ export const CategoryManager: React.FC = () => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                       <button
                         type="button"
-                        disabled={idx === 0}
+                        disabled={idx === 0 || isSubmitting}
                         onClick={() => handleMove(idx, 'up')}
                         style={{
                           background: 'none',
                           border: 'none',
-                          color: idx === 0 ? '#cbd5e1' : '#64748b',
-                          cursor: idx === 0 ? 'default' : 'pointer',
+                          color: idx === 0 || isSubmitting ? '#cbd5e1' : '#64748b',
+                          cursor: idx === 0 || isSubmitting ? 'default' : 'pointer',
                           padding: '2px',
                         }}
                         title="Đẩy lên trên"
@@ -274,13 +312,13 @@ export const CategoryManager: React.FC = () => {
                       </button>
                       <button
                         type="button"
-                        disabled={idx === categories.length - 1}
+                        disabled={idx === categories.length - 1 || isSubmitting}
                         onClick={() => handleMove(idx, 'down')}
                         style={{
                           background: 'none',
                           border: 'none',
-                          color: idx === categories.length - 1 ? '#cbd5e1' : '#64748b',
-                          cursor: idx === categories.length - 1 ? 'default' : 'pointer',
+                          color: idx === categories.length - 1 || isSubmitting ? '#cbd5e1' : '#64748b',
+                          cursor: idx === categories.length - 1 || isSubmitting ? 'default' : 'pointer',
                           padding: '2px',
                         }}
                         title="Đẩy xuống dưới"
@@ -311,7 +349,8 @@ export const CategoryManager: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleOpenEdit(item)}
-                        style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', padding: '4px' }}
+                        disabled={isSubmitting}
+                        style={{ background: 'none', border: 'none', color: '#2563eb', cursor: isSubmitting ? 'not-allowed' : 'pointer', padding: '4px' }}
                         title="Chỉnh sửa"
                       >
                         <Edit2 size={14} />
@@ -321,12 +360,12 @@ export const CategoryManager: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleDelete(item)}
-                        disabled={item.usage_count > 0}
+                        disabled={item.usage_count > 0 || isSubmitting}
                         style={{
                           background: 'none',
                           border: 'none',
-                          color: item.usage_count > 0 ? '#cbd5e1' : '#dc2626',
-                          cursor: item.usage_count > 0 ? 'not-allowed' : 'pointer',
+                          color: item.usage_count > 0 || isSubmitting ? '#cbd5e1' : '#dc2626',
+                          cursor: item.usage_count > 0 || isSubmitting ? 'not-allowed' : 'pointer',
                           padding: '4px',
                         }}
                         title={
@@ -379,6 +418,7 @@ export const CategoryManager: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsFormOpen(false)}
+                disabled={isSubmitting}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
               >
                 <X size={18} />
@@ -418,15 +458,17 @@ export const CategoryManager: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsFormOpen(false)}
+                  disabled={isSubmitting}
                   style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #cbd5e1', backgroundColor: '#ffffff', fontSize: '0.8rem', cursor: 'pointer' }}
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  style={{ padding: '6px 14px', borderRadius: '4px', border: 'none', backgroundColor: '#2563eb', color: '#ffffff', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
+                  disabled={isSubmitting}
+                  style={{ padding: '6px 14px', borderRadius: '4px', border: 'none', backgroundColor: '#2563eb', color: '#ffffff', fontSize: '0.8rem', fontWeight: 600, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
                 >
-                  Lưu thay đổi
+                  {isSubmitting ? 'Đang lưu...' : 'Lưu thay đổi'}
                 </button>
               </div>
             </form>

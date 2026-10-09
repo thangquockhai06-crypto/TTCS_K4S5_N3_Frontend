@@ -53,7 +53,7 @@ export const ProductList: React.FC = () => {
         category: categoryFilter !== 'all' ? categoryFilter : undefined,
       });
       setProducts(data);
-    } catch (err: any) {
+    } catch {
       setStatusMsg({ type: 'error', text: 'Không thể tải danh sách sản phẩm.' });
     } finally {
       setIsLoading(false);
@@ -98,6 +98,7 @@ export const ProductList: React.FC = () => {
       if (editingProduct) {
         await sprint2Service.updateProduct(editingProduct.id, {
           ...formData,
+          code: formData.sku,
           selling_price: Number(formData.selling_price),
           cost_price: isDirector ? Number(formData.cost_price) : undefined,
         });
@@ -105,15 +106,19 @@ export const ProductList: React.FC = () => {
       } else {
         await sprint2Service.createProduct({
           ...formData,
+          code: formData.sku,
           selling_price: Number(formData.selling_price),
-          cost_price: isDirector ? Number(formData.cost_price) : undefined,
+          cost_price: isDirector ? Number(formData.cost_price) : 0,
         });
         setStatusMsg({ type: 'success', text: 'Thêm mới sản phẩm thành công!' });
       }
       setIsFormOpen(false);
       fetchProducts();
-    } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.response?.data?.detail || 'Lỗi lưu sản phẩm.' });
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        'Lỗi lưu sản phẩm.';
+      setStatusMsg({ type: 'error', text: errorMsg });
     }
   };
 
@@ -135,10 +140,13 @@ export const ProductList: React.FC = () => {
       await sprint2Service.deleteProduct(p.id);
       setStatusMsg({ type: 'success', text: 'Đã xóa sản phẩm thành công.' });
       fetchProducts();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        'Lỗi khi xóa sản phẩm.';
       setStatusMsg({
         type: 'error',
-        text: err.response?.data?.detail || 'Lỗi khi xóa sản phẩm.',
+        text: errorMsg,
       });
     }
   };

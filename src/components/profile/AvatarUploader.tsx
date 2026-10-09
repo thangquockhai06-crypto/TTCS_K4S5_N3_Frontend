@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { Camera, Trash2, AlertCircle, Check } from 'lucide-react';
+import { Camera, Trash2, AlertCircle, Check, RefreshCw } from 'lucide-react';
+import { sprint2Service } from '../../services/sprint2Service';
 
 interface IAvatarUploaderProps {
   currentAvatarUrl?: string;
@@ -20,8 +21,9 @@ export const AvatarUploader: React.FC<IAvatarUploaderProps> = ({
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successNotice, setSuccessNotice] = useState<boolean>(false);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -41,19 +43,27 @@ export const AvatarUploader: React.FC<IAvatarUploaderProps> = ({
     }
 
     setErrorMessage(null);
+    setSuccessNotice(false);
+    setIsUploading(true);
 
-    // Read and preview 1:1
-    const reader = new FileReader();
-    reader.onload = (uploadEvent) => {
-      const result = uploadEvent.target?.result as string;
-      if (result) {
-        setPreviewUrl(result);
-        onAvatarChange(result);
+    try {
+      const res = await sprint2Service.uploadAvatar(file);
+      if (res && res.avatar_url) {
+        setPreviewUrl(res.avatar_url);
+        onAvatarChange(res.avatar_url);
         setSuccessNotice(true);
-        window.setTimeout(() => setSuccessNotice(false), 2000);
+        window.setTimeout(() => setSuccessNotice(false), 4000);
+      } else {
+        throw new Error('Máy chủ không trả về đường dẫn ảnh hợp lệ.');
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (err: any) {
+      const detail = err.response?.data?.detail || err.message || 'Lỗi khi tải ảnh đại diện lên máy chủ.';
+      setErrorMessage(detail);
+      setSuccessNotice(false);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const handleRemove = () => {
@@ -109,7 +119,7 @@ export const AvatarUploader: React.FC<IAvatarUploaderProps> = ({
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <button
               type="button"
-              disabled={disabled}
+              disabled={disabled || isUploading}
               onClick={() => fileInputRef.current?.click()}
               style={{
                 display: 'inline-flex',
@@ -122,16 +132,25 @@ export const AvatarUploader: React.FC<IAvatarUploaderProps> = ({
                 color: '#334155',
                 fontSize: '0.8rem',
                 fontWeight: 500,
-                cursor: disabled ? 'not-allowed' : 'pointer',
+                cursor: (disabled || isUploading) ? 'not-allowed' : 'pointer',
               }}
             >
-              <Camera size={14} />
-              Tải ảnh mới
+              {isUploading ? (
+                <>
+                  <RefreshCw size={14} className="spin" />
+                  Đang tải lên...
+                </>
+              ) : (
+                <>
+                  <Camera size={14} />
+                  Tải ảnh mới
+                </>
+              )}
             </button>
 
             <button
               type="button"
-              disabled={disabled}
+              disabled={disabled || isUploading}
               onClick={handleRemove}
               style={{
                 display: 'inline-flex',
@@ -143,7 +162,7 @@ export const AvatarUploader: React.FC<IAvatarUploaderProps> = ({
                 backgroundColor: '#fff1f2',
                 color: '#e11d48',
                 fontSize: '0.8rem',
-                cursor: disabled ? 'not-allowed' : 'pointer',
+                cursor: (disabled || isUploading) ? 'not-allowed' : 'pointer',
               }}
             >
               <Trash2 size={13} />
@@ -189,7 +208,7 @@ export const AvatarUploader: React.FC<IAvatarUploaderProps> = ({
           }}
         >
           <Check size={14} />
-          <span>Đã nạp ảnh mới thành công (xem trước). Hãy lưu thay đổi để cập nhật.</span>
+          <span>Ảnh đại diện đã được tải lên và lưu thành công trên máy chủ!</span>
         </div>
       )}
     </div>

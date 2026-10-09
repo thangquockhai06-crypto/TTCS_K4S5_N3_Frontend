@@ -114,6 +114,7 @@ class UserService {
     const params: Record<string, string | number> = {
       skip,
       limit,
+      page,
     };
     if (filter.search && filter.search.trim()) {
       params.search = filter.search.trim();
@@ -123,8 +124,10 @@ class UserService {
         filter.role === 'admin'
           ? 'Admin'
           : filter.role === 'manager'
-          ? 'Sales Manager'
-          : 'Account Executive';
+          ? 'Manager'
+          : filter.role === 'sales'
+          ? 'Sales'
+          : filter.role;
     }
     if (filter.status && filter.status !== 'all') {
       params.status = filter.status;
@@ -136,8 +139,23 @@ class UserService {
     try {
       const response = await axiosInstance.get<IBackendUser[]>('/users', { params });
       const rawList = Array.isArray(response.data) ? response.data : [];
-      const totalHeader = response.headers['x-total-count'];
-      const total = totalHeader ? Number(totalHeader) : rawList.length;
+      
+      // Lấy total count từ header (hỗ trợ AxiosHeaders hoặc standard object)
+      let totalCount: number | null = null;
+      if (response.headers) {
+        const h = response.headers as any;
+        const val = (typeof h.get === 'function' ? h.get('x-total-count') : null) 
+          || h['x-total-count'] 
+          || h['X-Total-Count'];
+        if (val !== undefined && val !== null && val !== '') {
+          const num = Number(val);
+          if (!isNaN(num)) {
+            totalCount = num;
+          }
+        }
+      }
+
+      const total = totalCount !== null ? totalCount : rawList.length;
       const totalPages = Math.max(1, Math.ceil(total / limit));
 
       const data = rawList.map((u, i) => mapBackendToUserItem(u, i));

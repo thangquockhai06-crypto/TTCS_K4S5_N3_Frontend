@@ -10,6 +10,7 @@ import {
   X,
   RefreshCw,
   Building2,
+  Plus,
 } from 'lucide-react';
 import { IOrgNode } from '../../interfaces';
 import { sprint2Service } from '../../services/sprint2Service';
@@ -23,13 +24,22 @@ export const OrgTreeView: React.FC = () => {
   const [region, setRegion] = useState('');
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // Modal thêm đơn vị tổ chức mới
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [createParentId, setCreateParentId] = useState<string>('');
+  const [createName, setCreateName] = useState('');
+  const [createLeaderName, setCreateLeaderName] = useState('');
+  const [createRegion, setCreateRegion] = useState('Toàn quốc');
+  const [createDescription, setCreateDescription] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const fetchTree = async () => {
     setIsLoading(true);
     setStatusMsg(null);
     try {
       const data = await sprint2Service.getOrgTree();
       setTreeData(data);
-    } catch (err: any) {
+    } catch {
       setStatusMsg({ type: 'error', text: 'Không thể tải cây tổ chức.' });
     } finally {
       setIsLoading(false);
@@ -54,18 +64,85 @@ export const OrgTreeView: React.FC = () => {
     e.preventDefault();
     if (!editingNode) return;
 
+    setIsSubmitting(true);
     try {
       await sprint2Service.updateOrgNode(editingNode.id, {
-        leader_name: leaderName,
+        leader_name: leaderName.trim() || undefined,
         region,
       });
       setStatusMsg({ type: 'success', text: `Cập nhật đơn vị "${editingNode.name}" thành công!` });
       setEditingNode(null);
       fetchTree();
-    } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.response?.data?.detail || 'Lỗi khi cập nhật đơn vị.' });
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        'Lỗi khi cập nhật đơn vị.';
+      setStatusMsg({ type: 'error', text: errorMsg });
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  const getAllNodesFlat = (nodes: IOrgNode[]): { id: string; name: string }[] => {
+    let result: { id: string; name: string }[] = [];
+    for (const node of nodes) {
+      result.push({ id: node.id, name: node.name });
+      if (node.children && node.children.length > 0) {
+        result = result.concat(getAllNodesFlat(node.children));
+      }
+    }
+    return result;
+  };
+
+  const handleOpenCreateRoot = () => {
+    setCreateParentId('');
+    setCreateName('');
+    setCreateLeaderName('');
+    setCreateRegion('Toàn quốc');
+    setCreateDescription('');
+    setIsCreateModalOpen(true);
+  };
+
+  const handleOpenCreateChild = (node: IOrgNode) => {
+    setCreateParentId(node.id);
+    setCreateName('');
+    setCreateLeaderName('');
+    setCreateRegion(node.region || 'Toàn quốc');
+    setCreateDescription('');
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCreateNode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!createName.trim()) {
+      setStatusMsg({ type: 'error', text: 'Vui lòng nhập tên đơn vị.' });
+      return;
+    }
+
+    setIsSubmitting(true);
+    setStatusMsg(null);
+    try {
+      const res = await sprint2Service.createOrgNode({
+        name: createName.trim(),
+        parent_id: createParentId || null,
+        leader_name: createLeaderName.trim() || undefined,
+        region: createRegion || 'Toàn quốc',
+        description: createDescription.trim() || undefined,
+      });
+      setStatusMsg({ type: 'success', text: `Thêm mới đơn vị "${res.name}" thành công!` });
+      setIsCreateModalOpen(false);
+      fetchTree();
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        'Lỗi khi thêm mới đơn vị tổ chức.';
+      setStatusMsg({ type: 'error', text: errorMsg });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const flatNodes = getAllNodesFlat(treeData);
 
   const renderNode = (node: IOrgNode, level = 0) => {
     const isCollapsed = Boolean(collapsedNodes[node.id]);
@@ -137,33 +214,59 @@ export const OrgTreeView: React.FC = () => {
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {/* Leader */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem', color: '#334155' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem', color: '#334155', marginRight: '8px' }}>
               <UserCheck size={13} color="#2563eb" />
               <span>{node.leader_name || <span style={{ color: '#94a3b8' }}>Chưa có Trưởng bộ phận</span>}</span>
             </div>
 
             {/* Region */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem', color: '#64748b' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem', color: '#64748b', marginRight: '8px' }}>
               <MapPin size={13} color="#f59e0b" />
               <span>{node.region || 'Toàn quốc'}</span>
             </div>
+
+            {/* Add child button */}
+            <button
+              type="button"
+              onClick={() => handleOpenCreateChild(node)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '4px 8px',
+                border: '1px solid #e2e8f0',
+                borderRadius: '4px',
+                background: '#f8fafc',
+                color: '#0284c7',
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+              }}
+              title="Thêm đơn vị trực thuộc"
+            >
+              <Plus size={13} /> Thêm cấp dưới
+            </button>
 
             {/* Edit button */}
             <button
               type="button"
               onClick={() => handleOpenEdit(node)}
               style={{
-                padding: '4px',
-                border: 'none',
-                background: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '4px 8px',
+                border: '1px solid #e2e8f0',
+                borderRadius: '4px',
+                background: '#f8fafc',
                 color: '#2563eb',
+                fontSize: '0.75rem',
                 cursor: 'pointer',
               }}
               title="Gán Trưởng bộ phận & Địa bàn phụ trách"
             >
-              <Edit2 size={14} />
+              <Edit2 size={13} /> Phân bổ
             </button>
           </div>
         </div>
@@ -197,26 +300,48 @@ export const OrgTreeView: React.FC = () => {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={fetchTree}
-          disabled={isLoading}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '6px 12px',
-            borderRadius: '6px',
-            border: '1px solid #cbd5e1',
-            backgroundColor: '#ffffff',
-            color: '#334155',
-            fontSize: '0.8rem',
-            cursor: isLoading ? 'not-allowed' : 'pointer',
-          }}
-        >
-          <RefreshCw size={13} className={isLoading ? 'spin' : ''} />
-          Làm mới
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            type="button"
+            onClick={handleOpenCreateRoot}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 14px',
+              borderRadius: '6px',
+              border: 'none',
+              backgroundColor: '#2563eb',
+              color: '#ffffff',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            <Plus size={14} /> Thêm đơn vị mới
+          </button>
+
+          <button
+            type="button"
+            onClick={fetchTree}
+            disabled={isLoading}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              border: '1px solid #cbd5e1',
+              backgroundColor: '#ffffff',
+              color: '#334155',
+              fontSize: '0.8rem',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+            }}
+          >
+            <RefreshCw size={13} className={isLoading ? 'spin' : ''} />
+            Làm mới
+          </button>
+        </div>
       </div>
 
       {statusMsg && (
@@ -256,6 +381,147 @@ export const OrgTreeView: React.FC = () => {
           treeData.map((rootNode) => renderNode(rootNode, 0))
         )}
       </div>
+
+      {/* Create Org Node Modal */}
+      {isCreateModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '16px',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '8px',
+              width: '100%',
+              maxWidth: '500px',
+              padding: '20px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Building2 size={20} color="#2563eb" />
+                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
+                  Thêm mới Đơn vị / Phòng ban
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCreateModalOpen(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateNode} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                  Tên đơn vị / Phòng ban *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ví dụ: Phòng Kinh doanh Miền Tây"
+                  value={createName}
+                  onChange={(e) => setCreateName(e.target.value)}
+                  style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                  Đơn vị cấp trên trực tiếp
+                </label>
+                <select
+                  value={createParentId}
+                  onChange={(e) => setCreateParentId(e.target.value)}
+                  style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', backgroundColor: '#ffffff', boxSizing: 'border-box' }}
+                >
+                  <option value="">Không có (Đơn vị gốc cấp cao nhất)</option>
+                  {flatNodes.map((n) => (
+                    <option key={n.id} value={n.id}>
+                      {n.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                  Trưởng bộ phận / Trưởng nhóm (Leader)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ví dụ: Lê Thị Hồng Mai"
+                  value={createLeaderName}
+                  onChange={(e) => setCreateLeaderName(e.target.value)}
+                  style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                  Khu vực / Địa bàn phụ trách (Region)
+                </label>
+                <select
+                  value={createRegion}
+                  onChange={(e) => setCreateRegion(e.target.value)}
+                  style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', backgroundColor: '#ffffff', boxSizing: 'border-box' }}
+                >
+                  <option value="Toàn quốc">Toàn quốc</option>
+                  <option value="Miền Bắc (Hà Nội & lân cận)">Miền Bắc (Hà Nội & lân cận)</option>
+                  <option value="Miền Trung (Đà Nẵng & miền Trung)">Miền Trung (Đà Nẵng & miền Trung)</option>
+                  <option value="Miền Nam (TP.HCM & Đông Nam Bộ)">Miền Nam (TP.HCM & Đông Nam Bộ)</option>
+                  <option value="Tây Nam Bộ">Tây Nam Bộ</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                  Mô tả chức năng nhiệm vụ
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ghi chú thêm về đơn vị..."
+                  value={createDescription}
+                  onChange={(e) => setCreateDescription(e.target.value)}
+                  style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsCreateModalOpen(false)}
+                  disabled={isSubmitting}
+                  style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #cbd5e1', backgroundColor: '#ffffff', fontSize: '0.8rem', cursor: 'pointer' }}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  style={{ padding: '6px 14px', borderRadius: '4px', border: 'none', backgroundColor: '#2563eb', color: '#ffffff', fontSize: '0.8rem', fontWeight: 600, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+                >
+                  {isSubmitting ? 'Đang lưu...' : 'Thêm đơn vị'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Edit Leader / Region Modal */}
       {editingNode && (
@@ -336,15 +602,17 @@ export const OrgTreeView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setEditingNode(null)}
+                  disabled={isSubmitting}
                   style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #cbd5e1', backgroundColor: '#ffffff', fontSize: '0.8rem', cursor: 'pointer' }}
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  style={{ padding: '6px 14px', borderRadius: '4px', border: 'none', backgroundColor: '#2563eb', color: '#ffffff', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
+                  disabled={isSubmitting}
+                  style={{ padding: '6px 14px', borderRadius: '4px', border: 'none', backgroundColor: '#2563eb', color: '#ffffff', fontSize: '0.8rem', fontWeight: 600, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
                 >
-                  Lưu phân công
+                  {isSubmitting ? 'Đang lưu...' : 'Lưu phân công'}
                 </button>
               </div>
             </form>

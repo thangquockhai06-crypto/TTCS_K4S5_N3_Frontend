@@ -23,7 +23,7 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({ isOpen, onClose
     try {
       const data = await sprint2Service.getPriceLists();
       setPriceLists(data);
-    } catch (err: any) {
+    } catch {
       setStatusMsg({ type: 'error', text: 'Không thể tải danh sách bảng giá.' });
     } finally {
       setIsLoading(false);
@@ -55,8 +55,11 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({ isOpen, onClose
       setDescription('');
       setShowCreateForm(false);
       fetchPriceLists();
-    } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.response?.data?.detail || 'Lỗi khi tạo bảng giá.' });
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        'Lỗi khi tạo bảng giá.';
+      setStatusMsg({ type: 'error', text: errorMsg });
     }
   };
 

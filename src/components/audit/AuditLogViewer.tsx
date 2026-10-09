@@ -49,11 +49,15 @@ export const AuditLogViewer: React.FC = () => {
     if (!ts) return '—';
     try {
       const d = new Date(ts);
+      if (isNaN(d.getTime())) return ts;
       return d.toLocaleString('vi-VN', {
+        year: 'numeric',
         month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
       });
     } catch {
       return ts;
@@ -219,7 +223,7 @@ export const AuditLogViewer: React.FC = () => {
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                 >
                   <td style={{ padding: '10px 14px', color: '#64748b', whiteSpace: 'nowrap' }}>
-                    {formatDateTime(log.timestamp)}
+                    {formatDateTime(log.created_at || log.timestamp)}
                   </td>
                   <td style={{ padding: '10px 14px', fontWeight: 500, color: '#1e293b' }}>
                     <div>{log.user_name || log.performed_by}</div>

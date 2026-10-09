@@ -109,7 +109,10 @@ export const ProfilePage: React.FC = () => {
             </label>
             <AvatarUploader
               currentAvatarUrl={avatarUrl || user?.avatarUrl}
-              onAvatarChange={(newUrl) => setAvatarUrl(newUrl)}
+              onAvatarChange={(newUrl) => {
+                setAvatarUrl(newUrl);
+                updateUserProfile({ avatarUrl: newUrl });
+              }}
               disabled={isSubmitting}
             />
           </div>
