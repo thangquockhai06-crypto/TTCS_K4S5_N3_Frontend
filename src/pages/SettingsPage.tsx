@@ -19,6 +19,7 @@ import { Badge, Button, Card } from '../components/common';
 import { UserManagementPanel } from '../components/users/UserManagementPanel';
 import { useCRMData } from '../context/CRMDataContext';
 import { useAuth } from '../hooks/useAuth';
+import { showGlobalToast } from '../context/ToastContext';
 import { INotificationPreference, ISecuritySession } from '../interfaces';
 import { ChangePasswordForm } from '../features/change-password';
 import { OrgTreeView } from '../components/org/OrgTreeView';
@@ -521,7 +522,16 @@ export const SettingsPage: React.FC = () => {
                     className={`${styles.modernToggle} ${
                       twoFactorEnabled ? styles['modernToggle--on'] : ''
                     }`}
-                    onClick={() => setTwoFactorEnabled((prev) => !prev)}
+                    onClick={() => {
+                      const next = !twoFactorEnabled;
+                      setTwoFactorEnabled(next);
+                      showGlobalToast(
+                        next
+                          ? 'Đã kích hoạt xác thực 2 lớp (2FA) thành công.'
+                          : 'Đã hủy kích hoạt xác thực 2 lớp (2FA).',
+                        'info'
+                      );
+                    }}
                   >
                     <span className={styles.modernToggle__thumb} />
                   </button>
@@ -562,9 +572,10 @@ export const SettingsPage: React.FC = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() =>
-                            setSessions((prev) => prev.filter((item) => item.id !== s.id))
-                          }
+                          onClick={() => {
+                            setSessions((prev) => prev.filter((item) => item.id !== s.id));
+                            showGlobalToast(`Đã thu hồi phiên đăng nhập của thiết bị: ${s.device}`, 'info');
+                          }}
                         >
                           Thu hồi quyền
                         </Button>

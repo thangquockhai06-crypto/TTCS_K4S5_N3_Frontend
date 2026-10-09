@@ -36,6 +36,7 @@ import { CustomerForm } from '../components/customer/CustomerForm';
 import { MergeCustomerModal } from '../components/customer/MergeCustomerModal';
 import { CustomerImportModal } from '../components/customer/CustomerImportModal';
 import { FilterDrawer, ICustomerFilterParams } from '../components/customer/FilterDrawer';
+import { showGlobalToast } from '../context/ToastContext';
 import styles from './CustomerListPage.module.css';
 
 const STATUS_FILTER_CHIPS: ReadonlyArray<{
@@ -117,16 +118,19 @@ export const CustomerListPage: React.FC = () => {
     try {
       await customerService.deleteCustomer(deletingCustomerId);
       setDeletingCustomerId(null);
+      const msg = 'Đã xóa mềm khách hàng thành công khỏi hệ thống.';
       setNotification({
         type: 'success',
-        message: 'Đã xóa mềm khách hàng thành công khỏi hệ thống.',
+        message: msg,
       });
+      showGlobalToast(msg, 'success');
       fetchCustomers();
     } catch (err: unknown) {
       const errorMsg =
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
         'Lỗi khi xóa khách hàng';
       setNotification({ type: 'error', message: errorMsg });
+      showGlobalToast(errorMsg, 'error');
     } finally {
       setIsDeleting(false);
     }
@@ -148,28 +152,36 @@ export const CustomerListPage: React.FC = () => {
       {/* Toast / Notification Banner */}
       {notification && (
         <div
+          role="alert"
           style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            zIndex: 99999,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: 10,
-            padding: '12px 16px',
+            gap: 12,
+            padding: '14px 18px',
             backgroundColor: notification.type === 'success' ? '#f0fdf4' : '#fef2f2',
-            border: `1px solid ${notification.type === 'success' ? '#bbf7d0' : '#fecaca'}`,
-            borderRadius: 8,
+            border: `1px solid ${notification.type === 'success' ? '#86efac' : '#fca5a5'}`,
+            borderRadius: 10,
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15)',
             color: notification.type === 'success' ? '#166534' : '#991b1b',
             fontSize: '0.875rem',
-            marginBottom: 16,
+            maxWidth: '420px',
+            width: 'calc(100vw - 48px)',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {notification.type === 'success' ? <Check size={18} /> : <AlertTriangle size={18} />}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {notification.type === 'success' ? <Check size={18} color="#16a34a" /> : <AlertTriangle size={18} color="#dc2626" />}
             <span>{notification.message}</span>
           </div>
           <button
             type="button"
             onClick={() => setNotification(null)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 2 }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 2, opacity: 0.7 }}
+            aria-label="Đóng thông báo"
           >
             <X size={16} />
           </button>
@@ -597,10 +609,12 @@ export const CustomerListPage: React.FC = () => {
           onClose={() => setIsCreateModalOpen(false)}
           onSuccess={(cust) => {
             setIsCreateModalOpen(false);
+            const msg = `Thêm mới khách hàng "${cust.company || cust.fullName}" thành công!`;
             setNotification({
               type: 'success',
-              message: `Thêm mới khách hàng "${cust.company || cust.fullName}" thành công!`,
+              message: msg,
             });
+            showGlobalToast(msg, 'success');
             fetchCustomers();
           }}
         />
@@ -614,10 +628,12 @@ export const CustomerListPage: React.FC = () => {
           customerToEdit={editingCustomer}
           onSuccess={(cust) => {
             setEditingCustomer(null);
+            const msg = `Cập nhật hồ sơ khách hàng "${cust.company || cust.fullName}" thành công!`;
             setNotification({
               type: 'success',
-              message: `Cập nhật hồ sơ khách hàng "${cust.company || cust.fullName}" thành công!`,
+              message: msg,
             });
+            showGlobalToast(msg, 'success');
             fetchCustomers();
           }}
         />
@@ -631,10 +647,12 @@ export const CustomerListPage: React.FC = () => {
           primaryCustomer={mergePrimaryCustomer}
           onMerged={(masterCust) => {
             setIsMergeModalOpen(false);
+            const msg = `Gộp dữ liệu khách hàng thành công vào tài khoản chính "${masterCust?.company || masterCust?.fullName || 'doanh nghiệp'}"!`;
             setNotification({
               type: 'success',
-              message: `Gộp dữ liệu khách hàng thành công vào tài khoản chính "${masterCust?.company || masterCust?.fullName || 'doanh nghiệp'}"!`,
+              message: msg,
             });
+            showGlobalToast(msg, 'success');
             fetchCustomers();
           }}
         />
@@ -646,10 +664,13 @@ export const CustomerListPage: React.FC = () => {
           isOpen={isImportModalOpen}
           onClose={() => setIsImportModalOpen(false)}
           onSuccess={() => {
+            setIsImportModalOpen(false);
+            const msg = 'Nhập dữ liệu khách hàng từ tệp Excel thành công!';
             setNotification({
               type: 'success',
-              message: 'Nhập dữ liệu khách hàng từ tệp Excel thành công!',
+              message: msg,
             });
+            showGlobalToast(msg, 'success');
             fetchCustomers();
           }}
         />

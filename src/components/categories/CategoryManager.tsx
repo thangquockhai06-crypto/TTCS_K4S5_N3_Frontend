@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { ICategory } from '../../interfaces';
 import { sprint2Service } from '../../services/sprint2Service';
+import { showGlobalToast } from '../../context/ToastContext';
 
 export const CategoryManager: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'lead_source' | 'industry'>('lead_source');
@@ -65,6 +66,7 @@ export const CategoryManager: React.FC = () => {
 
     if (!trimmedName || !trimmedCode) {
       setStatusMsg({ type: 'error', text: 'Vui lòng điền đầy đủ Tên và Mã danh mục.' });
+      showGlobalToast('Vui lòng điền đầy đủ Tên và Mã danh mục.', 'warning');
       return;
     }
 
@@ -76,7 +78,9 @@ export const CategoryManager: React.FC = () => {
           name: trimmedName,
           code: trimmedCode,
         });
-        setStatusMsg({ type: 'success', text: `Cập nhật danh mục "${trimmedName}" thành công!` });
+        const msg = `Cập nhật danh mục "${trimmedName}" thành công!`;
+        setStatusMsg({ type: 'success', text: msg });
+        showGlobalToast(msg, 'success');
       } else {
         await sprint2Service.createCategory({
           type: activeTab,
@@ -84,7 +88,9 @@ export const CategoryManager: React.FC = () => {
           code: trimmedCode,
           order_index: categories.length,
         });
-        setStatusMsg({ type: 'success', text: `Thêm mới danh mục "${trimmedName}" thành công!` });
+        const msg = `Thêm mới danh mục "${trimmedName}" thành công!`;
+        setStatusMsg({ type: 'success', text: msg });
+        showGlobalToast(msg, 'success');
       }
       setIsFormOpen(false);
       fetchCategories();
@@ -93,6 +99,7 @@ export const CategoryManager: React.FC = () => {
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
         'Lỗi lưu danh mục.';
       setStatusMsg({ type: 'error', text: errorMsg });
+      showGlobalToast(errorMsg, 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -103,10 +110,12 @@ export const CategoryManager: React.FC = () => {
     if (isSubmitting) return;
 
     if (item.usage_count > 0) {
+      const warnMsg = `Không thể xóa "${item.name}" vì đang được sử dụng bởi ${item.usage_count} khách hàng / giao dịch.`;
       setStatusMsg({
         type: 'error',
-        text: `Không thể xóa "${item.name}" vì đang được sử dụng bởi ${item.usage_count} khách hàng / giao dịch.`,
+        text: warnMsg,
       });
+      showGlobalToast(warnMsg, 'warning');
       return;
     }
 
@@ -116,13 +125,16 @@ export const CategoryManager: React.FC = () => {
     setStatusMsg(null);
     try {
       await sprint2Service.deleteCategory(item.id);
-      setStatusMsg({ type: 'success', text: `Đã xóa danh mục "${item.name}" thành công!` });
+      const successMsg = `Đã xóa danh mục "${item.name}" thành công!`;
+      setStatusMsg({ type: 'success', text: successMsg });
+      showGlobalToast(successMsg, 'success');
       fetchCategories();
     } catch (err: unknown) {
       const errorMsg =
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
         'Lỗi khi xóa danh mục.';
       setStatusMsg({ type: 'error', text: errorMsg });
+      showGlobalToast(errorMsg, 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -146,13 +158,16 @@ export const CategoryManager: React.FC = () => {
     setStatusMsg(null);
     try {
       await sprint2Service.reorderCategories(newCategories.map((c) => c.id));
-      setStatusMsg({ type: 'success', text: 'Cập nhật thứ tự sắp xếp danh mục thành công!' });
+      const msg = 'Cập nhật thứ tự sắp xếp danh mục thành công!';
+      setStatusMsg({ type: 'success', text: msg });
+      showGlobalToast(msg, 'success');
       fetchCategories();
     } catch (err: unknown) {
       const errorMsg =
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
         'Lỗi sắp xếp lại thứ tự danh mục.';
       setStatusMsg({ type: 'error', text: errorMsg });
+      showGlobalToast(errorMsg, 'error');
       fetchCategories();
     } finally {
       setIsSubmitting(false);

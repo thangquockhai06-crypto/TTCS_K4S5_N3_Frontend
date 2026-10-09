@@ -10,6 +10,7 @@ import { customerService } from '../../services/customerService';
 import { formatCurrency } from '../../utils/formatters';
 import { Button, Modal } from '../common';
 import { RiskBadge } from './RiskBadge';
+import { showGlobalToast } from '../../context/ToastContext';
 
 export interface IMergeCustomerModalProps {
   isOpen: boolean;
@@ -82,13 +83,18 @@ export const MergeCustomerModal: React.FC<IMergeCustomerModalProps> = ({
         { reason: reason.trim() }
       );
 
+      const msg = `Đã gộp hồ sơ trùng thành công vào khách hàng "${mergedResult.company}".`;
+      showGlobalToast(msg, 'success');
+
       if (onMerged) {
         onMerged(mergedResult);
       }
       onClose();
     } catch (err: any) {
       const msg = err.response?.data?.detail || err.message || 'Lỗi khi thực hiện gộp khách hàng';
-      setErrorMessage(typeof msg === 'string' ? msg : JSON.stringify(msg));
+      const text = typeof msg === 'string' ? msg : JSON.stringify(msg);
+      setErrorMessage(text);
+      showGlobalToast(text, 'error');
     } finally {
       setIsSubmitting(false);
     }

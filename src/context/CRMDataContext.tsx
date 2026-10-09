@@ -13,6 +13,7 @@ import { MOCK_CUSTOMERS } from '../mock/customers';
 import { INITIAL_NOTIFICATIONS } from '../mock/dashboard.mock';
 import { INITIAL_DEALS } from '../mock/deals';
 import { createAvatarSvgDataUri } from '../utils/formatters';
+import { showGlobalToast } from './ToastContext';
 
 export interface ICRMDataContext {
   customers: ICustomer[];
@@ -115,6 +116,7 @@ export const CRMDataProvider: React.FC<ICRMDataProviderProps> = ({ children }) =
     };
 
     setCustomers((prev) => [newCustomer, ...prev]);
+    showGlobalToast(`Đã thêm mới khách hàng "${dto.company}" (${dto.fullName}) thành công!`, 'success');
     return newCustomer;
   }, []);
 
@@ -123,6 +125,7 @@ export const CRMDataProvider: React.FC<ICRMDataProviderProps> = ({ children }) =
       setCustomers((prev) =>
         prev.map((c) => (c.id === customerId ? { ...c, status, lastContactedAt: 'Vừa xong' } : c))
       );
+      showGlobalToast(`Đã cập nhật trạng thái khách hàng sang "${status}".`, 'success');
     },
     []
   );
@@ -144,6 +147,7 @@ export const CRMDataProvider: React.FC<ICRMDataProviderProps> = ({ children }) =
             : c
         )
       );
+      showGlobalToast('Đã thêm ghi chú mới cho khách hàng thành công.', 'success');
     },
     []
   );
@@ -182,6 +186,7 @@ export const CRMDataProvider: React.FC<ICRMDataProviderProps> = ({ children }) =
           };
         })
       );
+      showGlobalToast(`Đã thêm hoạt động mới: "${title}".`, 'success');
     },
     []
   );
@@ -206,6 +211,7 @@ export const CRMDataProvider: React.FC<ICRMDataProviderProps> = ({ children }) =
           : deal
       )
     );
+    showGlobalToast(`Đã chuyển giai đoạn cơ hội sang "${newStage}".`, 'success');
   }, []);
 
   const addDeal = useCallback(
@@ -218,6 +224,7 @@ export const CRMDataProvider: React.FC<ICRMDataProviderProps> = ({ children }) =
         daysInStage: 1,
       };
       setDeals((prev) => [created, ...prev]);
+      showGlobalToast(`Đã thêm mới cơ hội bán hàng "${newDeal.title}" thành công!`, 'success');
     },
     []
   );

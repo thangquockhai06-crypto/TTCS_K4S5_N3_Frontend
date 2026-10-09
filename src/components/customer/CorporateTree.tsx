@@ -9,6 +9,7 @@ import { ICorporateHierarchyNode, ICustomer } from '../../interfaces';
 import { customerService } from '../../services/customerService';
 import { formatCurrency } from '../../utils/formatters';
 import { Button, Modal } from '../common';
+import { showGlobalToast } from '../../context/ToastContext';
 
 interface ICorporateTreeProps {
   customerId: string;
@@ -182,7 +183,7 @@ export const CorporateTree: React.FC<ICorporateTreeProps> = ({
       setAvailableParents(customers.filter((c) => c.id !== customerId));
       setIsModalOpen(true);
     } catch (err) {
-      alert('Lỗi tải danh sách khách hàng');
+      showGlobalToast('Lỗi tải danh sách khách hàng', 'error');
     }
   };
 
@@ -192,11 +193,14 @@ export const CorporateTree: React.FC<ICorporateTreeProps> = ({
     setSaveError(null);
     try {
       await customerService.setParentCustomer(customerId, selectedParentId || undefined);
+      showGlobalToast('Cập nhật cấu trúc công ty mẹ - con thành công!', 'success');
       setIsModalOpen(false);
       fetchTree();
       onHierarchyUpdated?.();
     } catch (err: any) {
-      setSaveError(err.response?.data?.detail || 'Lỗi khi gán công ty mẹ (Có thể do tạo vòng lặp tham chiếu)');
+      const errMsg = err.response?.data?.detail || 'Lỗi khi gán công ty mẹ (Có thể do tạo vòng lặp tham chiếu)';
+      setSaveError(errMsg);
+      showGlobalToast(errMsg, 'error');
     } finally {
       setIsSaving(false);
     }

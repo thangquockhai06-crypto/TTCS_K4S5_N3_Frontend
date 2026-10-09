@@ -12,6 +12,7 @@ import {
 import { ICustomer, CreateCustomerDTO, CustomerStatusType, CustomerTierType } from '../../interfaces';
 import { customerService } from '../../services/customerService';
 import { Button, Input, Modal } from '../common';
+import { showGlobalToast } from '../../context/ToastContext';
 
 interface ICustomerFormProps {
   isOpen: boolean;
@@ -182,11 +183,13 @@ export const CustomerForm: React.FC<ICustomerFormProps> = ({
           totalContractValue: formData.totalContractValue,
           notesSummary: formData.summary,
         });
+        showGlobalToast(`Đã cập nhật hồ sơ khách hàng "${savedCustomer.company}" thành công!`, 'success');
       } else {
         savedCustomer = await customerService.createCustomer({
           ...formData,
           taxCode: formData.taxCode?.trim() || undefined,
         });
+        showGlobalToast(`Đã thêm mới khách hàng "${savedCustomer.company}" thành công!`, 'success');
       }
 
       onSuccess(savedCustomer);
@@ -194,13 +197,14 @@ export const CustomerForm: React.FC<ICustomerFormProps> = ({
     } catch (err: any) {
       console.error('Lỗi khi lưu khách hàng:', err);
       const detail = err.response?.data?.detail;
+      let errMsg = 'Lỗi máy chủ hoặc trùng lặp Mã số thuế (MST). Vui lòng kiểm tra lại.';
       if (typeof detail === 'string') {
-        setSubmitError(detail);
+        errMsg = detail;
       } else if (Array.isArray(detail)) {
-        setSubmitError(detail.map((d: any) => d.msg).join(', '));
-      } else {
-        setSubmitError('Lỗi máy chủ hoặc trùng lặp Mã số thuế (MST). Vui lòng kiểm tra lại.');
+        errMsg = detail.map((d: any) => d.msg).join(', ');
       }
+      setSubmitError(errMsg);
+      showGlobalToast(errMsg, 'error');
     } finally {
       setIsSubmitting(false);
     }

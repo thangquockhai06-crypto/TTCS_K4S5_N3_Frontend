@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { IPipelineStage, IExitRules } from '../../interfaces';
 import { sprint2Service } from '../../services/sprint2Service';
+import { showGlobalToast } from '../../context/ToastContext';
 
 export const PipelineConfigView: React.FC = () => {
   const [stages, setStages] = useState<IPipelineStage[]>([]);
@@ -94,7 +95,9 @@ export const PipelineConfigView: React.FC = () => {
           color,
           exit_rules: JSON.stringify(exitRules),
         });
-        setStatusMsg({ type: 'success', text: 'Cập nhật giai đoạn phễu thành công!' });
+        const msg = 'Cập nhật giai đoạn phễu thành công!';
+        setStatusMsg({ type: 'success', text: msg });
+        showGlobalToast(msg, 'success');
       } else {
         await sprint2Service.createPipelineStage({
           name,
@@ -104,12 +107,16 @@ export const PipelineConfigView: React.FC = () => {
           exit_rules: JSON.stringify(exitRules),
           order_index: stages.length,
         });
-        setStatusMsg({ type: 'success', text: 'Thêm giai đoạn mới vào phễu thành công!' });
+        const msg = 'Thêm giai đoạn mới vào phễu thành công!';
+        setStatusMsg({ type: 'success', text: msg });
+        showGlobalToast(msg, 'success');
       }
       setIsModalOpen(false);
       fetchStages();
     } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.response?.data?.detail || 'Lỗi lưu giai đoạn.' });
+      const errorMsg = err.response?.data?.detail || 'Lỗi lưu giai đoạn.';
+      setStatusMsg({ type: 'error', text: errorMsg });
+      showGlobalToast(errorMsg, 'error');
     }
   };
 
@@ -119,10 +126,14 @@ export const PipelineConfigView: React.FC = () => {
     }
     try {
       await sprint2Service.deletePipelineStage(s.id);
-      setStatusMsg({ type: 'success', text: 'Đã xóa giai đoạn thành công.' });
+      const msg = 'Đã xóa giai đoạn thành công.';
+      setStatusMsg({ type: 'success', text: msg });
+      showGlobalToast(msg, 'success');
       fetchStages();
     } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.response?.data?.detail || 'Lỗi khi xóa giai đoạn.' });
+      const errorMsg = err.response?.data?.detail || 'Lỗi khi xóa giai đoạn.';
+      setStatusMsg({ type: 'error', text: errorMsg });
+      showGlobalToast(errorMsg, 'error');
     }
   };
 
@@ -138,6 +149,7 @@ export const PipelineConfigView: React.FC = () => {
     setStages(newStages);
     try {
       await sprint2Service.reorderPipelineStages(newStages.map((s) => s.id));
+      showGlobalToast('Cập nhật thứ tự giai đoạn phễu thành công!', 'success');
     } catch {
       fetchStages();
     }

@@ -13,6 +13,7 @@ import {
 import { IProduct } from '../../interfaces';
 import { useAuth } from '../../hooks/useAuth';
 import { sprint2Service } from '../../services/sprint2Service';
+import { showGlobalToast } from '../../context/ToastContext';
 import { PriceListModal } from './PriceListModal';
 
 export const ProductList: React.FC = () => {
@@ -102,7 +103,9 @@ export const ProductList: React.FC = () => {
           selling_price: Number(formData.selling_price),
           cost_price: isDirector ? Number(formData.cost_price) : undefined,
         });
-        setStatusMsg({ type: 'success', text: 'Cập nhật thông tin sản phẩm thành công!' });
+        const msg = 'Cập nhật thông tin sản phẩm thành công!';
+        setStatusMsg({ type: 'success', text: msg });
+        showGlobalToast(msg, 'success');
       } else {
         await sprint2Service.createProduct({
           ...formData,
@@ -110,7 +113,9 @@ export const ProductList: React.FC = () => {
           selling_price: Number(formData.selling_price),
           cost_price: isDirector ? Number(formData.cost_price) : 0,
         });
-        setStatusMsg({ type: 'success', text: 'Thêm mới sản phẩm thành công!' });
+        const msg = 'Thêm mới sản phẩm thành công!';
+        setStatusMsg({ type: 'success', text: msg });
+        showGlobalToast(msg, 'success');
       }
       setIsFormOpen(false);
       fetchProducts();
@@ -119,16 +124,19 @@ export const ProductList: React.FC = () => {
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
         'Lỗi lưu sản phẩm.';
       setStatusMsg({ type: 'error', text: errorMsg });
+      showGlobalToast(errorMsg, 'error');
     }
   };
 
   // S2-05: Prevent deletion if product has quotes
   const handleDelete = async (p: IProduct) => {
     if (p.quote_count > 0) {
+      const errText = `Không thể xóa "${p.name}" vì đã có ${p.quote_count} báo giá / hợp đồng tham chiếu đến sản phẩm này.`;
       setStatusMsg({
         type: 'error',
-        text: `Không thể xóa "${p.name}" vì đã có ${p.quote_count} báo giá / hợp đồng tham chiếu đến sản phẩm này.`,
+        text: errText,
       });
+      showGlobalToast(errText, 'error');
       return;
     }
 
@@ -138,7 +146,9 @@ export const ProductList: React.FC = () => {
 
     try {
       await sprint2Service.deleteProduct(p.id);
-      setStatusMsg({ type: 'success', text: 'Đã xóa sản phẩm thành công.' });
+      const msg = 'Đã xóa sản phẩm thành công.';
+      setStatusMsg({ type: 'success', text: msg });
+      showGlobalToast(msg, 'success');
       fetchProducts();
     } catch (err: unknown) {
       const errorMsg =
@@ -148,6 +158,7 @@ export const ProductList: React.FC = () => {
         type: 'error',
         text: errorMsg,
       });
+      showGlobalToast(errorMsg, 'error');
     }
   };
 

@@ -113,6 +113,11 @@ axiosInstance.interceptors.request.use(
     if (token) {
       config.headers.set('Authorization', `Bearer ${token}`);
     }
+    // Auto-detect FormData and remove Content-Type header so the browser automatically sets
+    // multipart/form-data with boundary
+    if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+      config.headers.delete('Content-Type');
+    }
     return config;
   },
   (error: AxiosError): Promise<never> => Promise.reject(error)

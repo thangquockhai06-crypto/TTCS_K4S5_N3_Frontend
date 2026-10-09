@@ -27,6 +27,7 @@ import { CorporateTree } from '../components/customer/CorporateTree';
 import { CustomerForm } from '../components/customer/CustomerForm';
 import { SupportTicketModal } from '../components/customer/SupportTicketModal';
 import { MergeCustomerModal } from '../components/customer/MergeCustomerModal';
+import { showGlobalToast } from '../context/ToastContext';
 
 type TabKey = 'info' | 'deals' | 'activities' | 'docs';
 
@@ -77,10 +78,13 @@ export const Customer360Dashboard: React.FC = () => {
     setIsSubmittingActivity(true);
     try {
       await customerService.quickTouchCustomer(id);
+      showGlobalToast('Đã ghi nhận tương tác khách hàng thành công!', 'success');
       setNewActivityTitle('');
       setNewActivityDesc('');
       loadCustomer360(id);
-    } catch (err) {
+    } catch (err: any) {
+      const errMsg = err?.response?.data?.detail || 'Lỗi khi thêm hoạt động';
+      showGlobalToast(errMsg, 'error');
       console.error('Lỗi khi thêm hoạt động:', err);
     } finally {
       setIsSubmittingActivity(false);

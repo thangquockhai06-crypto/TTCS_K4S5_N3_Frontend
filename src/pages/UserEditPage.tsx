@@ -11,6 +11,7 @@ import {
   UserRoleType,
   UserStatusType,
 } from '../interfaces/user-management.interface';
+import { showGlobalToast } from '../context/ToastContext';
 import styles from './UserEditPage.module.css';
 
 export const UserEditPage: React.FC = () => {
@@ -90,12 +91,16 @@ export const UserEditPage: React.FC = () => {
         currentAuthUser?.email
       );
 
-      setSuccess(result.message || 'Cập nhật tài khoản người dùng thành công.');
+      const msg = result.message || 'Cập nhật tài khoản người dùng thành công.';
+      setSuccess(msg);
+      showGlobalToast(msg, 'success');
       window.setTimeout(() => {
         navigate('/users');
       }, 1200);
     } catch (err: any) {
-      setError(err.message || 'Không thể lưu thay đổi người dùng.');
+      const errMsg = err.message || 'Không thể lưu thay đổi người dùng.';
+      setError(errMsg);
+      showGlobalToast(errMsg, 'error');
     } finally {
       setIsSaving(false);
     }

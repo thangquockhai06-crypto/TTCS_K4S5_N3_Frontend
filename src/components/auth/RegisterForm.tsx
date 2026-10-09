@@ -16,7 +16,6 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { IRegisterPayload } from '../../interfaces';
 import { Button, Input } from '../common';
-import { SocialPhoneAuthSection } from './SocialPhoneAuthSection';
 import styles from './RegisterForm.module.css';
 
 interface IRegisterFieldErrors {
@@ -289,8 +288,6 @@ export const RegisterForm: React.FC = () => {
           Hoàn tất Đăng ký & Truy cập
         </Button>
       </form>
-
-      <SocialPhoneAuthSection mode="register" />
 
       <div className={styles.switchRow}>
         <span>Đã có tài khoản trên hệ thống?</span>

@@ -12,6 +12,7 @@ import {
 } from '../../interfaces/customer.interface';
 import { customerService } from '../../services/customerService';
 import { Button, Modal } from '../common';
+import { showGlobalToast } from '../../context/ToastContext';
 
 export interface ICustomerImportModalProps {
   isOpen: boolean;
@@ -72,12 +73,16 @@ export const CustomerImportModal: React.FC<ICustomerImportModalProps> = ({
     try {
       const result = await customerService.executeExcelImport(selectedFile);
       setImportResult(result);
+      const msg = `Đã nhập thành công ${result.importedRows || 0} khách hàng từ Excel!`;
+      showGlobalToast(msg, 'success');
       if (onSuccess) {
         onSuccess();
       }
     } catch (err: any) {
       const msg = err.response?.data?.detail || err.message || 'Lỗi khi nhập dữ liệu từ Excel';
-      setErrorMessage(typeof msg === 'string' ? msg : JSON.stringify(msg));
+      const text = typeof msg === 'string' ? msg : JSON.stringify(msg);
+      setErrorMessage(text);
+      showGlobalToast(text, 'error');
     } finally {
       setIsImporting(false);
     }

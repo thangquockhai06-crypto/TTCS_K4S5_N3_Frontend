@@ -12,6 +12,7 @@ import {
 import { ICustomerContact, ICreateContactDTO, ICustomer } from '../../interfaces';
 import { customerService } from '../../services/customerService';
 import { Button, Input, Modal } from '../common';
+import { showGlobalToast } from '../../context/ToastContext';
 
 interface IContactListTabProps {
   customerId: string;
@@ -112,14 +113,16 @@ export const ContactListTab: React.FC<IContactListTabProps> = ({
     try {
       if (editingContact) {
         await customerService.updateContact(editingContact.id, formData);
+        showGlobalToast(`Đã cập nhật thông tin người liên hệ ${formData.fullName}.`, 'success');
       } else {
         await customerService.createContact(customerId, formData);
+        showGlobalToast(`Đã thêm mới người liên hệ ${formData.fullName}.`, 'success');
       }
       setIsFormOpen(false);
       fetchContacts();
       onContactChanged?.();
     } catch (err: any) {
-      alert(err.response?.data?.detail || 'Lỗi khi lưu người liên hệ');
+      showGlobalToast(err.response?.data?.detail || 'Lỗi khi lưu người liên hệ', 'error');
     }
   };
 
@@ -127,10 +130,11 @@ export const ContactListTab: React.FC<IContactListTabProps> = ({
     if (!window.confirm('Bạn có chắc chắn muốn xóa người liên hệ này?')) return;
     try {
       await customerService.deleteContact(contactId);
+      showGlobalToast('Đã xóa người liên hệ thành công.', 'success');
       fetchContacts();
       onContactChanged?.();
     } catch (err: any) {
-      alert('Không thể xóa người liên hệ');
+      showGlobalToast(err.response?.data?.detail || 'Không thể xóa người liên hệ', 'error');
     }
   };
 
@@ -164,12 +168,14 @@ export const ContactListTab: React.FC<IContactListTabProps> = ({
         targetCustomerId,
         transferReason || 'Điều chuyển công tác nội bộ'
       );
+      showGlobalToast(`Đã điều chuyển thành công người liên hệ ${transferringContact.fullName}.`, 'success');
       setTransferringContact(null);
       fetchContacts();
       onContactChanged?.();
-      alert(`Đã điều chuyển thành công người liên hệ ${transferringContact.fullName}.`);
     } catch (err: any) {
-      setTransferError(err.response?.data?.detail || 'Không thể điều chuyển người liên hệ.');
+      const errMsg = err.response?.data?.detail || 'Không thể điều chuyển người liên hệ.';
+      setTransferError(errMsg);
+      showGlobalToast(errMsg, 'error');
     } finally {
       setIsTransferring(false);
     }

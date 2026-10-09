@@ -1,6 +1,8 @@
-import React, { useRef, useState } from 'react';
-import { Camera, Trash2, AlertCircle, Check, RefreshCw } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import { Camera, Trash2, RefreshCw } from 'lucide-react';
 import { sprint2Service } from '../../services/sprint2Service';
+import { resolveAvatarUrl } from '../common/Avatar';
+import { useToast } from '../../context/ToastContext';
 
 interface IAvatarUploaderProps {
   currentAvatarUrl?: string;
@@ -9,6 +11,8 @@ interface IAvatarUploaderProps {
 }
 
 const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
+const DEFAULT_AVATAR =
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&crop=faces';
 
 export const AvatarUploader: React.FC<IAvatarUploaderProps> = ({
   currentAvatarUrl,
@@ -16,12 +20,20 @@ export const AvatarUploader: React.FC<IAvatarUploaderProps> = ({
   disabled,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>(
-    currentAvatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&crop=faces'
-  );
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successNotice, setSuccessNotice] = useState<boolean>(false);
+  const { showSuccess, showError } = useToast();
+
+  const [previewUrl, setPreviewUrl] = useState<string>(() => {
+    return resolveAvatarUrl(currentAvatarUrl) || DEFAULT_AVATAR;
+  });
   const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [imageError, setImageError] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (currentAvatarUrl) {
+      setPreviewUrl(resolveAvatarUrl(currentAvatarUrl) || DEFAULT_AVATAR);
+      setImageError(false);
+    }
+  }, [currentAvatarUrl]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -29,37 +41,44 @@ export const AvatarUploader: React.FC<IAvatarUploaderProps> = ({
 
     // S2-03: Max 2MB check
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      setErrorMessage(
-        `Kích thước ảnh (${(file.size / 1024 / 1024).toFixed(2)}MB) vượt quá dung lượng tối đa 2MB.`
-      );
+      const msg = `Kích thước ảnh (${(file.size / 1024 / 1024).toFixed(2)}MB) vượt quá dung lượng tối đa cho phép là 2MB.`;
+      showError(msg, 'Ảnh không hợp lệ');
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
     if (!file.type.startsWith('image/')) {
-      setErrorMessage('Chỉ hỗ trợ tệp định dạng hình ảnh (PNG, JPG, WEBP).');
+      const msg = 'Chỉ hỗ trợ tệp định dạng hình ảnh (PNG, JPG, WEBP).';
+      showError(msg, 'Định dạng không hỗ trợ');
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
-    setErrorMessage(null);
-    setSuccessNotice(false);
+    // Instant local preview
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+    setImageError(false);
     setIsUploading(true);
 
     try {
       const res = await sprint2Service.uploadAvatar(file);
       if (res && res.avatar_url) {
-        setPreviewUrl(res.avatar_url);
-        onAvatarChange(res.avatar_url);
-        setSuccessNotice(true);
-        window.setTimeout(() => setSuccessNotice(false), 4000);
+        const finalUrl = res.avatar_url.startsWith('http')
+          ? res.avatar_url
+          : `http://localhost:8000${res.avatar_url}`;
+
+        setPreviewUrl(finalUrl);
+        onAvatarChange(finalUrl);
+        showSuccess('Ảnh đại diện đã được tải lên và lưu thành công trên máy chủ!');
       } else {
         throw new Error('Máy chủ không trả về đường dẫn ảnh hợp lệ.');
       }
     } catch (err: any) {
-      const detail = err.response?.data?.detail || err.message || 'Lỗi khi tải ảnh đại diện lên máy chủ.';
-      setErrorMessage(detail);
-      setSuccessNotice(false);
+      const detail =
+        err.response?.data?.detail || err.message || 'Lỗi khi tải ảnh đại diện lên máy chủ.';
+      showError(detail, 'Tải ảnh thất bại');
+      // Revert to original on error
+      setPreviewUrl(resolveAvatarUrl(currentAvatarUrl) || DEFAULT_AVATAR);
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -67,13 +86,14 @@ export const AvatarUploader: React.FC<IAvatarUploaderProps> = ({
   };
 
   const handleRemove = () => {
-    const defaultAvatar =
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&crop=faces';
-    setPreviewUrl(defaultAvatar);
-    onAvatarChange(defaultAvatar);
-    setErrorMessage(null);
+    setPreviewUrl(DEFAULT_AVATAR);
+    setImageError(false);
+    onAvatarChange(DEFAULT_AVATAR);
+    showSuccess('Đã gỡ ảnh đại diện và trở về ảnh mặc định.');
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
+
+  const displaySrc = imageError ? DEFAULT_AVATAR : previewUrl;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -87,14 +107,15 @@ export const AvatarUploader: React.FC<IAvatarUploaderProps> = ({
             borderRadius: '50%',
             overflow: 'hidden',
             border: '2px solid #cbd5e1',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
             flexShrink: 0,
             backgroundColor: '#f1f5f9',
           }}
         >
           <img
-            src={previewUrl}
+            src={displaySrc}
             alt="Ảnh đại diện"
+            onError={() => setImageError(true)}
             style={{
               width: '100%',
               height: '100%',
@@ -110,7 +131,7 @@ export const AvatarUploader: React.FC<IAvatarUploaderProps> = ({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/png,image/jpeg,image/webp"
+            accept="image/png,image/jpeg,image/webp,image/jpg"
             style={{ display: 'none' }}
             onChange={handleFileChange}
             disabled={disabled}
@@ -125,14 +146,15 @@ export const AvatarUploader: React.FC<IAvatarUploaderProps> = ({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: '6px 12px',
+                padding: '7px 14px',
                 borderRadius: '6px',
                 border: '1px solid #cbd5e1',
                 backgroundColor: '#ffffff',
-                color: '#334155',
-                fontSize: '0.8rem',
+                color: '#1e293b',
+                fontSize: '0.825rem',
                 fontWeight: 500,
-                cursor: (disabled || isUploading) ? 'not-allowed' : 'pointer',
+                cursor: disabled || isUploading ? 'not-allowed' : 'pointer',
+                transition: 'all 0.15s ease',
               }}
             >
               {isUploading ? (
@@ -156,13 +178,15 @@ export const AvatarUploader: React.FC<IAvatarUploaderProps> = ({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '4px',
-                padding: '6px 10px',
+                padding: '7px 12px',
                 borderRadius: '6px',
                 border: '1px solid #fecaca',
                 backgroundColor: '#fff1f2',
                 color: '#e11d48',
-                fontSize: '0.8rem',
-                cursor: (disabled || isUploading) ? 'not-allowed' : 'pointer',
+                fontSize: '0.825rem',
+                fontWeight: 500,
+                cursor: disabled || isUploading ? 'not-allowed' : 'pointer',
+                transition: 'all 0.15s ease',
               }}
             >
               <Trash2 size={13} />
@@ -175,42 +199,6 @@ export const AvatarUploader: React.FC<IAvatarUploaderProps> = ({
           </span>
         </div>
       </div>
-
-      {/* Validation error */}
-      {errorMessage && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            color: '#dc2626',
-            fontSize: '0.8rem',
-            backgroundColor: '#fef2f2',
-            padding: '6px 10px',
-            borderRadius: '4px',
-            border: '1px solid #fecaca',
-          }}
-        >
-          <AlertCircle size={14} />
-          <span>{errorMessage}</span>
-        </div>
-      )}
-
-      {/* Success feedback */}
-      {successNotice && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            color: '#15803d',
-            fontSize: '0.8rem',
-          }}
-        >
-          <Check size={14} />
-          <span>Ảnh đại diện đã được tải lên và lưu thành công trên máy chủ!</span>
-        </div>
-      )}
     </div>
   );
 };

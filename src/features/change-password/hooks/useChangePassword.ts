@@ -7,6 +7,7 @@ import {
   ChangePasswordSubmitState,
 } from '../types/ChangePassword.types';
 import { validateChangePassword } from '../utils/ValidateChangePassword';
+import { showGlobalToast } from '../../../context/ToastContext';
 
 const INITIAL_FORM_VALUES: ChangePasswordFormValues = {
   currentPassword: '',
@@ -84,13 +85,15 @@ export function useChangePassword() {
       setTouched({});
       setErrors({});
       setSuccessMessage(response.message);
+      showGlobalToast(response.message || 'Đổi mật khẩu thành công!', 'success');
       setSubmitState('success');
     } catch (error: unknown) {
-      setApiError(
+      const errMsg =
         error instanceof Error
           ? error.message
-          : 'Không thể đổi mật khẩu. Vui lòng thử lại.'
-      );
+          : 'Không thể đổi mật khẩu. Vui lòng thử lại.';
+      setApiError(errMsg);
+      showGlobalToast(errMsg, 'error');
       setSubmitState('api-error');
     }
   };

@@ -17,7 +17,6 @@ import { useCountdown } from '../../hooks/useCountdown';
 import { ILoginPayload } from '../../interfaces';
 import { AUTH_STORAGE_KEYS } from '../../mock/auth.mock';
 import { Button, Input } from '../common';
-import { SocialPhoneAuthSection } from './SocialPhoneAuthSection';
 import styles from './LoginForm.module.css';
 
 const MAX_ATTEMPTS = 5;
@@ -284,8 +283,6 @@ export const LoginForm: React.FC = () => {
             : 'Đăng nhập vào Hệ thống'}
         </Button>
       </form>
-
-      <SocialPhoneAuthSection mode="login" disabled={isLockedOut} />
 
       {/* Liên kết chuyển sang trang Đăng ký */}
       <div className={styles.switchAuthRow}>

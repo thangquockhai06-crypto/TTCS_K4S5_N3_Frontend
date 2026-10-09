@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { ICustomField } from '../../interfaces';
 import { sprint2Service } from '../../services/sprint2Service';
+import { showGlobalToast } from '../../context/ToastContext';
 
 export const CustomFieldBuilder: React.FC = () => {
   const [entityType, setEntityType] = useState<'customer' | 'deal'>('customer');
@@ -94,6 +95,7 @@ export const CustomFieldBuilder: React.FC = () => {
     const trimmedLabel = fieldLabel.trim();
     if (!trimmedLabel) {
       setStatusMsg({ type: 'error', text: 'Vui lòng nhập tên nhãn hiển thị.' });
+      showGlobalToast('Vui lòng nhập tên nhãn hiển thị.', 'warning');
       return;
     }
 
@@ -107,7 +109,9 @@ export const CustomFieldBuilder: React.FC = () => {
           options: fieldType === 'select' ? optionsStr.trim() : undefined,
           is_required: isRequired,
         });
-        setStatusMsg({ type: 'success', text: `Cập nhật trường dữ liệu "${trimmedLabel}" thành công!` });
+        const msg = `Cập nhật trường dữ liệu "${trimmedLabel}" thành công!`;
+        setStatusMsg({ type: 'success', text: msg });
+        showGlobalToast(msg, 'success');
       } else {
         const generatedName = fieldName.trim()
           ? fieldName.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_')
@@ -121,7 +125,9 @@ export const CustomFieldBuilder: React.FC = () => {
           options: fieldType === 'select' ? optionsStr.trim() : undefined,
           is_required: isRequired,
         });
-        setStatusMsg({ type: 'success', text: `Thêm trường tùy chỉnh "${trimmedLabel}" thành công!` });
+        const msg = `Thêm trường tùy chỉnh "${trimmedLabel}" thành công!`;
+        setStatusMsg({ type: 'success', text: msg });
+        showGlobalToast(msg, 'success');
       }
       setIsModalOpen(false);
       fetchFields();
@@ -130,6 +136,7 @@ export const CustomFieldBuilder: React.FC = () => {
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
         'Lỗi lưu trường dữ liệu.';
       setStatusMsg({ type: 'error', text: errorMsg });
+      showGlobalToast(errorMsg, 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -145,13 +152,16 @@ export const CustomFieldBuilder: React.FC = () => {
     setStatusMsg(null);
     try {
       await sprint2Service.deleteCustomField(f.id);
-      setStatusMsg({ type: 'success', text: `Đã xóa trường tùy chỉnh "${f.field_label}" thành công.` });
+      const msg = `Đã xóa trường tùy chỉnh "${f.field_label}" thành công.`;
+      setStatusMsg({ type: 'success', text: msg });
+      showGlobalToast(msg, 'success');
       fetchFields();
     } catch (err: unknown) {
       const errorMsg =
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
         'Lỗi khi xóa trường tùy chỉnh.';
       setStatusMsg({ type: 'error', text: errorMsg });
+      showGlobalToast(errorMsg, 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -169,29 +179,35 @@ export const CustomFieldBuilder: React.FC = () => {
       const val = rawVal !== undefined ? String(rawVal).trim() : '';
 
       if (f.is_required && !val) {
+        const warn = `Trường bắt buộc "${f.field_label}" chưa được nhập giá trị.`;
         setValueMsg({
           type: 'error',
-          text: `Trường bắt buộc "${f.field_label}" chưa được nhập giá trị.`,
+          text: warn,
         });
+        showGlobalToast(warn, 'warning');
         return;
       }
 
       if (val && f.field_type === 'number') {
         if (isNaN(Number(val))) {
+          const warn = `Trường "${f.field_label}" yêu cầu kiểu số hợp lệ (hiện tại: "${val}").`;
           setValueMsg({
             type: 'error',
-            text: `Trường "${f.field_label}" yêu cầu kiểu số hợp lệ (hiện tại: "${val}").`,
+            text: warn,
           });
+          showGlobalToast(warn, 'warning');
           return;
         }
       }
 
       if (val && f.field_type === 'date') {
         if (!/^\d{4}-\d{2}-\d{2}$/.test(val) || isNaN(Date.parse(val))) {
+          const warn = `Trường "${f.field_label}" yêu cầu định dạng ngày hợp lệ YYYY-MM-DD.`;
           setValueMsg({
             type: 'error',
-            text: `Trường "${f.field_label}" yêu cầu định dạng ngày hợp lệ YYYY-MM-DD.`,
+            text: warn,
           });
+          showGlobalToast(warn, 'warning');
           return;
         }
       }
@@ -199,10 +215,12 @@ export const CustomFieldBuilder: React.FC = () => {
       if (val && f.field_type === 'select' && f.options) {
         const allowedOptions = f.options.split(',').map((o) => o.trim());
         if (!allowedOptions.includes(val)) {
+          const warn = `Giá trị "${val}" của trường "${f.field_label}" không nằm trong danh sách lựa chọn hợp lệ.`;
           setValueMsg({
             type: 'error',
-            text: `Giá trị "${val}" của trường "${f.field_label}" không nằm trong danh sách lựa chọn hợp lệ.`,
+            text: warn,
           });
+          showGlobalToast(warn, 'warning');
           return;
         }
       }
@@ -215,10 +233,12 @@ export const CustomFieldBuilder: React.FC = () => {
         entity_id: 'sample',
         values: previewValues,
       });
+      const msg = res.message || 'Đã lưu và xác thực thành công các giá trị trường tùy chỉnh!';
       setValueMsg({
         type: 'success',
-        text: res.message || 'Đã lưu và xác thực thành công các giá trị trường tùy chỉnh!',
+        text: msg,
       });
+      showGlobalToast(msg, 'success');
       if (res.values) {
         setPreviewValues(res.values);
       }
@@ -227,6 +247,7 @@ export const CustomFieldBuilder: React.FC = () => {
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
         'Lỗi khi lưu giá trị trường tùy biến.';
       setValueMsg({ type: 'error', text: errorMsg });
+      showGlobalToast(errorMsg, 'error');
     } finally {
       setIsValueSaving(false);
     }

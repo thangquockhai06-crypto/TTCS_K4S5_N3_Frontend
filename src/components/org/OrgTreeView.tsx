@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { IOrgNode } from '../../interfaces';
 import { sprint2Service } from '../../services/sprint2Service';
+import { showGlobalToast } from '../../context/ToastContext';
 
 export const OrgTreeView: React.FC = () => {
   const [treeData, setTreeData] = useState<IOrgNode[]>([]);
@@ -70,7 +71,9 @@ export const OrgTreeView: React.FC = () => {
         leader_name: leaderName.trim() || undefined,
         region,
       });
-      setStatusMsg({ type: 'success', text: `Cập nhật đơn vị "${editingNode.name}" thành công!` });
+      const msg = `Cập nhật đơn vị "${editingNode.name}" thành công!`;
+      setStatusMsg({ type: 'success', text: msg });
+      showGlobalToast(msg, 'success');
       setEditingNode(null);
       fetchTree();
     } catch (err: unknown) {
@@ -78,6 +81,7 @@ export const OrgTreeView: React.FC = () => {
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
         'Lỗi khi cập nhật đơn vị.';
       setStatusMsg({ type: 'error', text: errorMsg });
+      showGlobalToast(errorMsg, 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -116,6 +120,7 @@ export const OrgTreeView: React.FC = () => {
     e.preventDefault();
     if (!createName.trim()) {
       setStatusMsg({ type: 'error', text: 'Vui lòng nhập tên đơn vị.' });
+      showGlobalToast('Vui lòng nhập tên đơn vị.', 'warning');
       return;
     }
 
@@ -129,7 +134,9 @@ export const OrgTreeView: React.FC = () => {
         region: createRegion || 'Toàn quốc',
         description: createDescription.trim() || undefined,
       });
-      setStatusMsg({ type: 'success', text: `Thêm mới đơn vị "${res.name}" thành công!` });
+      const msg = `Thêm mới đơn vị "${res.name}" thành công!`;
+      setStatusMsg({ type: 'success', text: msg });
+      showGlobalToast(msg, 'success');
       setIsCreateModalOpen(false);
       fetchTree();
     } catch (err: unknown) {
@@ -137,6 +144,7 @@ export const OrgTreeView: React.FC = () => {
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
         'Lỗi khi thêm mới đơn vị tổ chức.';
       setStatusMsg({ type: 'error', text: errorMsg });
+      showGlobalToast(errorMsg, 'error');
     } finally {
       setIsSubmitting(false);
     }

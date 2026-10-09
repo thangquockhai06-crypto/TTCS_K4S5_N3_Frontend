@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { Check, AlertCircle, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { AvatarUploader } from '../components/profile/AvatarUploader';
 import { sprint2Service } from '../services/sprint2Service';
+
+import { useToast } from '../context/ToastContext';
 
 const VN_PHONE_REGEX = /^(03|05|07|08|09)\d{8}$/;
 
 export const ProfilePage: React.FC = () => {
   const { user, updateUserProfile } = useAuth();
+  const { showSuccess, showError } = useToast();
 
   const [fullName, setFullName] = useState(user?.fullName || 'Quản Trị Viên Hệ Thống');
   const [phone, setPhone] = useState(user?.phone || '0912345678');
@@ -17,7 +20,6 @@ export const ProfilePage: React.FC = () => {
 
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,13 +27,14 @@ export const ProfilePage: React.FC = () => {
     // Vietnamese phone validation
     const cleanedPhone = phone.trim().replace(/[\s-]/g, '');
     if (cleanedPhone && !VN_PHONE_REGEX.test(cleanedPhone)) {
-      setPhoneError('Số điện thoại không đúng chuẩn di động Việt Nam (gồm 10 số, bắt đầu bằng 03, 05, 07, 08 hoặc 09).');
+      const err = 'Số điện thoại không đúng chuẩn di động Việt Nam (gồm 10 số, bắt đầu bằng 03, 05, 07, 08 hoặc 09).';
+      setPhoneError(err);
+      showError(err, 'Lỗi định dạng');
       return;
     }
     setPhoneError(null);
 
     setIsSubmitting(true);
-    setStatusMessage(null);
 
     try {
       await sprint2Service.updateProfile({
@@ -51,11 +54,10 @@ export const ProfilePage: React.FC = () => {
         phone: cleanedPhone,
       });
 
-      setStatusMessage({ type: 'success', text: 'Cập nhật thông tin hồ sơ cá nhân thành công!' });
-      window.setTimeout(() => setStatusMessage(null), 4000);
+      showSuccess('Cập nhật thông tin hồ sơ cá nhân thành công!');
     } catch (err: any) {
       const detail = err.response?.data?.detail || err.message || 'Lỗi khi cập nhật hồ sơ.';
-      setStatusMessage({ type: 'error', text: detail });
+      showError(detail, 'Lỗi cập nhật');
     } finally {
       setIsSubmitting(false);
     }
@@ -71,26 +73,6 @@ export const ProfilePage: React.FC = () => {
           Quản lý thông tin cá nhân, ảnh đại diện và thông tin liên hệ trong hệ thống CRM
         </p>
       </header>
-
-      {statusMessage && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '12px 16px',
-            borderRadius: '6px',
-            marginBottom: '20px',
-            backgroundColor: statusMessage.type === 'success' ? '#f0fdf4' : '#fef2f2',
-            border: `1px solid ${statusMessage.type === 'success' ? '#bbf7d0' : '#fecaca'}`,
-            color: statusMessage.type === 'success' ? '#166534' : '#991b1b',
-            fontSize: '0.875rem',
-          }}
-        >
-          {statusMessage.type === 'success' ? <Check size={18} /> : <AlertCircle size={18} />}
-          <span>{statusMessage.text}</span>
-        </div>
-      )}
 
       <div
         style={{

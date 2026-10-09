@@ -17,6 +17,7 @@ import { customerService } from '../../services/customerService';
 import { formatDate } from '../../utils/formatters';
 import { Button, Modal } from '../common';
 import { RiskBadge } from './RiskBadge';
+import { showGlobalToast } from '../../context/ToastContext';
 
 export interface ISupportTicketModalProps {
   isOpen: boolean;
@@ -75,6 +76,7 @@ export const SupportTicketModal: React.FC<ISupportTicketModalProps> = ({
     e.preventDefault();
     if (!formTitle.trim()) {
       setFormError('Vui lòng nhập tiêu đề yêu cầu');
+      showGlobalToast('Vui lòng nhập tiêu đề yêu cầu', 'warning');
       return;
     }
 
@@ -90,13 +92,16 @@ export const SupportTicketModal: React.FC<ISupportTicketModalProps> = ({
       };
 
       await customerService.createSupportTicket(customerId, payload);
+      showGlobalToast(`Đã tạo yêu cầu hỗ trợ "${formTitle.trim()}" thành công!`, 'success');
       setShowCreateForm(false);
       setFormTitle('');
       setFormDescription('');
       loadTickets();
       if (onRiskUpdated) onRiskUpdated();
     } catch (err: any) {
-      setFormError(err.response?.data?.detail || 'Lỗi khi tạo yêu cầu hỗ trợ');
+      const errorMsg = err.response?.data?.detail || 'Lỗi khi tạo yêu cầu hỗ trợ';
+      setFormError(errorMsg);
+      showGlobalToast(errorMsg, 'error');
     } finally {
       setIsCreating(false);
     }
@@ -105,9 +110,20 @@ export const SupportTicketModal: React.FC<ISupportTicketModalProps> = ({
   const handleUpdateStatus = async (ticketId: string, newStatus: ISupportTicket['status']) => {
     try {
       await customerService.updateSupportTicket(ticketId, { status: newStatus });
+      const statusLabel =
+        newStatus === 'resolved'
+          ? 'Đã giải quyết'
+          : newStatus === 'in_progress'
+          ? 'Đang xử lý'
+          : newStatus === 'closed'
+          ? 'Đã đóng'
+          : 'Mới tiếp nhận';
+      showGlobalToast(`Đã cập nhật trạng thái phiếu hỗ trợ: ${statusLabel}`, 'success');
       loadTickets();
       if (onRiskUpdated) onRiskUpdated();
-    } catch (err) {
+    } catch (err: any) {
+      const errorMsg = err?.response?.data?.detail || 'Lỗi cập nhật trạng thái phiếu hỗ trợ';
+      showGlobalToast(errorMsg, 'error');
       console.error('Lỗi cập nhật trạng thái phiếu hỗ trợ:', err);
     }
   };
@@ -117,11 +133,13 @@ export const SupportTicketModal: React.FC<ISupportTicketModalProps> = ({
     setScanResultNotice(null);
     try {
       const result = await customerService.scanRisks(2);
-      setScanResultNotice(
-        `Quét xong hệ thống: Quét ${result.scannedCount || 0} khách hàng, phát hiện ${result.flaggedCount || 0} cờ rủi ro.`
-      );
+      const msg = `Quét xong hệ thống: Quét ${result.scannedCount || 0} khách hàng, phát hiện ${result.flaggedCount || 0} cờ rủi ro.`;
+      setScanResultNotice(msg);
+      showGlobalToast(msg, 'info');
       if (onRiskUpdated) onRiskUpdated();
-    } catch (err) {
+    } catch (err: any) {
+      const errorMsg = err?.response?.data?.detail || 'Lỗi quét cờ rủi ro';
+      showGlobalToast(errorMsg, 'error');
       console.error('Lỗi quét cờ rủi ro:', err);
     } finally {
       setIsScanning(false);

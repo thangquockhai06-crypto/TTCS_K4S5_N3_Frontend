@@ -156,23 +156,30 @@
 }
 
 .toastBanner {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 99999;
+  max-width: 420px;
+  width: calc(100vw - 48px);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 14px 18px;
-  border-radius: var(--radius-md, 8px);
+  border-radius: var(--radius-md, 10px);
   font-size: 13.5px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
   animation: slideIn 0.25s ease-out;
 }
 
 @keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateX(30px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(0);
   }
 }
 

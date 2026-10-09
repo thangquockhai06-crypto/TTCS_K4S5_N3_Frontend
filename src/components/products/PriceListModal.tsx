@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Plus, Check, AlertCircle, Tag } from 'lucide-react';
 import { IPriceList } from '../../interfaces';
 import { sprint2Service } from '../../services/sprint2Service';
+import { showGlobalToast } from '../../context/ToastContext';
 
 interface IPriceListModalProps {
   isOpen: boolean;
@@ -48,7 +49,9 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({ isOpen, onClose
         description,
         is_active: true,
       });
-      setStatusMsg({ type: 'success', text: 'Tạo bảng giá mới thành công!' });
+      const msg = `Tạo bảng giá "${name}" mới thành công!`;
+      setStatusMsg({ type: 'success', text: msg });
+      showGlobalToast(msg, 'success');
       setName('');
       setCode('');
       setMultiplier('1.0');
@@ -60,6 +63,7 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({ isOpen, onClose
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
         'Lỗi khi tạo bảng giá.';
       setStatusMsg({ type: 'error', text: errorMsg });
+      showGlobalToast(errorMsg, 'error');
     }
   };
 

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { IWinLossReason, ICompetitor } from '../../interfaces';
 import { sprint2Service } from '../../services/sprint2Service';
+import { showGlobalToast } from '../../context/ToastContext';
 
 export const WinLossConfig: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'WON' | 'LOST' | 'competitors'>('WON');
@@ -118,7 +119,9 @@ export const WinLossConfig: React.FC = () => {
           reason: trimmedText,
           description: reasonDesc.trim() || undefined,
         });
-        setStatusMsg({ type: 'success', text: `Cập nhật lý do "${trimmedText}" thành công!` });
+        const msg = `Cập nhật lý do "${trimmedText}" thành công!`;
+        setStatusMsg({ type: 'success', text: msg });
+        showGlobalToast(msg, 'success');
       } else {
         await sprint2Service.createWinLossReason({
           result_type: activeTab === 'WON' ? 'WON' : 'LOST',
@@ -127,7 +130,9 @@ export const WinLossConfig: React.FC = () => {
           description: reasonDesc.trim() || undefined,
         });
         const typeName = activeTab === 'WON' ? 'Thành công (Win)' : 'Thất bại (Loss)';
-        setStatusMsg({ type: 'success', text: `Thêm mới lý do ${typeName} "${trimmedText}" thành công!` });
+        const msg = `Thêm mới lý do ${typeName} "${trimmedText}" thành công!`;
+        setStatusMsg({ type: 'success', text: msg });
+        showGlobalToast(msg, 'success');
       }
       setIsReasonModalOpen(false);
       fetchData();
@@ -136,6 +141,7 @@ export const WinLossConfig: React.FC = () => {
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
         'Lỗi khi lưu lý do.';
       setStatusMsg({ type: 'error', text: errorMsg });
+      showGlobalToast(errorMsg, 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -149,13 +155,16 @@ export const WinLossConfig: React.FC = () => {
     setStatusMsg(null);
     try {
       await sprint2Service.deleteWinLossReason(r.id);
-      setStatusMsg({ type: 'success', text: `Đã xóa lý do "${r.reason}" thành công.` });
+      const msg = `Đã xóa lý do "${r.reason}" thành công.`;
+      setStatusMsg({ type: 'success', text: msg });
+      showGlobalToast(msg, 'success');
       fetchData();
     } catch (err: unknown) {
       const errorMsg =
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
         'Lỗi khi xóa lý do.';
       setStatusMsg({ type: 'error', text: errorMsg });
+      showGlobalToast(errorMsg, 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -189,11 +198,14 @@ export const WinLossConfig: React.FC = () => {
     const trimmedName = compName.trim();
     if (!trimmedName) {
       setStatusMsg({ type: 'error', text: 'Vui lòng nhập tên đối thủ cạnh tranh.' });
+      showGlobalToast('Vui lòng nhập tên đối thủ cạnh tranh.', 'warning');
       return;
     }
 
     if (!editingCompetitor && competitors.some((c) => c.name.toLowerCase() === trimmedName.toLowerCase())) {
-      setStatusMsg({ type: 'error', text: `Đối thủ "${trimmedName}" đã tồn tại trong danh sách.` });
+      const err = `Đối thủ "${trimmedName}" đã tồn tại trong danh sách.`;
+      setStatusMsg({ type: 'error', text: err });
+      showGlobalToast(err, 'error');
       return;
     }
 
@@ -208,7 +220,9 @@ export const WinLossConfig: React.FC = () => {
           weaknesses: compWeaknesses.trim() || undefined,
           win_rate: Number(compWinRate),
         });
-        setStatusMsg({ type: 'success', text: `Cập nhật đối thủ "${trimmedName}" thành công!` });
+        const msg = `Cập nhật đối thủ "${trimmedName}" thành công!`;
+        setStatusMsg({ type: 'success', text: msg });
+        showGlobalToast(msg, 'success');
       } else {
         await sprint2Service.createCompetitor({
           name: trimmedName,
@@ -217,7 +231,9 @@ export const WinLossConfig: React.FC = () => {
           weaknesses: compWeaknesses.trim() || undefined,
           win_rate: Number(compWinRate),
         });
-        setStatusMsg({ type: 'success', text: `Thêm mới đối thủ "${trimmedName}" thành công!` });
+        const msg = `Thêm mới đối thủ "${trimmedName}" thành công!`;
+        setStatusMsg({ type: 'success', text: msg });
+        showGlobalToast(msg, 'success');
       }
       setIsCompetitorModalOpen(false);
       fetchData();
@@ -226,6 +242,7 @@ export const WinLossConfig: React.FC = () => {
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
         'Lỗi lưu đối thủ cạnh tranh.';
       setStatusMsg({ type: 'error', text: errorMsg });
+      showGlobalToast(errorMsg, 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -239,13 +256,16 @@ export const WinLossConfig: React.FC = () => {
     setStatusMsg(null);
     try {
       await sprint2Service.deleteCompetitor(c.id);
-      setStatusMsg({ type: 'success', text: `Đã xóa đối thủ "${c.name}" thành công.` });
+      const msg = `Đã xóa đối thủ "${c.name}" thành công.`;
+      setStatusMsg({ type: 'success', text: msg });
+      showGlobalToast(msg, 'success');
       fetchData();
     } catch (err: unknown) {
       const errorMsg =
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
         'Lỗi khi xóa đối thủ.';
       setStatusMsg({ type: 'error', text: errorMsg });
+      showGlobalToast(errorMsg, 'error');
     } finally {
       setIsSubmitting(false);
     }

@@ -26,6 +26,7 @@ import type {
 } from '../../interfaces';
 import { ROLE_DATA_SCOPE_MAP } from '../../mock/userManagement.mock';
 import { formatCompactCurrency } from '../../utils/formatters';
+import { showGlobalToast } from '../../context/ToastContext';
 import { DeactivateUserModal } from './DeactivateUserModal';
 import styles from './UserManagementPanel.module.css';
 
@@ -141,6 +142,7 @@ export const UserManagementPanel: React.FC = () => {
 
   const showToast = (message: string): void => {
     setFeedbackToast(message);
+    showGlobalToast(message, 'success');
     window.setTimeout(() => {
       setFeedbackToast((prev) => (prev === message ? null : prev));
     }, 5000);

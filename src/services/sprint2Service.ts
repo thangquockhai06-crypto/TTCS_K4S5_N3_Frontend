@@ -35,7 +35,7 @@ class Sprint2Service {
       formData,
       {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': undefined,
         },
       }
     );
