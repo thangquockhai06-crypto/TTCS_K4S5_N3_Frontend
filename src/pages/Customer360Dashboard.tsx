@@ -130,7 +130,7 @@ export const Customer360Dashboard: React.FC = () => {
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => setIsMergeModalOpen(true)}
+            onClick={() => navigate(`/customers/merge?primaryId=${customer.id}`)}
             leftIcon={<GitMerge size={15} />}
           >
             Gộp trùng
@@ -148,7 +148,7 @@ export const Customer360Dashboard: React.FC = () => {
           <Button
             variant="primary"
             size="sm"
-            onClick={() => setIsEditModalOpen(true)}
+            onClick={() => navigate(`/customers/${customer.id}/edit`)}
             leftIcon={<Edit size={15} />}
           >
             Chỉnh sửa thông tin

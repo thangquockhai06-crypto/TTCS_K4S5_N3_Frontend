@@ -73,7 +73,7 @@ export const CustomerListPage: React.FC = () => {
   const [editingCustomer, setEditingCustomer] = useState<ICustomer | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
   const [isMergeModalOpen, setIsMergeModalOpen] = useState<boolean>(false);
-  const [mergePrimaryCustomer, setMergePrimaryCustomer] = useState<ICustomer | null>(null);
+  const [mergePrimaryCustomer] = useState<ICustomer | null>(null);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState<boolean>(false);
   const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
@@ -138,8 +138,7 @@ export const CustomerListPage: React.FC = () => {
 
   const handleOpenMergeFor = (c: ICustomer, e: React.MouseEvent) => {
     e.stopPropagation();
-    setMergePrimaryCustomer(c);
-    setIsMergeModalOpen(true);
+    navigate(`/customers/merge?primaryId=${c.id}`);
   };
 
   const totalFilteredArr = customers.reduce(
@@ -212,10 +211,7 @@ export const CustomerListPage: React.FC = () => {
           <Button
             variant="secondary"
             leftIcon={<GitMerge size={16} />}
-            onClick={() => {
-              setMergePrimaryCustomer(customers[0] || null);
-              setIsMergeModalOpen(true);
-            }}
+            onClick={() => navigate('/customers/merge')}
             title="Gộp khách hàng trùng lặp"
           >
             Gộp trùng
@@ -224,7 +220,7 @@ export const CustomerListPage: React.FC = () => {
           <Button
             variant="secondary"
             leftIcon={<Upload size={16} />}
-            onClick={() => setIsImportModalOpen(true)}
+            onClick={() => navigate('/customers/import')}
             title="Nhập khách hàng từ Excel"
           >
             Nhập Excel
@@ -233,7 +229,7 @@ export const CustomerListPage: React.FC = () => {
           <Button
             variant="primary"
             leftIcon={<Plus size={16} />}
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={() => navigate('/customers/create')}
           >
             Thêm khách hàng
           </Button>
@@ -374,7 +370,7 @@ export const CustomerListPage: React.FC = () => {
             <Button
               variant="primary"
               leftIcon={<Plus size={15} />}
-              onClick={() => setIsCreateModalOpen(true)}
+              onClick={() => navigate('/customers/create')}
             >
               Thêm khách hàng mới
             </Button>
@@ -430,7 +426,7 @@ export const CustomerListPage: React.FC = () => {
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setEditingCustomer(c);
+                      navigate(`/customers/${c.id}/edit`);
                     }}
                     title="Chỉnh sửa"
                   >
@@ -544,7 +540,7 @@ export const CustomerListPage: React.FC = () => {
                         <Button
                           variant="secondary"
                           size="sm"
-                          onClick={() => setEditingCustomer(c)}
+                          onClick={() => navigate(`/customers/${c.id}/edit`)}
                           title="Chỉnh sửa hồ sơ"
                         >
                           <Edit size={14} />

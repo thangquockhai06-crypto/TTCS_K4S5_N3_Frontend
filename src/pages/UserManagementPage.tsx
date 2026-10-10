@@ -279,11 +279,11 @@ export const UserManagementPage: React.FC = () => {
         </div>
 
         <div className={styles.headerActions}>
-          {/* Thêm người dùng mới */}
+          {/* Thêm người dùng mới (Trang riêng) */}
           <button
             type="button"
             className={styles.btnPrimary}
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={() => navigate('/users/create')}
           >
             <Plus size={18} />
             <span>Thêm người dùng mới</span>
@@ -293,11 +293,11 @@ export const UserManagementPage: React.FC = () => {
           <button
             type="button"
             className={styles.btnSecondary}
-            onClick={() => setIsExcelModalOpen(true)}
+            onClick={() => navigate('/users/import')}
             title="Nhập danh sách người dùng từ tệp Excel / CSV"
           >
             <FileSpreadsheet size={16} style={{ color: '#16a34a' }} />
-            <span>Nhập Excel</span>
+            <span>Nhập Excel / CSV</span>
           </button>
         </div>
       </div>

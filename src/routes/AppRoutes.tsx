@@ -10,6 +10,7 @@ import { RegisterPage } from '../pages/RegisterPage';
 import { SettingsPage } from '../pages/SettingsPage';
 import { UserManagementPage } from '../pages/UserManagementPage';
 import { UserEditPage } from '../pages/UserEditPage';
+import { UserCreatePage } from '../pages/UserCreatePage';
 import { ProductsPage } from '../pages/ProductsPage';
 import { AuditLogsPage } from '../pages/AuditLogsPage';
 import { ProfilePage } from '../pages/ProfilePage';
@@ -19,6 +20,11 @@ import { CustomFieldsPage } from '../pages/CustomFieldsPage';
 import { PipelineConfigPage } from '../pages/PipelineConfigPage';
 import { WinLossPage } from '../pages/WinLossPage';
 import { CustomerListPage } from '../pages/CustomerListPage';
+import { CustomerCreatePage } from '../pages/CustomerCreatePage';
+import { CustomerEditPage } from '../pages/CustomerEditPage';
+import { CustomerImportPage } from '../pages/CustomerImportPage';
+import { CustomerMergePage } from '../pages/CustomerMergePage';
+import { UserImportPage } from '../pages/UserImportPage';
 import { Customer360Dashboard } from '../pages/Customer360Dashboard';
 import { StagnantCustomerList } from '../components/customer/StagnantCustomerList';
 
@@ -55,12 +61,20 @@ export const AppRoutes: React.FC = () => {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
 
-        {/* User Management & Dedicated Edit */}
+        {/* User Management & Dedicated Create, Edit & Import */}
         <Route path="users" element={<UserManagementPage />} />
+        <Route path="users/create" element={<UserCreatePage />} />
+        <Route path="users/new" element={<Navigate to="/users/create" replace />} />
+        <Route path="users/import" element={<UserImportPage />} />
         <Route path="users/:id/edit" element={<UserEditPage />} />
 
         {/* Customer Management */}
         <Route path="customers" element={<CustomerListPage />} />
+        <Route path="customers/create" element={<CustomerCreatePage />} />
+        <Route path="customers/new" element={<Navigate to="/customers/create" replace />} />
+        <Route path="customers/import" element={<CustomerImportPage />} />
+        <Route path="customers/merge" element={<CustomerMergePage />} />
+        <Route path="customers/:id/edit" element={<CustomerEditPage />} />
         <Route path="customers/stagnant" element={<StagnantCustomerList />} />
         <Route path="customers/:id" element={<Customer360Dashboard />} />
 

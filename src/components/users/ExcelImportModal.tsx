@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
-import { X, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import {
+  X,
+  CheckCircle,
+  AlertCircle,
+  RefreshCw,
+  FileSpreadsheet,
+} from 'lucide-react';
 import { ExcelUploadZone } from './ExcelUploadZone';
-import { PreviewDataGrid } from './PreviewDataGrid';
+import { PreviewDataGrid, ImportFilterType } from './PreviewDataGrid';
 import { IExcelImportUserRow, IExcelImportResult } from '../../interfaces';
 import { sprint2Service } from '../../services/sprint2Service';
+import { IUserImportPreviewRow } from '../../services/userImportService';
 
 interface IExcelImportModalProps {
   isOpen: boolean;
@@ -17,7 +24,8 @@ export const ExcelImportModal: React.FC<IExcelImportModalProps> = ({
   onSuccess,
 }) => {
   const [rows, setRows] = useState<IExcelImportUserRow[]>([]);
-  const [filterType, setFilterType] = useState<'all' | 'valid' | 'invalid'>('all');
+  const [serverDetails, setServerDetails] = useState<IUserImportPreviewRow[] | undefined>(undefined);
+  const [filterType, setFilterType] = useState<ImportFilterType>('all');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [importResult, setImportResult] = useState<IExcelImportResult | null>(null);
@@ -30,6 +38,17 @@ export const ExcelImportModal: React.FC<IExcelImportModalProps> = ({
     const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail);
     return cleanName && emailOk;
   });
+
+  const handleDataParsed = (
+    parsedRows: IExcelImportUserRow[],
+    _file?: File,
+    details?: IUserImportPreviewRow[]
+  ) => {
+    setRows(parsedRows);
+    setServerDetails(details);
+    setErrorMsg(null);
+    setFilterType('all');
+  };
 
   const handleImport = async () => {
     if (validRows.length === 0) {
@@ -53,6 +72,7 @@ export const ExcelImportModal: React.FC<IExcelImportModalProps> = ({
 
   const handleReset = () => {
     setRows([]);
+    setServerDetails(undefined);
     setImportResult(null);
     setErrorMsg(null);
     setFilterType('all');
@@ -64,6 +84,7 @@ export const ExcelImportModal: React.FC<IExcelImportModalProps> = ({
         position: 'fixed',
         inset: 0,
         backgroundColor: 'rgba(15, 23, 42, 0.5)',
+        backdropFilter: 'blur(4px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -74,13 +95,14 @@ export const ExcelImportModal: React.FC<IExcelImportModalProps> = ({
       <div
         style={{
           backgroundColor: '#ffffff',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-md, 12px)',
           width: '100%',
-          maxWidth: '750px',
+          maxWidth: '820px',
           maxHeight: '90vh',
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
+          boxShadow: 'var(--shadow-lg, 0 20px 25px -5px rgba(0, 0, 0, 0.1))',
+          border: '1px solid var(--color-border, #e2e8f0)',
         }}
       >
         {/* Header */}
@@ -90,16 +112,32 @@ export const ExcelImportModal: React.FC<IExcelImportModalProps> = ({
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '16px 20px',
-            borderBottom: '1px solid #e2e8f0',
+            borderBottom: '1px solid var(--color-border, #e2e8f0)',
           }}
         >
-          <div>
-            <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#0f172a' }}>
-              Nhập danh sách người dùng từ Excel / CSV
-            </h2>
-            <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: '#64748b' }}>
-              Tải lên tệp danh sách nhân sự để thêm hàng loạt tài khoản vào hệ thống CRM
-            </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: '8px',
+                backgroundColor: '#dcfce7',
+                color: '#16a34a',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <FileSpreadsheet size={20} />
+            </div>
+            <div>
+              <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-text-primary, #0f172a)' }}>
+                Nhập danh sách người dùng từ Excel / CSV
+              </h2>
+              <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: 'var(--color-text-muted, #64748b)' }}>
+                Tải lên tệp danh sách nhân sự để thêm hàng loạt tài khoản vào hệ thống CRM
+              </p>
+            </div>
           </div>
           <button
             type="button"
@@ -107,9 +145,10 @@ export const ExcelImportModal: React.FC<IExcelImportModalProps> = ({
             style={{
               background: 'none',
               border: 'none',
-              color: '#64748b',
+              color: 'var(--color-text-muted, #64748b)',
               cursor: 'pointer',
-              padding: '4px',
+              padding: '6px',
+              borderRadius: '6px',
             }}
           >
             <X size={20} />
@@ -117,7 +156,15 @@ export const ExcelImportModal: React.FC<IExcelImportModalProps> = ({
         </div>
 
         {/* Body */}
-        <div style={{ padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div
+          style={{
+            padding: '20px',
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
+          }}
+        >
           {errorMsg && (
             <div
               style={{
@@ -140,34 +187,55 @@ export const ExcelImportModal: React.FC<IExcelImportModalProps> = ({
           {importResult ? (
             <div
               style={{
-                padding: '24px',
+                padding: '28px',
                 textAlign: 'center',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '12px',
+                gap: '14px',
               }}
             >
-              <CheckCircle size={48} color="#16a34a" />
-              <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#15803d' }}>
-                Đã nhập thành công {importResult.success_count} người dùng!
-              </h3>
-              {importResult.failed_count > 0 && (
-                <p style={{ margin: 0, fontSize: '0.85rem', color: '#b45309' }}>
-                  Có {importResult.failed_count} dòng bị bỏ qua do không hợp lệ hoặc đã tồn tại.
-                </p>
-              )}
-              <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: '50%',
+                  backgroundColor: '#dcfce7',
+                  color: '#16a34a',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <CheckCircle size={36} />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700, color: '#15803d' }}>
+                  Đã nhập thành công {importResult.success_count} người dùng!
+                </h3>
+                {importResult.failed_count > 0 ? (
+                  <p style={{ margin: '6px 0 0', fontSize: '0.85rem', color: '#b45309' }}>
+                    Có {importResult.failed_count} dòng bị bỏ qua do trùng lặp email hoặc dữ liệu không đúng định dạng.
+                  </p>
+                ) : (
+                  <p style={{ margin: '6px 0 0', fontSize: '0.85rem', color: '#475569' }}>
+                    Tất cả tài khoản người dùng đã được kích hoạt và phân vai trò đầy đủ.
+                  </p>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
                 <button
                   type="button"
                   onClick={handleReset}
                   style={{
-                    padding: '8px 16px',
+                    padding: '8px 18px',
                     borderRadius: '6px',
                     border: '1px solid #cbd5e1',
                     backgroundColor: '#ffffff',
                     color: '#334155',
                     fontSize: '0.85rem',
+                    fontWeight: 600,
                     cursor: 'pointer',
                   }}
                 >
@@ -177,7 +245,7 @@ export const ExcelImportModal: React.FC<IExcelImportModalProps> = ({
                   type="button"
                   onClick={onClose}
                   style={{
-                    padding: '8px 16px',
+                    padding: '8px 20px',
                     borderRadius: '6px',
                     border: 'none',
                     backgroundColor: '#2563eb',
@@ -193,13 +261,14 @@ export const ExcelImportModal: React.FC<IExcelImportModalProps> = ({
             </div>
           ) : (
             <>
-              <ExcelUploadZone onDataParsed={setRows} disabled={isSubmitting} />
+              <ExcelUploadZone onDataParsed={handleDataParsed} disabled={isSubmitting} />
 
               {rows.length > 0 && (
                 <PreviewDataGrid
                   rows={rows}
                   filterType={filterType}
                   onFilterChange={setFilterType}
+                  serverDetails={serverDetails}
                 />
               )}
             </>
@@ -215,8 +284,8 @@ export const ExcelImportModal: React.FC<IExcelImportModalProps> = ({
               justifyContent: 'flex-end',
               gap: '10px',
               padding: '12px 20px',
-              borderTop: '1px solid #e2e8f0',
-              backgroundColor: '#f8fafc',
+              borderTop: '1px solid var(--color-border, #e2e8f0)',
+              backgroundColor: 'var(--color-bg-subtle, #f8fafc)',
             }}
           >
             <button
@@ -240,7 +309,7 @@ export const ExcelImportModal: React.FC<IExcelImportModalProps> = ({
               onClick={handleImport}
               disabled={isSubmitting || validRows.length === 0}
               style={{
-                padding: '8px 16px',
+                padding: '8px 18px',
                 borderRadius: '6px',
                 border: 'none',
                 backgroundColor: validRows.length > 0 ? '#2563eb' : '#94a3b8',

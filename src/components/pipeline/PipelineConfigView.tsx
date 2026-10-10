@@ -121,12 +121,18 @@ export const PipelineConfigView: React.FC = () => {
   };
 
   const handleDelete = async (s: IPipelineStage) => {
+    if (s.is_won || s.is_lost || s.stage_key === 'Won' || s.stage_key === 'Lost') {
+      const msg = 'Không thể xóa giai đoạn chuẩn Chốt thành công hoặc Thất bại của hệ thống.';
+      setStatusMsg({ type: 'error', text: msg });
+      showGlobalToast(msg, 'error');
+      return;
+    }
     if (!window.confirm(`Xóa giai đoạn "${s.name}"? Hệ thống sẽ đảm bảo không làm mất cơ hội nào đang hoạt động.`)) {
       return;
     }
     try {
       await sprint2Service.deletePipelineStage(s.id);
-      const msg = 'Đã xóa giai đoạn thành công.';
+      const msg = `Đã xóa giai đoạn "${s.name}" thành công.`;
       setStatusMsg({ type: 'success', text: msg });
       showGlobalToast(msg, 'success');
       fetchStages();
@@ -365,17 +371,31 @@ export const PipelineConfigView: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleOpenEdit(s)}
+                          title={`Chỉnh sửa giai đoạn ${s.name}`}
                           style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', padding: '4px' }}
                         >
                           <Edit2 size={14} />
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(s)}
-                          style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', padding: '4px' }}
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        {(() => {
+                          const isSystemStage = s.is_won || s.is_lost || s.stage_key === 'Won' || s.stage_key === 'Lost';
+                          return (
+                            <button
+                              type="button"
+                              disabled={isSystemStage}
+                              onClick={() => !isSystemStage && handleDelete(s)}
+                              title={isSystemStage ? 'Giai đoạn chuẩn của hệ thống, không thể xóa' : `Xóa giai đoạn ${s.name}`}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: isSystemStage ? '#cbd5e1' : '#dc2626',
+                                cursor: isSystemStage ? 'not-allowed' : 'pointer',
+                                padding: '4px',
+                              }}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          );
+                        })()}
                       </div>
                     </td>
                   </tr>

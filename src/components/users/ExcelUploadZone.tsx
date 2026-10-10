@@ -1,99 +1,99 @@
 import React, { useRef, useState } from 'react';
-import { UploadCloud, FileSpreadsheet, X, AlertCircle } from 'lucide-react';
+import {
+  UploadCloud,
+  FileSpreadsheet,
+  X,
+  AlertCircle,
+  FileText,
+  Download,
+  Loader2,
+} from 'lucide-react';
 import { IExcelImportUserRow } from '../../interfaces';
+import { userImportService, IUserImportPreviewRow } from '../../services/userImportService';
 
 interface IExcelUploadZoneProps {
-  onDataParsed: (rows: IExcelImportUserRow[]) => void;
+  onDataParsed: (
+    rows: IExcelImportUserRow[],
+    rawFile?: File,
+    serverDetails?: IUserImportPreviewRow[]
+  ) => void;
   disabled?: boolean;
 }
 
-export const ExcelUploadZone: React.FC<IExcelUploadZoneProps> = ({ onDataParsed, disabled }) => {
+export const ExcelUploadZone: React.FC<IExcelUploadZoneProps> = ({
+  onDataParsed,
+  disabled,
+}) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileSize, setFileSize] = useState<string | null>(null);
+  const [fileType, setFileType] = useState<'excel' | 'csv' | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [downloadingTemplate, setDownloadingTemplate] = useState<'xlsx' | 'csv' | null>(null);
 
-  const parseFileContent = (content: string, name: string) => {
+  const handleDownloadTemplate = async (format: 'xlsx' | 'csv', e: React.MouseEvent) => {
+    e.stopPropagation();
     try {
-      // Basic CSV/TSV parser supporting standard comma or semicolon separation
-      const lines = content.split(/\r?\n/).filter((line) => line.trim().length > 0);
-      if (lines.length < 2) {
-        setParseError('Tập tin không có dữ liệu hoặc thiếu dòng tiêu đề (header).');
-        return;
-      }
-
-      // Check header row
-      const delimiter = lines[0].includes(';') ? ';' : lines[0].includes('\t') ? '\t' : ',';
-      const headers = lines[0].split(delimiter).map((h) => h.trim().toLowerCase().replace(/^["']|["']$/g, ''));
-
-      const nameIdx = headers.findIndex((h) => h.includes('name') || h.includes('tên') || h.includes('họ'));
-      const emailIdx = headers.findIndex((h) => h.includes('email') || h.includes('thư'));
-      const roleIdx = headers.findIndex((h) => h.includes('role') || h.includes('vai') || h.includes('chức'));
-      const groupIdx = headers.findIndex((h) => h.includes('group') || h.includes('team') || h.includes('nhóm') || h.includes('phòng'));
-      const phoneIdx = headers.findIndex((h) => h.includes('phone') || h.includes('điện thoại') || h.includes('sđt'));
-
-      if (nameIdx === -1 && emailIdx === -1) {
-        setParseError('Tập tin thiếu cột bắt buộc "Họ và tên" hoặc "Email". Vui lòng kiểm tra file mẫu.');
-        return;
-      }
-
-      const rows: IExcelImportUserRow[] = [];
-      for (let i = 1; i < lines.length; i++) {
-        const rawLine = lines[i].trim();
-        if (!rawLine) continue;
-
-        // Split preserving quotes if simple
-        const cols = rawLine.split(delimiter).map((c) => c.trim().replace(/^["']|["']$/g, ''));
-        const row: IExcelImportUserRow = {
-          name: nameIdx !== -1 && cols[nameIdx] ? cols[nameIdx] : (cols[0] || ''),
-          email: emailIdx !== -1 && cols[emailIdx] ? cols[emailIdx] : (cols[1] || ''),
-          role: roleIdx !== -1 && cols[roleIdx] ? cols[roleIdx] : 'sales',
-          group: groupIdx !== -1 && cols[groupIdx] ? cols[groupIdx] : 'Miền Bắc (Hà Nội)',
-          phone: phoneIdx !== -1 && cols[phoneIdx] ? cols[phoneIdx] : undefined,
-        };
-        rows.push(row);
-      }
-
-      if (rows.length === 0) {
-        setParseError('Không tìm thấy dòng dữ liệu nào hợp lệ trong tập tin.');
-        return;
-      }
-
-      setParseError(null);
-      setFileName(name);
-      onDataParsed(rows);
+      setDownloadingTemplate(format);
+      await userImportService.downloadTemplate(format);
     } catch (err: any) {
-      setParseError('Định dạng tệp không hợp lệ: ' + (err.message || 'Lỗi đọc tệp'));
+      setParseError('Không thể tải tệp mẫu. Vui lòng thử lại sau.');
+    } finally {
+      setDownloadingTemplate(null);
     }
   };
 
-  const handleFile = (file: File) => {
-    if (!file.name.match(/\.(csv|txt|tsv|xlsx|xls)$/i)) {
-      setParseError('Chỉ hỗ trợ tệp định dạng .CSV, .XLSX, .XLS hoặc .TXT có phân tách.');
+  const handleFile = async (file: File) => {
+    const extMatch = file.name.match(/\.(xlsx|xls|csv)$/i);
+    if (!extMatch) {
+      setParseError('Chỉ hỗ trợ tệp định dạng Excel (.xlsx, .xls) hoặc CSV (.csv).');
       return;
     }
 
+    const isCsv = file.name.toLowerCase().endsWith('.csv');
+    setFileType(isCsv ? 'csv' : 'excel');
     setFileSize(`${(file.size / 1024).toFixed(1)} KB`);
     setParseError(null);
+    setIsLoading(true);
 
-    // Read text content (for CSV/TSV) or generate simulated parsed rows
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target?.result as string;
-      if (text) {
-        parseFileContent(text, file.name);
+    try {
+      // Gửi file lên backend preview API để validate chính xác bằng quy tắc nghiệp vụ
+      const res = await userImportService.previewImport(file);
+      const details = res.details || [];
+
+      if (details.length === 0) {
+        setParseError('Tệp không có dòng dữ liệu nào.');
+        setIsLoading(false);
+        return;
       }
-    };
-    reader.onerror = () => {
-      setParseError('Không thể đọc tệp tin. Vui lòng thử lại.');
-    };
-    reader.readAsText(file, 'UTF-8');
+
+      const parsedRows: IExcelImportUserRow[] = details.map((d) => ({
+        name: d.full_name || '',
+        email: d.email || '',
+        phone: d.phone || undefined,
+        role: d.role || 'sales',
+        group: d.department || 'Miền Bắc (Hà Nội)',
+      }));
+
+      setFileName(file.name);
+      setParseError(null);
+      onDataParsed(parsedRows, file, details);
+    } catch (err: any) {
+      const msg =
+        err.response?.data?.detail ||
+        err.message ||
+        'Lỗi khi đọc và kiểm tra tính hợp lệ của tệp.';
+      setParseError(typeof msg === 'string' ? msg : JSON.stringify(msg));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    if (!disabled) setIsDragging(true);
+    if (!disabled && !isLoading) setIsDragging(true);
   };
 
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
@@ -104,7 +104,7 @@ export const ExcelUploadZone: React.FC<IExcelUploadZoneProps> = ({ onDataParsed,
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
-    if (disabled) return;
+    if (disabled || isLoading) return;
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFile(e.dataTransfer.files[0]);
     }
@@ -113,72 +113,217 @@ export const ExcelUploadZone: React.FC<IExcelUploadZoneProps> = ({ onDataParsed,
   const handleClear = () => {
     setFileName(null);
     setFileSize(null);
+    setFileType(null);
     setParseError(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
-    onDataParsed([]);
-  };
-
-  const handleDownloadSample = () => {
-    const sampleCsv = `Họ và tên,Email,Vai trò,Phòng ban / Nhóm,Số điện thoại\nNguyễn Văn An,an.nguyen@nexus.vn,sales,Kinh doanh Miền Bắc,0912345678\nTrần Thị Bích,bich.tran@nexus.vn,sales,Kinh doanh Miền Nam,0987654321\nLê Hoàng Nam,nam.le@nexus.vn,manager,Kinh doanh Miền Trung,0901234567\nPhạm Thu Hà,invalid-email,sales,Kinh doanh Miền Bắc,012345`;
-    const blob = new Blob([sampleCsv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'crm_user_import_sample.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    onDataParsed([], undefined, undefined);
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      {/* Thanh tiện ích tải file mẫu */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '10px',
+          padding: '10px 14px',
+          backgroundColor: 'var(--color-bg-subtle, #f8fafc)',
+          border: '1px solid var(--color-border, #e2e8f0)',
+          borderRadius: 'var(--radius-sm, 8px)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FileSpreadsheet size={18} style={{ color: 'var(--color-primary, #2563eb)' }} />
+          <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-primary, #0f172a)' }}>
+            Chưa có tệp dữ liệu chuẩn? Tải file mẫu tại đây:
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            type="button"
+            onClick={(e) => handleDownloadTemplate('xlsx', e)}
+            disabled={downloadingTemplate !== null}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              borderRadius: 'var(--radius-xs, 6px)',
+              border: '1px solid #16a34a',
+              backgroundColor: '#f0fdf4',
+              color: '#16a34a',
+              cursor: downloadingTemplate ? 'wait' : 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+            title="Tải tệp mẫu Microsoft Excel (.xlsx)"
+          >
+            {downloadingTemplate === 'xlsx' ? (
+              <Loader2 size={13} className="spin" />
+            ) : (
+              <Download size={13} />
+            )}
+            <span>Mẫu Excel (.xlsx)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={(e) => handleDownloadTemplate('csv', e)}
+            disabled={downloadingTemplate !== null}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              borderRadius: 'var(--radius-xs, 6px)',
+              border: '1px solid var(--color-primary, #2563eb)',
+              backgroundColor: '#eff6ff',
+              color: 'var(--color-primary, #2563eb)',
+              cursor: downloadingTemplate ? 'wait' : 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+            title="Tải tệp mẫu CSV phân tách bằng dấu phẩy (.csv)"
+          >
+            {downloadingTemplate === 'csv' ? (
+              <Loader2 size={13} className="spin" />
+            ) : (
+              <Download size={13} />
+            )}
+            <span>Mẫu CSV (.csv)</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Vùng kéo thả tệp tải lên */}
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={() => !disabled && !fileName && fileInputRef.current?.click()}
+        onClick={() => !disabled && !fileName && !isLoading && fileInputRef.current?.click()}
         style={{
-          border: isDragging ? '2px dashed #2563eb' : '2px dashed #cbd5e1',
-          borderRadius: '8px',
-          padding: '24px 16px',
+          border: isDragging
+            ? '2px dashed var(--color-primary, #2563eb)'
+            : '2px dashed var(--color-border-strong, #cbd5e1)',
+          borderRadius: 'var(--radius-md, 10px)',
+          padding: '28px 20px',
           textAlign: 'center',
-          backgroundColor: isDragging ? '#eff6ff' : '#f8fafc',
-          cursor: disabled || fileName ? 'default' : 'pointer',
-          transition: 'all 0.15s ease',
+          backgroundColor: isDragging
+            ? 'var(--color-bg-sidebar-active, #eff6ff)'
+            : 'var(--color-bg-subtle, #f8fafc)',
+          cursor: disabled || fileName || isLoading ? 'default' : 'pointer',
+          transition: 'all 0.2s ease',
+          boxShadow: isDragging ? 'var(--shadow-glow-primary)' : 'none',
         }}
       >
         <input
           ref={fileInputRef}
           type="file"
-          accept=".csv,.xlsx,.xls,.tsv,.txt"
+          accept=".xlsx,.xls,.csv"
           style={{ display: 'none' }}
           onChange={(e) => {
             if (e.target.files && e.target.files[0]) {
               handleFile(e.target.files[0]);
             }
           }}
-          disabled={disabled}
+          disabled={disabled || isLoading}
         />
 
-        {!fileName ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-            <UploadCloud size={32} color="#64748b" />
-            <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: '#1e293b' }}>
-              Kéo thả tệp Excel/CSV vào đây hoặc <span style={{ color: '#2563eb' }}>bấm để chọn</span>
+        {isLoading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+            <Loader2 size={36} style={{ color: 'var(--color-primary, #2563eb)' }} className="spin" />
+            <p style={{ margin: 0, fontSize: '0.92rem', fontWeight: 600, color: 'var(--color-text-primary, #0f172a)' }}>
+              Đang phân tích cú pháp và kiểm tra hợp lệ dữ liệu từ máy chủ...
             </p>
-            <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
-              Định dạng hỗ trợ: .csv, .xlsx, .xls (Tối đa 10MB)
+            <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted, #64748b)' }}>
+              Hệ thống đang kiểm tra cấu trúc cột, email trùng lặp và vai trò hệ thống
             </span>
           </div>
+        ) : !fileName ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: '50%',
+                backgroundColor: 'var(--color-primary-soft, #eff6ff)',
+                color: 'var(--color-primary, #2563eb)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <UploadCloud size={30} />
+            </div>
+            <div>
+              <p style={{ margin: 0, fontSize: '0.95rem', fontWeight: 600, color: 'var(--color-text-primary, #0f172a)' }}>
+                Kéo thả tệp Excel hoặc CSV vào đây hoặc{' '}
+                <span style={{ color: 'var(--color-primary, #2563eb)', textDecoration: 'underline' }}>
+                  bấm để chọn từ máy tính
+                </span>
+              </p>
+              <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--color-text-muted, #64748b)' }}>
+                Hỗ trợ định dạng chuẩn: <strong>.xlsx</strong>, <strong>.xls</strong>, <strong>.csv</strong> (Dung lượng tối đa 15MB)
+              </p>
+            </div>
+          </div>
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <FileSpreadsheet size={24} color="#16a34a" />
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '6px 12px',
+              backgroundColor: 'var(--color-bg-surface, #ffffff)',
+              borderRadius: 'var(--radius-sm, 8px)',
+              border: '1px solid var(--color-border, #e2e8f0)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 'var(--radius-xs, 6px)',
+                  backgroundColor: fileType === 'csv' ? '#eff6ff' : '#f0fdf4',
+                  color: fileType === 'csv' ? '#2563eb' : '#16a34a',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {fileType === 'csv' ? <FileText size={22} /> : <FileSpreadsheet size={22} />}
+              </div>
               <div style={{ textAlign: 'left' }}>
-                <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: '#1e293b' }}>{fileName}</p>
-                <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{fileSize}</span>
+                <p style={{ margin: 0, fontSize: '0.92rem', fontWeight: 600, color: 'var(--color-text-primary, #0f172a)' }}>
+                  {fileName}
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--color-text-muted, #64748b)' }}>
+                    Kích thước: {fileSize}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '0.72rem',
+                      padding: '1px 6px',
+                      borderRadius: '4px',
+                      backgroundColor: fileType === 'csv' ? '#dbeafe' : '#dcfce7',
+                      color: fileType === 'csv' ? '#1d4ed8' : '#15803d',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {fileType === 'csv' ? 'Tệp CSV' : 'Tệp Excel'}
+                  </span>
+                </div>
               </div>
             </div>
+
             {!disabled && (
               <button
                 type="button"
@@ -187,15 +332,17 @@ export const ExcelUploadZone: React.FC<IExcelUploadZoneProps> = ({ onDataParsed,
                   handleClear();
                 }}
                 style={{
-                  background: 'none',
+                  backgroundColor: '#fee2e2',
                   border: 'none',
-                  color: '#ef4444',
+                  color: '#dc2626',
                   cursor: 'pointer',
-                  padding: '4px',
+                  padding: '6px',
+                  borderRadius: 'var(--radius-xs, 6px)',
                   display: 'flex',
                   alignItems: 'center',
+                  transition: 'background-color 0.15s ease',
                 }}
-                title="Hủy tệp đã chọn"
+                title="Hủy chọn tệp này"
               >
                 <X size={18} />
               </button>
@@ -205,29 +352,23 @@ export const ExcelUploadZone: React.FC<IExcelUploadZoneProps> = ({ onDataParsed,
       </div>
 
       {parseError && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', color: '#dc2626', fontSize: '0.82rem' }}>
-          <AlertCircle size={16} />
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '10px 14px',
+            backgroundColor: 'var(--color-danger-soft, #fef2f2)',
+            border: '1px solid #fecaca',
+            borderRadius: 'var(--radius-sm, 8px)',
+            color: 'var(--color-danger, #dc2626)',
+            fontSize: '0.85rem',
+          }}
+        >
+          <AlertCircle size={18} style={{ flexShrink: 0 }} />
           <span>{parseError}</span>
         </div>
       )}
-
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <button
-          type="button"
-          onClick={handleDownloadSample}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#2563eb',
-            fontSize: '0.8rem',
-            cursor: 'pointer',
-            textDecoration: 'underline',
-            padding: 0,
-          }}
-        >
-          Tải file mẫu mẫu (.csv)
-        </button>
-      </div>
     </div>
   );
 };
