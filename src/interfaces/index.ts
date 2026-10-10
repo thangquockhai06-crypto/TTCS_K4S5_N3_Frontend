@@ -8,3 +8,6 @@ export * from './user-management.interface';
 export * from './userManagement.interface';
 export * from './menu.interface';
 export * from './sprint2.interface';
+export * from './forecast.interface';
+export * from './stagnant-deal.interface';
+export * from './deal-reassignment.interface';

@@ -1,0 +1,47 @@
+.forecastPage {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.forecastPage__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.forecastPage__badgeWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.forecastPage__title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--color-text-primary, #0F172A);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.forecastPage__subtitle {
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary, #475569);
+  margin: 0;
+  max-width: 900px;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .forecastPage {
+    padding: 1rem 0.75rem;
+  }
+
+  .forecastPage__title {
+    font-size: 1.375rem;
+  }
+}

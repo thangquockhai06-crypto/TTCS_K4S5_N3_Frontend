@@ -1,0 +1,178 @@
+.stagnantTableCard {
+  background: var(--color-bg-surface, #FFFFFF);
+  border: 1px solid var(--color-border, #E2E8F0);
+  border-radius: var(--radius-md, 12px);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm, 0 2px 6px -1px rgba(15, 23, 42, 0.05));
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stagnantTableCard__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.stagnantTableCard__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #0F172A);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stagnantTableCard__tableWrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.stagnantTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  text-align: left;
+}
+
+.stagnantTable__th {
+  background: var(--color-bg-subtle, #EEF2F8);
+  color: var(--color-text-secondary, #475569);
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border, #E2E8F0);
+  white-space: nowrap;
+}
+
+.stagnantTable__td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--color-border, #E2E8F0);
+  color: var(--color-text-primary, #0F172A);
+  vertical-align: middle;
+  font-feature-settings: 'tnum';
+}
+
+.stagnantTable__tr:hover {
+  background: var(--color-bg-hover, #F1F5F9);
+}
+
+.stagnantTable__dealCell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 260px;
+}
+
+.stagnantTable__companyAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm, 8px);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.stagnantTable__dealInfo {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.stagnantTable__dealTitle {
+  font-weight: 600;
+  color: var(--color-text-primary, #0F172A);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stagnantTable__customerName {
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #64748B);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stagnantTable__flagsWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stagnantTable__flagBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.stagnantTable__flagBadge--danger {
+  background: var(--color-danger-soft, rgba(239, 68, 68, 0.12));
+  color: #EF4444;
+}
+
+.stagnantTable__flagBadge--warning {
+  background: var(--color-warning-soft, rgba(245, 158, 11, 0.14));
+  color: #F59E0B;
+}
+
+.stagnantTable__repCell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.stagnantTable__repAvatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+}
+
+.stagnantTable__actionBtn {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  background: var(--color-primary, #2563EB);
+  border: none;
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.stagnantTable__actionBtn:hover {
+  background: var(--color-primary-hover, #1D4ED8);
+}
+
+.stagnantTable__statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.stagnantTable__statusBadge--pending {
+  background: var(--color-warning-soft, rgba(245, 158, 11, 0.14));
+  color: #F59E0B;
+}
+
+.stagnantTable__statusBadge--resolved {
+  background: var(--color-success-soft, rgba(16, 185, 129, 0.12));
+  color: #10B981;
+}

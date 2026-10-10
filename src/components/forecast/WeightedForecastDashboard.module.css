@@ -1,0 +1,42 @@
+.forecastDashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.forecastDashboard__tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--color-border, #E2E8F0);
+  padding-bottom: 0.5rem;
+  overflow-x: auto;
+}
+
+.forecastDashboard__tab {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary, #475569);
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--radius-sm, 8px);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.forecastDashboard__tab:hover {
+  background: var(--color-bg-hover, #F1F5F9);
+  color: var(--color-text-primary, #0F172A);
+}
+
+.forecastDashboard__tab--active {
+  background: var(--color-primary-soft, rgba(37, 99, 235, 0.1));
+  color: var(--color-primary, #2563EB);
+  font-weight: 600;
+}

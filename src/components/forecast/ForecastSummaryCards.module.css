@@ -1,0 +1,197 @@
+.forecastSummary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  width: 100%;
+}
+
+.forecastSummary__card {
+  background: var(--color-bg-surface, #FFFFFF);
+  border: 1px solid var(--color-border, #E2E8F0);
+  border-radius: var(--radius-md, 12px);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: var(--shadow-sm, 0 2px 6px -1px rgba(15, 23, 42, 0.05));
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.forecastSummary__card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md, 0 10px 24px -4px rgba(15, 23, 42, 0.08));
+  border-color: var(--color-primary, #2563EB);
+}
+
+.forecastSummary__card--primary {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.04) 0%, rgba(139, 92, 246, 0.08) 100%), var(--color-bg-surface, #FFFFFF);
+  border-color: rgba(37, 99, 235, 0.35);
+}
+
+.forecastSummary__card--primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #2563EB, #8B5CF6);
+}
+
+.forecastSummary__card--success::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #10B981;
+}
+
+.forecastSummary__card--warning::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #F59E0B;
+}
+
+.forecastSummary__card--accent::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #8B5CF6;
+}
+
+.forecastSummary__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.forecastSummary__title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted, #64748B);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.forecastSummary__iconWrap {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm, 8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-subtle, #EEF2F8);
+  color: var(--color-primary, #2563EB);
+}
+
+.forecastSummary__iconWrap--success {
+  background: var(--color-success-soft, rgba(16, 185, 129, 0.12));
+  color: #10B981;
+}
+
+.forecastSummary__iconWrap--warning {
+  background: var(--color-warning-soft, rgba(245, 158, 11, 0.14));
+  color: #F59E0B;
+}
+
+.forecastSummary__iconWrap--accent {
+  background: var(--color-accent-soft, rgba(139, 92, 246, 0.12));
+  color: #8B5CF6;
+}
+
+.forecastSummary__value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #0F172A);
+  line-height: 1.2;
+  margin-bottom: 0.5rem;
+  font-feature-settings: 'tnum';
+}
+
+.forecastSummary__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #475569);
+  margin-top: 0.5rem;
+}
+
+.forecastSummary__metaHighlight {
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.forecastSummary__metaHighlight--positive {
+  color: #10B981;
+}
+
+.forecastSummary__metaHighlight--negative {
+  color: #EF4444;
+}
+
+.forecastSummary__progressContainer {
+  margin-top: 0.75rem;
+}
+
+.forecastSummary__progressBar {
+  width: 100%;
+  height: 6px;
+  background: var(--color-bg-subtle, #EEF2F8);
+  border-radius: var(--radius-full, 9999px);
+  overflow: hidden;
+  position: relative;
+}
+
+.forecastSummary__progressFill {
+  height: 100%;
+  border-radius: var(--radius-full, 9999px);
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.forecastSummary__progressFill--primary {
+  background: linear-gradient(90deg, #2563EB, #8B5CF6);
+}
+
+.forecastSummary__progressFill--success {
+  background: #10B981;
+}
+
+.forecastSummary__progressFill--warning {
+  background: #F59E0B;
+}
+
+/* Responsive Grid */
+@media (max-width: 1200px) {
+  .forecastSummary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .forecastSummary {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .forecastSummary__value {
+    font-size: 1.3125rem;
+  }
+}

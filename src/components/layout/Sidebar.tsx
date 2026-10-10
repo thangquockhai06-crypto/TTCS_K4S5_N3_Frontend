@@ -1,6 +1,8 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
+  AlertTriangle,
+  ArrowRightLeft,
   Building2,
   Clock,
   FileText,
@@ -12,6 +14,7 @@ import {
   ShieldCheck,
   Sliders,
   Target,
+  TrendingUp,
   UserCheck,
   Users,
   X,
@@ -37,6 +40,27 @@ const ALL_MENU_ITEMS: ReadonlyArray<IMenuItem> = [
     label: 'Tổng quan',
     path: '/dashboard',
     icon: <LayoutDashboard size={19} />,
+    requiredPermission: 'view_dashboard',
+  },
+  {
+    id: 'forecast',
+    label: 'Dự báo Doanh số',
+    path: '/forecast',
+    icon: <TrendingUp size={19} />,
+    requiredPermission: 'view_dashboard',
+  },
+  {
+    id: 'stagnant-deals',
+    label: 'Cơ hội Đình trệ',
+    path: '/stagnant-deals',
+    icon: <AlertTriangle size={19} color="#F59E0B" />,
+    requiredPermission: 'view_dashboard',
+  },
+  {
+    id: 'deal-reassignment',
+    label: 'Điều phối Cơ hội',
+    path: '/deal-reassignment',
+    icon: <ArrowRightLeft size={19} />,
     requiredPermission: 'view_dashboard',
   },
   {
