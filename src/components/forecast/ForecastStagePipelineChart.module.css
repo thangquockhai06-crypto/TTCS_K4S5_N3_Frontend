@@ -1,0 +1,110 @@
+.stagePipeline {
+  background: var(--color-bg-surface, #FFFFFF);
+  border: 1px solid var(--color-border, #E2E8F0);
+  border-radius: var(--radius-md, 12px);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm, 0 2px 6px -1px rgba(15, 23, 42, 0.05));
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.stagePipeline__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.stagePipeline__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #0F172A);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stagePipeline__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.875rem;
+}
+
+.stagePipeline__stageCard {
+  background: var(--color-bg-subtle, #EEF2F8);
+  border: 1px solid var(--color-border, #E2E8F0);
+  border-radius: var(--radius-sm, 8px);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.stagePipeline__stageCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm, 0 2px 6px -1px rgba(15, 23, 42, 0.05));
+}
+
+.stagePipeline__stageCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--stage-color, #2563EB);
+}
+
+.stagePipeline__stageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.stagePipeline__stageName {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #0F172A);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stagePipeline__probabilityBadge {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--stage-color, #2563EB);
+  background: rgba(37, 99, 235, 0.1);
+  white-space: nowrap;
+}
+
+.stagePipeline__weightedVal {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #0F172A);
+  font-feature-settings: 'tnum';
+  margin-top: 0.25rem;
+}
+
+.stagePipeline__unweightedVal {
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #64748B);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stagePipeline__dealCount {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #475569);
+  font-weight: 500;
+}

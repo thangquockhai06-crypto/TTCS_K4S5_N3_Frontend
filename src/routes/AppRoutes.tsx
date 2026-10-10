@@ -21,6 +21,9 @@ import { WinLossPage } from '../pages/WinLossPage';
 import { CustomerListPage } from '../pages/CustomerListPage';
 import { Customer360Dashboard } from '../pages/Customer360Dashboard';
 import { StagnantCustomerList } from '../components/customer/StagnantCustomerList';
+import { ForecastPage } from '../pages/ForecastPage';
+import { StagnantDealsPage } from '../pages/StagnantDealsPage';
+import { DealReassignmentPage } from '../pages/DealReassignmentPage';
 
 interface IProtectedRouteProps {
   children: React.ReactElement;
@@ -54,6 +57,9 @@ export const AppRoutes: React.FC = () => {
       >
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="forecast" element={<ForecastPage />} />
+        <Route path="stagnant-deals" element={<StagnantDealsPage />} />
+        <Route path="deal-reassignment" element={<DealReassignmentPage />} />
 
         {/* User Management & Dedicated Edit */}
         <Route path="users" element={<UserManagementPage />} />
