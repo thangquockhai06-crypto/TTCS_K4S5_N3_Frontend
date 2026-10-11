@@ -27,6 +27,8 @@ import { CustomerMergePage } from '../pages/CustomerMergePage';
 import { UserImportPage } from '../pages/UserImportPage';
 import { Customer360Dashboard } from '../pages/Customer360Dashboard';
 import { StagnantCustomerList } from '../components/customer/StagnantCustomerList';
+import { LeadCapturePage } from '../pages/LeadCapturePage';
+import { PublicLeadFormPage } from '../pages/PublicLeadFormPage';
 
 interface IProtectedRouteProps {
   children: React.ReactElement;
@@ -88,7 +90,14 @@ export const AppRoutes: React.FC = () => {
         <Route path="custom-fields" element={<CustomFieldsPage />} />
         <Route path="audit-logs" element={<AuditLogsPage />} />
         <Route path="settings" element={<SettingsPage />} />
+
+        {/* Webform & Lead Capture (S4-01 & S4-02) */}
+        <Route path="leads/capture" element={<LeadCapturePage />} />
+        <Route path="webform" element={<Navigate to="/leads/capture" replace />} />
       </Route>
+
+      {/* Public Standalone Embed Form */}
+      <Route path="/embed/lead-form" element={<PublicLeadFormPage />} />
 
       {/* Error Pages */}
       <Route path="/forbidden" element={<ErrorPage code={403} />} />

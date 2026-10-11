@@ -1,0 +1,112 @@
+.modalContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.noticeBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background-color: rgba(37, 99, 235, 0.06);
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: var(--radius-md, 8px);
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  color: var(--color-primary, #2563EB);
+  line-height: 1.45;
+}
+
+:global([data-theme='dark']) .noticeBox {
+  background-color: rgba(37, 99, 235, 0.12);
+  border-color: rgba(37, 99, 235, 0.3);
+  color: #93C5FD;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 600px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-main, #0F172A);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+:global([data-theme='dark']) .fieldLabel {
+  color: #F8FAFC;
+}
+
+.requiredAsterisk {
+  color: #DC2626;
+  font-weight: 700;
+}
+
+.fieldError {
+  font-size: 0.74rem;
+  color: #DC2626;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--color-border, #CBD5E1);
+  background-color: var(--color-bg-card, #FFFFFF);
+  color: var(--color-text-main, #0F172A);
+  font-size: 0.86rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 72px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--color-primary, #2563EB);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+:global([data-theme='dark']) .textarea {
+  background-color: #1E293B;
+  border-color: #334155;
+  color: #F8FAFC;
+}
+
+.modalFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border-card, #E2E8F0);
+}
+
+:global([data-theme='dark']) .modalFooter {
+  border-top-color: #334155;
+}

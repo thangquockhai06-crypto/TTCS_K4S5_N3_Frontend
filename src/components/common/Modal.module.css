@@ -38,6 +38,10 @@
   max-width: 740px;
 }
 
+.modalContent--xl {
+  max-width: 1040px;
+}
+
 .modal__header {
   display: flex;
   align-items: flex-start;

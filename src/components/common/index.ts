@@ -12,3 +12,5 @@ export * from './SearchBar';
 export * from './StatCard';
 export * from './ErrorBoundary';
 export * from './PermissionGuard';
+export * from './CustomSelect';
+export * from './ConfirmModal';

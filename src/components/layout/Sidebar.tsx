@@ -6,6 +6,7 @@ import {
   FileText,
   FolderTree,
   GitCommit,
+  Globe,
   LayoutDashboard,
   Package,
   PanelLeftClose,
@@ -52,6 +53,13 @@ const ALL_MENU_ITEMS: ReadonlyArray<IMenuItem> = [
     path: '/customers/stagnant',
     icon: <Clock size={19} />,
     requiredPermission: 'manage_customers',
+  },
+  {
+    id: 'webform',
+    label: 'Biểu mẫu web (Webform)',
+    path: '/leads/capture',
+    icon: <Globe size={19} />,
+    requiredPermission: 'view_dashboard',
   },
   {
     id: 'users',
