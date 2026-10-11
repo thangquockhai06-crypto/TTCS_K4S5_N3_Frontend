@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import {
   Building2,
   Clock,
@@ -135,6 +135,24 @@ export const Sidebar: React.FC<ISidebarProps> = ({
 }) => {
   const { user, lastTokenRefresh } = useAuth();
   const { hasPermission } = useAuthorization();
+  const location = useLocation();
+
+  const isItemActive = (itemPath: string): boolean => {
+    if (itemPath === '/customers') {
+      // Khi người dùng đang ở Chăm sóc định kỳ (/customers/stagnant), không làm sáng Khách hàng Doanh nghiệp
+      if (location.pathname.startsWith('/customers/stagnant')) {
+        return false;
+      }
+      return location.pathname === '/customers' || location.pathname.startsWith('/customers/');
+    }
+    if (itemPath === '/customers/stagnant') {
+      return location.pathname.startsWith('/customers/stagnant');
+    }
+    if (itemPath === '/dashboard') {
+      return location.pathname === '/' || location.pathname === '/dashboard';
+    }
+    return location.pathname === itemPath || location.pathname.startsWith(itemPath + '/');
+  };
 
   const menuItems = React.useMemo(() => {
     return ALL_MENU_ITEMS.filter((item) => {
@@ -202,11 +220,9 @@ export const Sidebar: React.FC<ISidebarProps> = ({
                 <NavLink
                   to={item.path}
                   onClick={onCloseMobile}
-                  className={({ isActive }) =>
-                    `${styles.sidebar__link} ${
-                      isActive ? styles['sidebar__link--active'] : ''
-                    }`
-                  }
+                  className={`${styles.sidebar__link} ${
+                    isItemActive(item.path) ? styles['sidebar__link--active'] : ''
+                  }`}
                 >
                   <span className={styles.sidebar__linkIcon}>{item.icon}</span>
                   <span className={styles.sidebar__linkLabel}>{item.label}</span>

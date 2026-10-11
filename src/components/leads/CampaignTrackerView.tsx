@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   TrendingUp,
   DollarSign,
@@ -74,6 +74,29 @@ export const CampaignTrackerView: React.FC = () => {
 
   // Active sub-tab in detail tracker section: 'leads' | 'deals'
   const [detailTab, setDetailTab] = useState<'leads' | 'deals'>('leads');
+
+  // Pagination for Leads and Deals in detail section
+  const [leadsPage, setLeadsPage] = useState<number>(1);
+  const leadsPerPage = 4;
+  const totalLeadsPages = Math.max(1, Math.ceil(selectedCampaignLeads.length / leadsPerPage));
+  const pagedLeads = useMemo(() => {
+    const start = (leadsPage - 1) * leadsPerPage;
+    return selectedCampaignLeads.slice(start, start + leadsPerPage);
+  }, [selectedCampaignLeads, leadsPage]);
+
+  const [dealsPage, setDealsPage] = useState<number>(1);
+  const dealsPerPage = 4;
+  const totalDealsPages = Math.max(1, Math.ceil(selectedCampaignDeals.length / dealsPerPage));
+  const pagedDeals = useMemo(() => {
+    const start = (dealsPage - 1) * dealsPerPage;
+    return selectedCampaignDeals.slice(start, start + dealsPerPage);
+  }, [selectedCampaignDeals, dealsPage]);
+
+  // Reset pagination when campaign or tab changes
+  useEffect(() => {
+    setLeadsPage(1);
+    setDealsPage(1);
+  }, [selectedCampaignId, detailTab]);
 
   // Modal create campaign state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
@@ -406,115 +429,183 @@ export const CampaignTrackerView: React.FC = () => {
 
         {/* Tab Leads */}
         {detailTab === 'leads' && (
-          <div className={styles.tableWrapper}>
-            <table className={styles.customTable}>
-              <thead>
-                <tr>
-                  <th>Khách Hàng &amp; Doanh Nghiệp</th>
-                  <th>Email &amp; Điện Thoại</th>
-                  <th>Nhu Cầu Quan Tâm</th>
-                  <th>Nguồn Lead / Chiến Dịch</th>
-                  <th>Trạng Thái CRM</th>
-                  <th>Thời Gian Tiếp Nhận</th>
-                </tr>
-              </thead>
-              <tbody>
-                {selectedCampaignLeads.length === 0 ? (
+          <div style={{ border: '1px solid var(--color-border-card, #E2E8F0)', borderRadius: '12px', backgroundColor: 'var(--color-bg-card, #FFFFFF)', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)' }}>
+            <div className={styles.tableWrapper} style={{ border: 'none', borderRadius: 0, boxShadow: 'none' }}>
+              <table className={styles.customTable}>
+                <thead>
                   <tr>
-                    <td colSpan={6} style={{ textAlign: 'center', padding: '32px', color: 'var(--color-text-muted)' }}>
-                      Chưa có lead nào phát sinh từ chiến dịch này.
-                    </td>
+                    <th>Khách Hàng &amp; Doanh Nghiệp</th>
+                    <th>Email &amp; Điện Thoại</th>
+                    <th>Nhu Cầu Quan Tâm</th>
+                    <th>Nguồn Lead / Chiến Dịch</th>
+                    <th>Trạng Thái CRM</th>
+                    <th>Thời Gian Tiếp Nhận</th>
                   </tr>
-                ) : (
-                  selectedCampaignLeads.map((lead) => (
-                    <tr key={lead.id}>
-                      <td>
-                        <strong>{lead.fullName}</strong>
-                        <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>
-                          {lead.company || 'Doanh nghiệp chưa phân loại'}
-                        </div>
-                      </td>
-                      <td>
-                        <div style={{ fontSize: '0.8rem' }}>{lead.email}</div>
-                        <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>
-                          {lead.phone}
-                        </div>
-                      </td>
-                      <td>
-                        <div style={{ fontSize: '0.8rem', fontWeight: 500 }}>{lead.interest}</div>
-                      </td>
-                      <td>
-                        <Badge tone="primary">{lead.leadSource}</Badge>
-                      </td>
-                      <td>
-                        <Badge tone="success">{lead.status}</Badge>
-                      </td>
-                      <td style={{ fontSize: '0.76rem', color: 'var(--color-text-muted)' }}>
-                        {lead.submittedAt}
+                </thead>
+                <tbody>
+                  {selectedCampaignLeads.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} style={{ textAlign: 'center', padding: '32px', color: 'var(--color-text-muted)' }}>
+                        Chưa có lead nào phát sinh từ chiến dịch này.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    pagedLeads.map((lead) => (
+                      <tr key={lead.id}>
+                        <td>
+                          <strong>{lead.fullName}</strong>
+                          <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>
+                            {lead.company || 'Doanh nghiệp chưa phân loại'}
+                          </div>
+                        </td>
+                        <td>
+                          <div style={{ fontSize: '0.8rem' }}>{lead.email}</div>
+                          <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>
+                            {lead.phone}
+                          </div>
+                        </td>
+                        <td>
+                          <div style={{ fontSize: '0.8rem', fontWeight: 500 }}>{lead.interest}</div>
+                        </td>
+                        <td>
+                          <Badge tone="primary">{lead.leadSource}</Badge>
+                        </td>
+                        <td>
+                          <Badge tone="success">{lead.status}</Badge>
+                        </td>
+                        <td style={{ fontSize: '0.76rem', color: 'var(--color-text-muted)' }}>
+                          {lead.submittedAt}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Controls for Leads - OUTSIDE tableWrapper */}
+            {selectedCampaignLeads.length > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderTop: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)', flexWrap: 'wrap', gap: '8px' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                  Hiển thị {Math.min((leadsPage - 1) * leadsPerPage + 1, selectedCampaignLeads.length)} - {Math.min(leadsPage * leadsPerPage, selectedCampaignLeads.length)} trên tổng số {selectedCampaignLeads.length} lead
+                </span>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    disabled={leadsPage <= 1}
+                    onClick={() => setLeadsPage((p) => Math.max(1, p - 1))}
+                  >
+                    Trước
+                  </Button>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 600, padding: '0 8px', color: 'var(--color-text-main)' }}>
+                    Trang {leadsPage} / {totalLeadsPages}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    disabled={leadsPage >= totalLeadsPages}
+                    onClick={() => setLeadsPage((p) => Math.min(totalLeadsPages, p + 1))}
+                  >
+                    Sau
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {/* Tab Deals */}
         {detailTab === 'deals' && (
-          <div className={styles.tableWrapper}>
-            <table className={styles.customTable}>
-              <thead>
-                <tr>
-                  <th>Tên Cơ Hội / Hợp Đồng</th>
-                  <th>Khách Hàng &amp; Doanh Nghiệp</th>
-                  <th style={{ textAlign: 'right' }}>Giá Trị Deal</th>
-                  <th style={{ textAlign: 'center' }}>Xác Suất</th>
-                  <th style={{ textAlign: 'center' }}>Giai Đoạn</th>
-                  <th>Ngày Đóng Dự Kiến</th>
-                </tr>
-              </thead>
-              <tbody>
-                {selectedCampaignDeals.length === 0 ? (
+          <div style={{ border: '1px solid var(--color-border-card, #E2E8F0)', borderRadius: '12px', backgroundColor: 'var(--color-bg-card, #FFFFFF)', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)' }}>
+            <div className={styles.tableWrapper} style={{ border: 'none', borderRadius: 0, boxShadow: 'none' }}>
+              <table className={styles.customTable}>
+                <thead>
                   <tr>
-                    <td colSpan={6} style={{ textAlign: 'center', padding: '32px', color: 'var(--color-text-muted)' }}>
-                      Chưa có cơ hội kinh doanh (deal) nào được tạo từ chiến dịch này.
-                    </td>
+                    <th>Tên Cơ Hội / Hợp Đồng</th>
+                    <th>Khách Hàng &amp; Doanh Nghiệp</th>
+                    <th style={{ textAlign: 'right' }}>Giá Trị Deal</th>
+                    <th style={{ textAlign: 'center' }}>Xác Suất</th>
+                    <th style={{ textAlign: 'center' }}>Giai Đoạn</th>
+                    <th>Ngày Đóng Dự Kiến</th>
                   </tr>
-                ) : (
-                  selectedCampaignDeals.map((deal) => (
-                    <tr key={deal.id}>
-                      <td>
-                        <strong style={{ fontSize: '0.85rem' }}>{deal.title}</strong>
-                        <div style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>
-                          Phụ trách: {deal.ownerName}
-                        </div>
-                      </td>
-                      <td>
-                        <div>{deal.customerName}</div>
-                        <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>
-                          {deal.company}
-                        </div>
-                      </td>
-                      <td style={{ textAlign: 'right', fontWeight: 700, color: deal.stage === 'Won' ? '#16A34A' : 'var(--color-text-main)' }}>
-                        {formatCurrency(deal.value)}
-                      </td>
-                      <td style={{ textAlign: 'center', fontWeight: 600 }}>
-                        {deal.probability}%
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <Badge tone={deal.stage === 'Won' ? 'success' : deal.stage === 'Negotiation' ? 'warning' : 'primary'}>
-                          {deal.stage === 'Won' ? 'Đã Chốt (Won)' : deal.stage === 'Negotiation' ? 'Đàm Phán' : deal.stage === 'Contacted' ? 'Đã Liên Hệ' : 'Mới'}
-                        </Badge>
-                      </td>
-                      <td style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
-                        {deal.expectedCloseDate}
+                </thead>
+                <tbody>
+                  {selectedCampaignDeals.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} style={{ textAlign: 'center', padding: '32px', color: 'var(--color-text-muted)' }}>
+                        Chưa có cơ hội kinh doanh (deal) nào được tạo từ chiến dịch này.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    pagedDeals.map((deal) => (
+                      <tr key={deal.id}>
+                        <td>
+                          <strong style={{ fontSize: '0.85rem' }}>{deal.title}</strong>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>
+                            Phụ trách: {deal.ownerName}
+                          </div>
+                        </td>
+                        <td>
+                          <div>{deal.customerName}</div>
+                          <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>
+                            {deal.company}
+                          </div>
+                        </td>
+                        <td style={{ textAlign: 'right', fontWeight: 700, color: deal.stage === 'Won' ? '#16A34A' : 'var(--color-text-main)' }}>
+                          {formatCurrency(deal.value)}
+                        </td>
+                        <td style={{ textAlign: 'center', fontWeight: 600 }}>
+                          {deal.probability}%
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <Badge tone={deal.stage === 'Won' ? 'success' : deal.stage === 'Negotiation' ? 'warning' : 'primary'}>
+                            {deal.stage === 'Won' ? 'Đã Chốt (Won)' : deal.stage === 'Negotiation' ? 'Đàm Phán' : deal.stage === 'Contacted' ? 'Đã Liên Hệ' : 'Mới'}
+                          </Badge>
+                        </td>
+                        <td style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
+                          {deal.expectedCloseDate}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Controls for Deals - OUTSIDE tableWrapper */}
+            {selectedCampaignDeals.length > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderTop: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)', flexWrap: 'wrap', gap: '8px' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                  Hiển thị {Math.min((dealsPage - 1) * dealsPerPage + 1, selectedCampaignDeals.length)} - {Math.min(dealsPage * dealsPerPage, selectedCampaignDeals.length)} trên tổng số {selectedCampaignDeals.length} cơ hội
+                </span>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    disabled={dealsPage <= 1}
+                    onClick={() => setDealsPage((p) => Math.max(1, p - 1))}
+                  >
+                    Trước
+                  </Button>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 600, padding: '0 8px', color: 'var(--color-text-main)' }}>
+                    Trang {dealsPage} / {totalDealsPages}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    disabled={dealsPage >= totalDealsPages}
+                    onClick={() => setDealsPage((p) => Math.min(totalDealsPages, p + 1))}
+                  >
+                    Sau
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

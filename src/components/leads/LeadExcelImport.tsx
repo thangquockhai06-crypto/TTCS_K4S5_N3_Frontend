@@ -7,7 +7,6 @@ import {
   CheckCircle,
   Trash2,
   Layers,
-  Sparkles,
   RefreshCw,
 } from 'lucide-react';
 import { Button, Modal, Badge, Input } from '../common';
@@ -142,41 +141,6 @@ export const LeadExcelImport: React.FC<ILeadExcelImportProps> = ({
     showToast('Đã tải xuống tệp mẫu danh_sach_lead_mau.csv thành công!', 'success');
   };
 
-  // Quick load 2 sample leads for instant verification
-  const handleQuickLoadSampleData = (): void => {
-    const parsedRows: IExcelLeadRow[] = [
-      {
-        rowNumber: 1,
-        fullName: 'Đặng Tuấn Anh',
-        role: 'Giám đốc Vận hành',
-        company: 'Công ty TNHH Vận Tải An Nam',
-        email: 'tuananh.dang@annamlogistics.vn',
-        phone: '0934567890',
-        leadSource: defaultSourceInput.trim() || 'Hội thảo Logistics Tech 2026',
-        interest: 'enterprise_pricing',
-        notes: 'Gặp tại sự kiện sáng 10/10',
-        isValid: true,
-        errors: [],
-      },
-      {
-        rowNumber: 2,
-        fullName: 'Ngô Mỹ Duyên',
-        role: 'Trưởng phòng Kinh doanh',
-        company: 'Tập đoàn Bất động sản Địa Ốc Xanh',
-        email: 'duyen.ngo@diaocxanh.vn',
-        phone: '0987654321',
-        leadSource: defaultSourceInput.trim() || 'Triển lãm VietBuild 2026',
-        interest: 'crm_consultation',
-        notes: 'Quan tâm quản lý giỏ hàng và khách hàng tiềm năng',
-        isValid: true,
-        errors: [],
-      },
-    ];
-    setRows(parsedRows);
-    setUploadedFileName('du_lieu_mau_kiem_thu.csv');
-    showToast('Đã nạp 2 dòng lead mẫu kiểm thử vào bảng xem trước!', 'success');
-  };
-
   // Parse CSV text
   const parseCSVContent = (content: string, fileName: string): void => {
     const lines = content
@@ -222,7 +186,6 @@ export const LeadExcelImport: React.FC<ILeadExcelImportProps> = ({
 
     setRows(parsedRows);
     setUploadedFileName(fileName);
-    showToast(`Đã tải lên và phân tích ${parsedRows.length} dòng dữ liệu từ "${fileName}".`, 'info');
   };
 
   // Handle file input change
@@ -299,7 +262,6 @@ export const LeadExcelImport: React.FC<ILeadExcelImportProps> = ({
   const handleDeleteRow = (index: number): void => {
     const updated = rows.filter((_, i) => i !== index);
     setRows(updated);
-    showToast('Đã xóa 1 dòng khỏi bảng xem trước.', 'info');
   };
 
   // Reset to Step 1
@@ -475,27 +437,6 @@ export const LeadExcelImport: React.FC<ILeadExcelImportProps> = ({
                   }}
                 >
                   Chọn Tệp Từ Thiết Bị
-                </Button>
-              </div>
-
-              {/* Quick Test Card for Instant Verification */}
-              <div className={styles.quickTestCard}>
-                <div>
-                  <strong style={{ fontSize: '0.82rem', color: 'var(--color-text-main)' }}>
-                    Chưa có sẵn tệp kiểm thử?
-                  </strong>
-                  <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>
-                    Nạp ngay 2 dòng dữ liệu mẫu chuẩn để kiểm tra chức năng trực tiếp.
-                  </div>
-                </div>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  leftIcon={<Sparkles size={14} color="#F59E0B" />}
-                  onClick={handleQuickLoadSampleData}
-                >
-                  Nạp Thử 2 Lead Mẫu
                 </Button>
               </div>
             </div>

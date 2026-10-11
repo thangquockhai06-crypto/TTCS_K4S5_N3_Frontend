@@ -60,8 +60,8 @@ export const StagnantCustomerList: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+        <div style={{ flex: 1, minWidth: '320px', marginRight: 16 }}>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
             Danh Sách Cần Chăm Sóc Định Kỳ
           </h1>
@@ -72,8 +72,8 @@ export const StagnantCustomerList: React.FC = () => {
         </div>
 
         {/* Filter threshold dropdown */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#475569' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, marginTop: 4 }}>
+          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>
             Thời gian không tương tác:
           </span>
           <select

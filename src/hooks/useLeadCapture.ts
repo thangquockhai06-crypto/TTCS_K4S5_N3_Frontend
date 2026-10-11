@@ -311,7 +311,7 @@ export function useLeadCapture() {
             ownerName: 'Đội ngũ Marketing & Tiếp nhận Lead',
             tags: [`Nguồn: ${dto.leadSource.trim()}`, 'Nhập Excel / CSV', 'Trạng thái Mới'],
             summary: `Lead nhập hàng loạt từ tệp Excel/CSV hội thảo. Nguồn: ${dto.leadSource}. Chức danh: ${dto.role || 'N/A'}.${dto.notes ? ` Ghi chú: ${dto.notes}` : ''}`,
-          });
+          }, true);
 
           addCustomerActivity(
             createdCustomer.id,

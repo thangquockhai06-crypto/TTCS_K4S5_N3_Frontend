@@ -20,7 +20,7 @@ export interface ICRMDataContext {
   deals: IDeal[];
   notifications: INotificationItem[];
   appearance: IAppearanceSettings;
-  addCustomer: (dto: CreateCustomerDTO) => ICustomer;
+  addCustomer: (dto: CreateCustomerDTO, silent?: boolean) => ICustomer;
   updateCustomerStatus: (customerId: string, status: ICustomer['status']) => void;
   addCustomerNote: (customerId: string, content: string, authorName: string) => void;
   addCustomerActivity: (
@@ -61,7 +61,7 @@ export const CRMDataProvider: React.FC<ICRMDataProviderProps> = ({ children }) =
     document.documentElement.style.setProperty('--color-primary', appearance.accentColor);
   }, [appearance]);
 
-  const addCustomer = useCallback((dto: CreateCustomerDTO): ICustomer => {
+  const addCustomer = useCallback((dto: CreateCustomerDTO, silent: boolean = false): ICustomer => {
     const newId = `cust-${String(Date.now()).slice(-4)}`;
     const ownerName = dto.ownerName || 'Quản Trị Viên Hệ Thống';
     const newCustomer: ICustomer = {
@@ -116,7 +116,9 @@ export const CRMDataProvider: React.FC<ICRMDataProviderProps> = ({ children }) =
     };
 
     setCustomers((prev) => [newCustomer, ...prev]);
-    showGlobalToast(`Đã thêm mới khách hàng "${dto.company}" (${dto.fullName}) thành công!`, 'success');
+    if (!silent) {
+      showGlobalToast(`Đã thêm mới khách hàng "${dto.company}" (${dto.fullName}) thành công!`, 'success');
+    }
     return newCustomer;
   }, []);
 

@@ -219,21 +219,6 @@
   margin: 0;
 }
 
-.quickTestCard {
-  background-color: var(--color-bg-card, #FFFFFF);
-  border: 1.5px dashed var(--color-border, #CBD5E1);
-  border-radius: var(--radius-md, 12px);
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-:global([data-theme='dark']) .quickTestCard {
-  background-color: #1E293B;
-  border-color: #334155;
-}
 
 /* KPI Summary Cards in Preview View */
 .kpiSummaryGrid {

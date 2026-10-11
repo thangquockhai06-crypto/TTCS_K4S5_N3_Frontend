@@ -66,7 +66,10 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const id = `toast-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
       const newToast: IToastItem = { id, type, title, message, duration };
 
-      setToasts((prev) => [...prev, newToast]);
+      setToasts((prev) => {
+        const next = [...prev, newToast];
+        return next.length > 3 ? next.slice(next.length - 3) : next;
+      });
 
       if (duration > 0) {
         window.setTimeout(() => {
@@ -253,13 +256,13 @@ const ToastContainer: React.FC<{
       })}
       <style>{`
         @keyframes nexusToastSlideIn {
-          from {
+          0% {
             opacity: 0;
-            transform: translateX(30px) scale(0.96);
+            transform: translateY(16px) scale(0.96);
           }
-          to {
+          100% {
             opacity: 1;
-            transform: translateX(0) scale(1);
+            transform: translateY(0) scale(1);
           }
         }
       `}</style>

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Globe,
@@ -388,6 +388,19 @@ export const LeadCapturePage: React.FC = () => {
     if (submissionFilterScope === 'all') return submissions;
     return currentFormSubmissions;
   }, [submissionFilterScope, submissions, currentFormSubmissions]);
+
+  // Pagination for Submissions tab
+  const [submissionsPage, setSubmissionsPage] = useState<number>(1);
+  const submissionsPerPage = 5;
+  const totalSubmissionsPages = Math.max(1, Math.ceil(displayedSubmissions.length / submissionsPerPage));
+  const pagedSubmissions = useMemo(() => {
+    const start = (submissionsPage - 1) * submissionsPerPage;
+    return displayedSubmissions.slice(start, start + submissionsPerPage);
+  }, [displayedSubmissions, submissionsPage, submissionsPerPage]);
+
+  useEffect(() => {
+    setSubmissionsPage(1);
+  }, [selectedForm?.id, submissionFilterScope]);
 
   // Create Web Form Handler
   const handleCreateForm = (e: React.FormEvent<HTMLFormElement>): void => {
@@ -1106,95 +1119,96 @@ export const LeadCapturePage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className={styles.tableWrapper}>
-                  <table className={styles.customTable}>
-                    <thead>
-                      <tr>
-                        <th style={{ width: '22%' }}>Khách Hàng &amp; Doanh Nghiệp</th>
-                        <th style={{ width: '22%' }}>Email &amp; Điện Thoại</th>
-                        <th style={{ width: '22%' }}>Nhu Cầu &amp; Nguồn Lead</th>
-                        <th style={{ width: '13%' }}>Trạng Thái CRM</th>
-                        <th style={{ width: '11%' }}>Thời Gian</th>
-                        <th style={{ width: '10%', textAlign: 'center' }}>Thao Tác</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {displayedSubmissions.length === 0 ? (
-                        <tr>
-                          <td colSpan={6} style={{ textAlign: 'center', padding: '42px 20px', color: 'var(--color-text-muted)' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                              <Clock size={30} style={{ opacity: 0.35, color: 'var(--color-primary)' }} />
-                              <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--color-text-main)' }}>
-                                Biểu mẫu &quot;{selectedForm.title}&quot; chưa có lượt gửi nào
-                              </div>
-                              <div style={{ fontSize: '0.78rem', maxWidth: '440px', lineHeight: 1.5 }}>
-                                Dữ liệu mỗi biểu mẫu được phân tách độc lập để đảm bảo không bị đè thông tin lên nhau. Bạn có thể nạp lead mới bằng cách gửi form nhúng, nạp Excel hoặc tạo card visit.
-                              </div>
-                              <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                                <Button
-                                  type="button"
-                                  variant="primary"
-                                  size="sm"
-                                  leftIcon={<FileSpreadsheet size={13} />}
-                                  onClick={() => setIsExcelImportOpen(true)}
-                                >
-                                  Nhập Excel Cho Biểu Mẫu Này
-                                </Button>
-                                <Button
-                                  type="button"
-                                  variant="secondary"
-                                  size="sm"
-                                  leftIcon={<CreditCard size={13} />}
-                                  onClick={() => setIsCreateLeadModalOpen(true)}
-                                >
-                                  + Thêm Card Visit
-                                </Button>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      ) : (
-                        displayedSubmissions.map((sub) => (
-                          <tr key={sub.id}>
-                            <td>
-                              <div>
-                                <strong style={{ color: 'var(--color-text-main)', fontSize: '0.84rem' }}>{sub.fullName}</strong>
-                                <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>
-                                  {sub.company || 'Doanh nghiệp chưa phân loại'}
+                  <div style={{ border: '1px solid var(--color-border-card, #E2E8F0)', borderRadius: 'var(--radius-md, 8px)', backgroundColor: 'var(--color-bg-card, #FFFFFF)', overflow: 'hidden' }}>
+                    <div className={styles.tableWrapper} style={{ border: 'none', borderRadius: 0, boxShadow: 'none' }}>
+                      <table className={styles.customTable}>
+                        <thead>
+                          <tr>
+                            <th style={{ width: '22%' }}>Khách Hàng &amp; Doanh Nghiệp</th>
+                            <th style={{ width: '22%' }}>Email &amp; Điện Thoại</th>
+                            <th style={{ width: '22%' }}>Nhu Cầu &amp; Nguồn Lead</th>
+                            <th style={{ width: '13%' }}>Trạng Thái CRM</th>
+                            <th style={{ width: '11%' }}>Thời Gian</th>
+                            <th style={{ width: '10%', textAlign: 'center' }}>Thao Tác</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {displayedSubmissions.length === 0 ? (
+                            <tr>
+                              <td colSpan={6} style={{ textAlign: 'center', padding: '42px 20px', color: 'var(--color-text-muted)' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                                  <Clock size={30} style={{ opacity: 0.35, color: 'var(--color-primary)' }} />
+                                  <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--color-text-main)' }}>
+                                    Biểu mẫu &quot;{selectedForm.title}&quot; chưa có lượt gửi nào
+                                  </div>
+                                  <div style={{ fontSize: '0.78rem', maxWidth: '440px', lineHeight: 1.5 }}>
+                                    Dữ liệu mỗi biểu mẫu được phân tách độc lập để đảm bảo không bị đè thông tin lên nhau. Bạn có thể nạp lead mới bằng cách gửi form nhúng, nạp Excel hoặc tạo card visit.
+                                  </div>
+                                  <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                                    <Button
+                                      type="button"
+                                      variant="primary"
+                                      size="sm"
+                                      leftIcon={<FileSpreadsheet size={13} />}
+                                      onClick={() => setIsExcelImportOpen(true)}
+                                    >
+                                      Nhập Excel Cho Biểu Mẫu Này
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="secondary"
+                                      size="sm"
+                                      leftIcon={<CreditCard size={13} />}
+                                      onClick={() => setIsCreateLeadModalOpen(true)}
+                                    >
+                                      + Thêm Card Visit
+                                    </Button>
+                                  </div>
                                 </div>
-                              </div>
-                            </td>
-                            <td>
-                              <div>
-                                <div style={{ color: 'var(--color-text-main)', fontSize: '0.81rem' }}>{sub.email}</div>
-                                <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>{sub.phone}</div>
-                              </div>
-                            </td>
-                            <td>
-                              <div>
-                                <div style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--color-text-main)' }}>
-                                  {interestLabelMap[sub.interest] || sub.interest}
-                                </div>
-                                <div style={{ marginTop: '2px' }}>
-                                  <span
-                                    style={{
-                                      padding: '2px 6px',
-                                      borderRadius: '4px',
-                                      backgroundColor: 'rgba(37, 99, 235, 0.08)',
-                                      color: 'var(--color-primary)',
-                                      fontSize: '0.72rem',
-                                      fontWeight: 600,
-                                    }}
-                                  >
-                                    {sub.leadSource}
-                                  </span>
-                                </div>
-                              </div>
-                            </td>
-                            <td>
-                              {sub.isSpamBlocked ? (
-                                <Badge tone="danger">Từ chối (Spam)</Badge>
-                              ) : (
+                              </td>
+                            </tr>
+                          ) : (
+                            pagedSubmissions.map((sub) => (
+                              <tr key={sub.id}>
+                                <td>
+                                  <div>
+                                    <strong style={{ color: 'var(--color-text-main)', fontSize: '0.84rem' }}>{sub.fullName}</strong>
+                                    <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>
+                                      {sub.company || 'Doanh nghiệp chưa phân loại'}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td>
+                                  <div>
+                                    <div style={{ color: 'var(--color-text-main)', fontSize: '0.81rem' }}>{sub.email}</div>
+                                    <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>{sub.phone}</div>
+                                  </div>
+                                </td>
+                                <td>
+                                  <div>
+                                    <div style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--color-text-main)' }}>
+                                      {interestLabelMap[sub.interest] || sub.interest}
+                                    </div>
+                                    <div style={{ marginTop: '2px' }}>
+                                      <span
+                                        style={{
+                                          padding: '2px 6px',
+                                          borderRadius: '4px',
+                                          backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                                          color: 'var(--color-primary)',
+                                          fontSize: '0.72rem',
+                                          fontWeight: 600,
+                                        }}
+                                      >
+                                        {sub.leadSource}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td>
+                                  {sub.isSpamBlocked ? (
+                                    <Badge tone="danger">Từ chối (Spam)</Badge>
+                                  ) : (
                                 <div>
                                   <Badge tone="primary">Mới (New Lead)</Badge>
                                   <div
@@ -1246,6 +1260,50 @@ export const LeadCapturePage: React.FC = () => {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Pagination Controls for Submissions - OUTSIDE tableWrapper */}
+                {displayedSubmissions.length > 0 && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '12px 16px',
+                      borderTop: '1px solid var(--color-border)',
+                      backgroundColor: 'var(--color-bg-card)',
+                      flexWrap: 'wrap',
+                      gap: '8px',
+                    }}
+                  >
+                    <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                      Hiển thị {Math.min((submissionsPage - 1) * submissionsPerPage + 1, displayedSubmissions.length)} - {Math.min(submissionsPage * submissionsPerPage, displayedSubmissions.length)} trên tổng số {displayedSubmissions.length} lượt gửi
+                    </span>
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        disabled={submissionsPage <= 1}
+                        onClick={() => setSubmissionsPage((p) => Math.max(1, p - 1))}
+                      >
+                        Trước
+                      </Button>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 600, padding: '0 8px', color: 'var(--color-text-main)' }}>
+                        Trang {submissionsPage} / {totalSubmissionsPages}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        disabled={submissionsPage >= totalSubmissionsPages}
+                        onClick={() => setSubmissionsPage((p) => Math.min(totalSubmissionsPages, p + 1))}
+                      >
+                        Sau
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
               </div>
             )}
           </div>
