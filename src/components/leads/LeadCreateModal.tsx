@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CreditCard, Info } from 'lucide-react';
 import { Button, Input, Modal } from '../common';
 import { CustomSelect, ICustomSelectOption } from '../common/CustomSelect';
 import { useLeadCapture } from '../../hooks/useLeadCapture';
+import { useLeadDeduplication } from '../../hooks/useLeadDeduplication';
 import {
   ICreateManualLeadDTO,
   LeadInterestType,
 } from '../../interfaces/lead-capture.interface';
+import { IDuplicateCheckResult } from '../../interfaces/lead-deduplication.interface';
+import { LeadDeduplicationBanner } from './LeadDeduplicationBanner';
 import styles from './LeadCreateModal.module.css';
 
 export interface ILeadCreateModalProps {
@@ -41,6 +44,7 @@ export const LeadCreateModal: React.FC<ILeadCreateModalProps> = ({
   formId,
 }) => {
   const { createManualLead } = useLeadCapture();
+  const { checkDuplicateRealtime, linkLeadToExistingCustomer } = useLeadDeduplication();
 
   // Form states
   const [fullName, setFullName] = useState<string>('');
@@ -52,6 +56,31 @@ export const LeadCreateModal: React.FC<ILeadCreateModalProps> = ({
   const [customSource, setCustomSource] = useState<string>('');
   const [interest, setInterest] = useState<LeadInterestType>('crm_consultation');
   const [notes, setNotes] = useState<string>('');
+
+  // Duplicate warning state
+  const [duplicateCheck, setDuplicateCheck] = useState<IDuplicateCheckResult>({
+    hasDuplicate: false,
+    matches: [],
+    suggestedAction: 'create_new',
+  });
+
+  // Real-time duplicate detection when email, phone, or company changes
+  useEffect(() => {
+    if (phone.trim().length >= 3 || email.trim().length >= 4 || company.trim().length >= 3) {
+      const result = checkDuplicateRealtime({
+        email: email.trim(),
+        phone: phone.trim(),
+        company: company.trim(),
+      });
+      setDuplicateCheck(result);
+    } else {
+      setDuplicateCheck({
+        hasDuplicate: false,
+        matches: [],
+        suggestedAction: 'create_new',
+      });
+    }
+  }, [phone, email, company, checkDuplicateRealtime]);
 
   // Validation error states (real-time error message directly under input)
   const [fullNameError, setFullNameError] = useState<string | null>(null);
@@ -159,6 +188,7 @@ export const LeadCreateModal: React.FC<ILeadCreateModalProps> = ({
     setEmailError(null);
     setPhoneError(null);
     setSourceError(null);
+    setDuplicateCheck({ hasDuplicate: false, matches: [], suggestedAction: 'create_new' });
   };
 
   const handleClose = (): void => {
@@ -242,6 +272,35 @@ export const LeadCreateModal: React.FC<ILeadCreateModalProps> = ({
             <strong>Quy định hệ thống:</strong> Mọi lead nhập vào đều bắt buộc phải có nguồn rõ ràng để phân loại và theo dõi hành trình chuyển đổi trong CRM.
           </span>
         </div>
+
+        {/* Real-time duplicate warning banner */}
+        <LeadDeduplicationBanner
+          checkResult={duplicateCheck}
+          onLinkToCustomer={() => {
+            if (duplicateCheck.matchedCustomer) {
+              const now = new Date();
+              const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+              linkLeadToExistingCustomer(
+                {
+                  id: `sub-direct-${Date.now()}`,
+                  formId: formId || 'manual-entry',
+                  fullName: fullName.trim() || duplicateCheck.matchedCustomer.fullName,
+                  email: email.trim() || duplicateCheck.matchedCustomer.email,
+                  phone: phone.trim() || duplicateCheck.matchedCustomer.phone,
+                  company: company.trim() || duplicateCheck.matchedCustomer.company,
+                  interest,
+                  leadSource: getEffectiveSource(),
+                  status: 'New Lead',
+                  ipAddress: 'Nhập thủ công (Card Visit)',
+                  submittedAt: dateStr,
+                  isSpamBlocked: false,
+                },
+                duplicateCheck.matchedCustomer
+              );
+              handleClose();
+            }
+          }}
+        />
 
         <div className={styles.formGrid}>
           {/* Họ và tên */}

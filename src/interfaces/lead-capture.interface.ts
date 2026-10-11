@@ -82,6 +82,12 @@ export interface ILeadSubmission {
   ipAddress: string;
   submittedAt: string;
   customerId?: string;
+  campaignId?: string;
+  campaignName?: string;
+  notes?: string;
+  history?: string[];
+  isMerged?: boolean;
+  mergedIntoId?: string;
   isSpamBlocked: boolean;
   blockReason?: string;
 }
@@ -117,6 +123,7 @@ export interface ICreateManualLeadDTO {
   leadSource: string; // Bắt buộc: Mọi lead nhập vào đều bắt buộc có nguồn
   interest: LeadInterestType;
   notes?: string;
+  campaignId?: string;
 }
 
 export interface IExcelLeadRow {

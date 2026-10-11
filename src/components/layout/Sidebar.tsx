@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Sliders,
   Target,
+  TrendingUp,
   UserCheck,
   Users,
   X,
@@ -59,6 +60,13 @@ const ALL_MENU_ITEMS: ReadonlyArray<IMenuItem> = [
     label: 'Biểu mẫu web (Webform)',
     path: '/leads/capture',
     icon: <Globe size={19} />,
+    requiredPermission: 'view_dashboard',
+  },
+  {
+    id: 'campaigns',
+    label: 'Chiến dịch Tiếp thị',
+    path: '/campaigns',
+    icon: <TrendingUp size={19} />,
     requiredPermission: 'view_dashboard',
   },
   {

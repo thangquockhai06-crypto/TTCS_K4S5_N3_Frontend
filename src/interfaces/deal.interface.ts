@@ -18,6 +18,8 @@ export interface IDeal {
   ownerAvatar: string;
   tags: string[];
   daysInStage: number;
+  campaignId?: string;
+  campaignName?: string;
 }
 
 export interface IDealStageColumn {

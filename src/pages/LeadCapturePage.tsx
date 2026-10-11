@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Globe,
   FileText,
@@ -13,11 +14,14 @@ import {
   FileSpreadsheet,
   Clock,
   Search,
+  GitMerge,
+  TrendingUp,
 } from 'lucide-react';
 import {
   EmbedCodeGenerator,
   LeadCreateModal,
   LeadExcelImport,
+  LeadDeduplicationView,
 } from '../components/leads';
 import { useLeadCapture } from '../hooks/useLeadCapture';
 import { Badge } from '../components/common/Badge';
@@ -86,6 +90,7 @@ export const AVAILABLE_FORM_FIELDS: IAvailableFieldItem[] = [
 ];
 
 export const LeadCapturePage: React.FC = () => {
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const {
     forms,
@@ -114,6 +119,7 @@ export const LeadCapturePage: React.FC = () => {
   const [isGuideModalOpen, setIsGuideModalOpen] = useState<boolean>(false);
   const [isCreateFormModalOpen, setIsCreateFormModalOpen] = useState<boolean>(false);
   const [isEditFormModalOpen, setIsEditFormModalOpen] = useState<boolean>(false);
+  const [isDeduplicationModalOpen, setIsDeduplicationModalOpen] = useState<boolean>(false);
 
   // New form state (matching Image 4)
   const [newFormTitle, setNewFormTitle] = useState<string>('Thu thập khách hàng tiềm năng Q2');
@@ -467,6 +473,24 @@ export const LeadCapturePage: React.FC = () => {
           </div>
 
           <div className={styles.actionBtnGroup}>
+            <Button
+              type="button"
+              variant="secondary"
+              size="md"
+              leftIcon={<TrendingUp size={16} />}
+              onClick={() => navigate('/campaigns')}
+            >
+              Theo Dõi Chiến Dịch
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="md"
+              leftIcon={<GitMerge size={16} />}
+              onClick={() => setIsDeduplicationModalOpen(true)}
+            >
+              Gộp Lead Trùng
+            </Button>
             <Button
               type="button"
               variant="secondary"
@@ -1005,7 +1029,16 @@ export const LeadCapturePage: React.FC = () => {
                     </span>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '8px' }}>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      leftIcon={<GitMerge size={14} />}
+                      onClick={() => setIsDeduplicationModalOpen(true)}
+                    >
+                      Quét &amp; Gộp Lead Trùng
+                    </Button>
                     <Button
                       type="button"
                       variant="secondary"
@@ -1233,6 +1266,17 @@ export const LeadCapturePage: React.FC = () => {
         currentFormId={selectedForm?.id}
         forms={forms}
       />
+
+      {/* Lead Deduplication & Merge Modal (S4-04) */}
+      <Modal
+        isOpen={isDeduplicationModalOpen}
+        onClose={() => setIsDeduplicationModalOpen(false)}
+        title="Quét &amp; Gộp Lead Trùng Lặp"
+        subtitle="Phát hiện và xử lý trùng lặp theo Số điện thoại, Email hoặc Tên công ty"
+        maxWidth="xl"
+      >
+        <LeadDeduplicationView />
+      </Modal>
 
       {/* Edit Lead Modal */}
       {editingSub && (

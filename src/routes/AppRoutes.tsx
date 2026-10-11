@@ -29,6 +29,7 @@ import { Customer360Dashboard } from '../pages/Customer360Dashboard';
 import { StagnantCustomerList } from '../components/customer/StagnantCustomerList';
 import { LeadCapturePage } from '../pages/LeadCapturePage';
 import { PublicLeadFormPage } from '../pages/PublicLeadFormPage';
+import { CampaignsPage } from '../pages/CampaignsPage';
 
 interface IProtectedRouteProps {
   children: React.ReactElement;
@@ -94,6 +95,9 @@ export const AppRoutes: React.FC = () => {
         {/* Webform & Lead Capture (S4-01 & S4-02) */}
         <Route path="leads/capture" element={<LeadCapturePage />} />
         <Route path="webform" element={<Navigate to="/leads/capture" replace />} />
+
+        {/* Marketing Campaign Tracking (S4-03) */}
+        <Route path="campaigns" element={<CampaignsPage />} />
       </Route>
 
       {/* Public Standalone Embed Form */}

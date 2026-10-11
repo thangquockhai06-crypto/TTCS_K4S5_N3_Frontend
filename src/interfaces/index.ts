@@ -9,3 +9,5 @@ export * from './userManagement.interface';
 export * from './menu.interface';
 export * from './sprint2.interface';
 export * from './lead-capture.interface';
+export * from './campaign.interface';
+export * from './lead-deduplication.interface';
