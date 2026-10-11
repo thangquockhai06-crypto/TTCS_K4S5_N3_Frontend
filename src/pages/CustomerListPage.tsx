@@ -198,7 +198,7 @@ export const CustomerListPage: React.FC = () => {
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <div className={styles.pageHeader__actions}>
           <Button
             variant="secondary"
             leftIcon={<Clock size={16} />}

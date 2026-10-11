@@ -6,9 +6,10 @@
 
 .pageHeader {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
+  flex-wrap: wrap;
 }
 
 .pageHeader__title {
@@ -16,10 +17,30 @@
   font-weight: 800;
 }
 
+@media (min-width: 900px) {
+  .pageHeader__title {
+    white-space: nowrap;
+  }
+}
+
 .pageHeader__subtitle {
   font-size: 0.875rem;
   color: var(--color-text-secondary);
   margin-top: 4px;
+}
+
+.pageHeader__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .pageHeader__actions {
+    flex-wrap: wrap;
+  }
 }
 
 .toolbarCard {

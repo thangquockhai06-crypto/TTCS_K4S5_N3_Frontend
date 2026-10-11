@@ -50,8 +50,9 @@ export const CustomerImportPage: React.FC = () => {
     try {
       const preview = await customerService.previewExcelImport(file);
       setPreviewData(preview);
-    } catch (err: any) {
-      const msg = err.response?.data?.detail || err.message || 'Lỗi khi đọc file Excel';
+    } catch (err: unknown) {
+      const errObj = err as { response?: { data?: { detail?: string } }; message?: string };
+      const msg = errObj.response?.data?.detail || errObj.message || 'Lỗi khi đọc file Excel';
       setErrorMessage(typeof msg === 'string' ? msg : JSON.stringify(msg));
     } finally {
       setIsLoadingPreview(false);
@@ -69,8 +70,9 @@ export const CustomerImportPage: React.FC = () => {
       setImportResult(result);
       const msg = `Đã nhập thành công ${result.importedRows || 0} khách hàng từ Excel!`;
       showGlobalToast(msg, 'success');
-    } catch (err: any) {
-      const msg = err.response?.data?.detail || err.message || 'Lỗi khi nhập dữ liệu từ Excel';
+    } catch (err: unknown) {
+      const errObj = err as { response?: { data?: { detail?: string } }; message?: string };
+      const msg = errObj.response?.data?.detail || errObj.message || 'Lỗi khi nhập dữ liệu từ Excel';
       const text = typeof msg === 'string' ? msg : JSON.stringify(msg);
       setErrorMessage(text);
       showGlobalToast(text, 'error');

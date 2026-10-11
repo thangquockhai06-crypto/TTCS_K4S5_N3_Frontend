@@ -81,8 +81,9 @@ export const CustomerEditPage: React.FC = () => {
         setTotalContractValue(Number(cust.totalContractValue || cust.dealValue || 0));
         setLocation(cust.location || '');
         setSummary(cust.notesSummary || cust.summary || '');
-      } catch (err: any) {
-        const msg = err.response?.data?.detail || err.message || 'Lỗi khi tải thông tin khách hàng.';
+      } catch (err: unknown) {
+        const errObj = err as { response?: { data?: { detail?: string } }; message?: string };
+        const msg = errObj.response?.data?.detail || errObj.message || 'Lỗi khi tải thông tin khách hàng.';
         setLoadError(msg);
       } finally {
         setIsLoading(false);
@@ -174,14 +175,14 @@ export const CustomerEditPage: React.FC = () => {
       const msg = `Cập nhật hồ sơ khách hàng "${updated.company || company}" thành công!`;
       showGlobalToast(msg, 'success');
       navigate('/customers');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Lỗi khi cập nhật hồ sơ khách hàng:', err);
-      const detail = err.response?.data?.detail;
+      const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail;
       let errMsg = 'Lỗi máy chủ hoặc trùng lặp Mã số thuế (MST). Vui lòng kiểm tra lại.';
       if (typeof detail === 'string') {
         errMsg = detail;
       } else if (Array.isArray(detail)) {
-        errMsg = detail.map((d: any) => d.msg).join(', ');
+        errMsg = detail.map((d: { msg?: string }) => d.msg || '').filter(Boolean).join(', ');
       }
       setServerError(errMsg);
       showGlobalToast(errMsg, 'error');

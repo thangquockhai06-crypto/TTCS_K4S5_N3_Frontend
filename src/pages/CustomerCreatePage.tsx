@@ -62,7 +62,10 @@ export const CustomerCreatePage: React.FC = () => {
     return undefined;
   };
 
-  const handleInputChange = (field: keyof CreateCustomerDTO, value: any) => {
+  const handleInputChange = (
+    field: keyof CreateCustomerDTO,
+    value: string | number | string[] | undefined
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setServerError(null);
 
@@ -138,14 +141,14 @@ export const CustomerCreatePage: React.FC = () => {
       const msg = `Thêm mới Khách hàng Doanh nghiệp "${savedCustomer.company}" thành công!`;
       showGlobalToast(msg, 'success');
       navigate('/customers');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Lỗi khi tạo hồ sơ khách hàng:', err);
-      const detail = err.response?.data?.detail;
+      const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail;
       let errMsg = 'Lỗi máy chủ hoặc trùng lặp Mã số thuế (MST). Vui lòng kiểm tra lại.';
       if (typeof detail === 'string') {
         errMsg = detail;
       } else if (Array.isArray(detail)) {
-        errMsg = detail.map((d: any) => d.msg).join(', ');
+        errMsg = detail.map((d: { msg?: string }) => d.msg || '').filter(Boolean).join(', ');
       }
       setServerError(errMsg);
       showGlobalToast(errMsg, 'error');

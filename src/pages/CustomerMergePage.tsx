@@ -41,7 +41,7 @@ export const CustomerMergePage: React.FC = () => {
           limit: 100,
         });
         setCandidateCustomers(res);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Lỗi tải danh sách khách hàng:', err);
       }
     };
@@ -113,8 +113,9 @@ export const CustomerMergePage: React.FC = () => {
       setMergeSuccessCustomer(mergedResult);
       const msg = `Đã gộp hồ sơ trùng thành công vào khách hàng "${mergedResult.company || mergedResult.fullName}".`;
       showGlobalToast(msg, 'success');
-    } catch (err: any) {
-      const msg = err.response?.data?.detail || err.message || 'Lỗi khi thực hiện gộp khách hàng';
+    } catch (err: unknown) {
+      const errObj = err as { response?: { data?: { detail?: string } }; message?: string };
+      const msg = errObj.response?.data?.detail || errObj.message || 'Lỗi khi thực hiện gộp khách hàng';
       const text = typeof msg === 'string' ? msg : JSON.stringify(msg);
       setErrorMessage(text);
       showGlobalToast(text, 'error');
