@@ -90,3 +90,9 @@ TTCS_K4S5_N3/
 ├── start-all.bat                    # Script khởi chạy đồng thời cả Backend và Frontend
 └── package.json
 ```
+
+## IV. Danh sách Lead
+
+Trang Lead được tích hợp tại `/leads`, dùng route/layout và quyền `manage_customers` hiện có. Mã feature nằm trong `src/features/lead-management/`; giao diện sử dụng CSS Modules và design tokens toàn ứng dụng nên tự đồng bộ light/dark mode.
+
+Hiện danh sách Lead và bộ lọc đã lưu chạy qua `leadManagementService` dạng mock trong bộ nhớ. Preset không tồn tại sau khi tải lại trang; thay adapter này bằng API Lead và API preset khi backend cung cấp hợp đồng tương ứng. Bộ lọc ngày áp dụng cho ngày tạo theo UTC, bao gồm cả hai ngày đầu/cuối. SLA chỉ dựa trên `slaDueAt` từ dữ liệu; ngày đến hạn thiếu hoặc không hợp lệ được hiển thị riêng là chưa có dữ liệu, không suy diễn chính sách SLA.

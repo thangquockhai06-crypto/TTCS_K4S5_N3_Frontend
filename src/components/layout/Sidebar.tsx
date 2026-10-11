@@ -9,6 +9,7 @@ import {
   FolderTree,
   GitCommit,
   LayoutDashboard,
+  ContactRound,
   Package,
   PanelLeftClose,
   ShieldCheck,
@@ -68,6 +69,13 @@ const ALL_MENU_ITEMS: ReadonlyArray<IMenuItem> = [
     label: 'Khách hàng Doanh nghiệp',
     path: '/customers',
     icon: <Users size={19} />,
+    requiredPermission: 'manage_customers',
+  },
+  {
+    id: 'leads',
+    label: 'Danh sách Lead',
+    path: '/leads',
+    icon: <ContactRound size={19} />,
     requiredPermission: 'manage_customers',
   },
   {
