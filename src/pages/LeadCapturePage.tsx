@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   CreditCard,
   FileSpreadsheet,
-  Ban,
   Clock,
   Search,
 } from 'lucide-react';
@@ -51,6 +50,41 @@ const LEAD_SOURCE_OPTIONS: ICustomSelectOption<string>[] = [
   { value: 'Sự Kiện Hội Thảo Tech', label: 'Sự kiện Hội thảo Công nghệ & Triển lãm' },
 ];
 
+const FORM_TYPE_OPTIONS: ICustomSelectOption<string>[] = [
+  { value: 'Thu thập khách hàng tiềm năng', label: 'Thu thập khách hàng tiềm năng' },
+  { value: 'Đăng ký tư vấn giải pháp', label: 'Đăng ký tư vấn giải pháp' },
+  { value: 'Khảo sát & đồng bộ Custom Field', label: 'Khảo sát & đồng bộ Custom Field' },
+  { value: 'Trải nghiệm bản Demo Enterprise', label: 'Trải nghiệm bản Demo Enterprise' },
+];
+
+const WORKFLOW_OPTIONS: ICustomSelectOption<string>[] = [
+  { value: 'Không liên kết workflow', label: 'Không liên kết workflow' },
+  { value: 'Tự động phân bổ Salesteam Inbound', label: 'Tự động phân bổ Salesteam Inbound' },
+  { value: 'Chiến dịch email nuôi dưỡng Lead tự động', label: 'Chiến dịch email nuôi dưỡng Lead tự động' },
+];
+
+const SUBMIT_ACTION_OPTIONS: ICustomSelectOption<string>[] = [
+  { value: 'Hiển thị tin nhắn', label: 'Hiển thị tin nhắn' },
+  { value: 'Chuyển hướng đến liên kết URL', label: 'Chuyển hướng đến liên kết URL' },
+];
+
+export interface IAvailableFieldItem {
+  key: string;
+  label: string;
+  shortLabel: string;
+  mockLabel: string;
+  mockValue: string;
+}
+
+export const AVAILABLE_FORM_FIELDS: IAvailableFieldItem[] = [
+  { key: 'fullName', label: 'T Full name *', shortLabel: 'Họ và tên', mockLabel: 'T Full name *', mockValue: 'Nguyễn Văn Hải' },
+  { key: 'email', label: '✉ Email *', shortLabel: 'Email', mockLabel: '✉ Email *', mockValue: 'hai.nguyen@company.com' },
+  { key: 'phone', label: '✆ Phone *', shortLabel: 'Số điện thoại', mockLabel: '✆ Số điện thoại *', mockValue: '0987 654 321' },
+  { key: 'company', label: 'Tên công ty', shortLabel: 'Tên công ty', mockLabel: '🏢 Tên công ty / Doanh nghiệp', mockValue: 'VietTech Solutions JSC' },
+  { key: 'interest', label: 'Nhu cầu quan tâm', shortLabel: 'Nhu cầu', mockLabel: '🎯 Nhu cầu quan tâm', mockValue: 'Tư vấn CRM Doanh nghiệp' },
+  { key: 'notes', label: 'Ghi chú / Yêu cầu', shortLabel: 'Ghi chú', mockLabel: '📝 Ghi chú / Yêu cầu tùy chỉnh', mockValue: 'Cần tích hợp trong Q2...' },
+];
+
 export const LeadCapturePage: React.FC = () => {
   const { showToast } = useToast();
   const {
@@ -81,13 +115,35 @@ export const LeadCapturePage: React.FC = () => {
   const [isCreateFormModalOpen, setIsCreateFormModalOpen] = useState<boolean>(false);
   const [isEditFormModalOpen, setIsEditFormModalOpen] = useState<boolean>(false);
 
-  // New form state
-  const [newFormTitle, setNewFormTitle] = useState<string>('');
-  const [newFormDescription, setNewFormDescription] = useState<string>('');
+  // New form state (matching Image 4)
+  const [newFormTitle, setNewFormTitle] = useState<string>('Thu thập khách hàng tiềm năng Q2');
+  const [newFormType, setNewFormType] = useState<string>('Thu thập khách hàng tiềm năng');
+  const [newFormDescription, setNewFormDescription] = useState<string>('Thu thập khách hàng tiềm năng từ các landing page trả phí.');
+  const [newFormWorkflow, setNewFormWorkflow] = useState<string>('Không liên kết workflow');
+  const [newFormSubmitAction, setNewFormSubmitAction] = useState<string>('Hiển thị tin nhắn');
+  const [newFormSuccessMessage, setNewFormSuccessMessage] = useState<string>('Cảm ơn bạn đã gửi thông tin!');
+  const [createFormFields, setCreateFormFields] = useState<string[]>([
+    'fullName',
+    'email',
+    'phone',
+    'company',
+    'interest',
+  ]);
 
-  // Edit form state
+  // Edit form state (matching Image 5)
   const [editFormTitle, setEditFormTitle] = useState<string>('');
+  const [editFormWorkflow, setEditFormWorkflow] = useState<string>('Không liên kết workflow');
   const [editFormDescription, setEditFormDescription] = useState<string>('');
+  const [editFormSubmitAction, setEditFormSubmitAction] = useState<string>('Hiển thị tin nhắn');
+  const [editFormSuccessMessage, setEditFormSuccessMessage] = useState<string>('OK');
+  const [editFormStatus, setEditFormStatus] = useState<'active' | 'inactive'>('active');
+  const [editFormFields, setEditFormFields] = useState<string[]>([
+    'fullName',
+    'email',
+    'phone',
+    'company',
+    'interest',
+  ]);
 
   // State for Delete submission confirmation
   const [subToDelete, setSubToDelete] = useState<ILeadSubmission | null>(null);
@@ -253,6 +309,80 @@ export const LeadCapturePage: React.FC = () => {
     setSubToDelete(null);
   };
 
+  // Toggle and Add field handlers for Create Form Modal
+  const handleToggleCreateField = (key: string): void => {
+    setCreateFormFields((prev) => {
+      if (prev.includes(key)) {
+        if (prev.length <= 1) {
+          showToast('Biểu mẫu cần ít nhất 1 trường dữ liệu.', 'warning');
+          return prev;
+        }
+        return prev.filter((k) => k !== key);
+      }
+      return [...prev, key];
+    });
+  };
+
+  const handleAddMoreCreateField = (): void => {
+    const missing = AVAILABLE_FORM_FIELDS.find((f) => !createFormFields.includes(f.key));
+    if (missing) {
+      setCreateFormFields((prev) => [...prev, missing.key]);
+      showToast(`Đã thêm trường "${missing.shortLabel}" vào biểu mẫu!`, 'success');
+    } else {
+      showToast('Đã kích hoạt toàn bộ các trường dữ liệu tiêu chuẩn!', 'info');
+    }
+  };
+
+  // Toggle and Add field handlers for Edit Form Modal
+  const handleToggleEditField = (key: string): void => {
+    setEditFormFields((prev) => {
+      if (prev.includes(key)) {
+        if (prev.length <= 1) {
+          showToast('Biểu mẫu cần ít nhất 1 trường dữ liệu.', 'warning');
+          return prev;
+        }
+        return prev.filter((k) => k !== key);
+      }
+      return [...prev, key];
+    });
+  };
+
+  const handleAddMoreEditField = (): void => {
+    const missing = AVAILABLE_FORM_FIELDS.find((f) => !editFormFields.includes(f.key));
+    if (missing) {
+      setEditFormFields((prev) => [...prev, missing.key]);
+      showToast(`Đã thêm trường "${missing.shortLabel}" vào biểu mẫu!`, 'success');
+    } else {
+      showToast('Đã kích hoạt toàn bộ các trường dữ liệu tiêu chuẩn!', 'info');
+    }
+  };
+
+  // Fields configured for the active selected form (syncs Tab 2 "Trường")
+  const currentFormFields = useMemo(() => {
+    if (!selectedForm) return fields;
+    const activeKeys =
+      selectedForm.fields && selectedForm.fields.length > 0
+        ? selectedForm.fields
+        : ['fullName', 'email', 'phone', 'company', 'interest'];
+    return fields.filter(
+      (f) => activeKeys.includes(f.name) || f.name === 'honeypotValue'
+    );
+  }, [selectedForm, fields]);
+
+  // Submissions scope filter ('current_form' by default, or 'all')
+  const [submissionFilterScope, setSubmissionFilterScope] = useState<'current_form' | 'all'>('current_form');
+
+  // Submissions associated with the active form
+  const currentFormSubmissions = useMemo(() => {
+    if (!selectedForm) return [];
+    return submissions.filter((s) => s.formId === selectedForm.id);
+  }, [submissions, selectedForm]);
+
+  const displayedSubmissions = useMemo(() => {
+    if (submissionFilterScope === 'all') return submissions;
+    return currentFormSubmissions;
+  }, [submissionFilterScope, submissions, currentFormSubmissions]);
+
   // Create Web Form Handler
   const handleCreateForm = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
@@ -262,22 +392,35 @@ export const LeadCapturePage: React.FC = () => {
     }
     createWebForm({
       title: newFormTitle.trim(),
-      type: 'Thu thập khách hàng tiềm năng',
+      type: newFormType,
       status: 'active',
       embedKey: `nexus_${Date.now()}`,
-      workflowConnection: 'Tự động phân bổ Salesteam Inbound Q4',
+      workflowConnection: newFormWorkflow,
       description: newFormDescription.trim() || 'Biểu mẫu thu thập thông tin khách hàng tiềm năng qua website.',
+      submitAction: newFormSubmitAction,
+      successMessage: newFormSuccessMessage.trim() || 'Cảm ơn bạn đã gửi thông tin!',
+      fields: createFormFields,
     });
     setNewFormTitle('');
     setNewFormDescription('');
+    setCreateFormFields(['fullName', 'email', 'phone', 'company', 'interest']);
     setIsCreateFormModalOpen(false);
   };
 
-  // Open Edit Form Modal
+  // Open Edit Form Modal (matching Image 5)
   const handleOpenEditFormModal = (): void => {
     if (!selectedForm) return;
     setEditFormTitle(selectedForm.title);
+    setEditFormWorkflow(selectedForm.workflowConnection || 'Không liên kết workflow');
     setEditFormDescription(selectedForm.description);
+    setEditFormSubmitAction(selectedForm.submitAction || 'Hiển thị tin nhắn');
+    setEditFormSuccessMessage(selectedForm.successMessage || 'OK');
+    setEditFormStatus(selectedForm.status);
+    setEditFormFields(
+      selectedForm.fields && selectedForm.fields.length > 0
+        ? selectedForm.fields
+        : ['fullName', 'email', 'phone', 'company', 'interest']
+    );
     setIsEditFormModalOpen(true);
   };
 
@@ -291,7 +434,12 @@ export const LeadCapturePage: React.FC = () => {
     }
     updateWebForm(selectedForm.id, {
       title: editFormTitle.trim(),
+      workflowConnection: editFormWorkflow,
       description: editFormDescription.trim(),
+      submitAction: editFormSubmitAction,
+      successMessage: editFormSuccessMessage.trim(),
+      status: editFormStatus,
+      fields: editFormFields,
     });
     setIsEditFormModalOpen(false);
   };
@@ -335,7 +483,7 @@ export const LeadCapturePage: React.FC = () => {
               leftIcon={<Plus size={16} />}
               onClick={() => setIsCreateFormModalOpen(true)}
             >
-              + Tạo Biểu Mẫu
+              Tạo Biểu Mẫu
             </Button>
             <Button
               type="button"
@@ -522,7 +670,7 @@ export const LeadCapturePage: React.FC = () => {
                 className={`${styles.tabBtn} ${activeTab === 'fields' ? styles.active : ''}`}
                 onClick={() => setActiveTab('fields')}
               >
-                Trường
+                Trường ({currentFormFields.length})
               </button>
               <button
                 type="button"
@@ -543,7 +691,7 @@ export const LeadCapturePage: React.FC = () => {
                 className={`${styles.tabBtn} ${activeTab === 'submissions' ? styles.active : ''}`}
                 onClick={() => setActiveTab('submissions')}
               >
-                Lượt Gửi ({submissions.length})
+                Lượt Gửi ({currentFormSubmissions.length})
               </button>
             </div>
 
@@ -599,6 +747,14 @@ export const LeadCapturePage: React.FC = () => {
                     </span>
                   </div>
                   <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Hành động khi gửi:</span>
+                    <span className={styles.infoVal}>{selectedForm.submitAction || 'Hiển thị tin nhắn'}</span>
+                  </div>
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Tin nhắn thành công:</span>
+                    <span className={styles.infoVal}>{selectedForm.successMessage || 'Cảm ơn bạn đã gửi thông tin!'}</span>
+                  </div>
+                  <div className={styles.infoRow}>
                     <span className={styles.infoLabel}>Nguồn Lead mặc định:</span>
                     <span className={styles.infoVal}>{config.leadSource}</span>
                   </div>
@@ -609,60 +765,30 @@ export const LeadCapturePage: React.FC = () => {
                     </span>
                   </div>
                 </div>
-
-                <div
-                  style={{
-                    backgroundColor: 'rgba(37, 99, 235, 0.05)',
-                    border: '1px dashed rgba(37, 99, 235, 0.25)',
-                    borderRadius: '10px',
-                    padding: '16px 20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    flexWrap: 'wrap',
-                    gap: '12px',
-                  }}
-                >
-                  <div>
-                    <strong style={{ fontSize: '0.9rem', color: 'var(--color-text-main)' }}>
-                      Mở rộng nguồn thu thập Lead
-                    </strong>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-                      Thêm nhanh khách hàng từ sự kiện hội thảo hoặc đưa danh sách Excel hàng loạt vào hệ thống.
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      leftIcon={<CreditCard size={14} />}
-                      onClick={() => setIsCreateLeadModalOpen(true)}
-                    >
-                      + Tạo Card Visit
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="primary"
-                      size="sm"
-                      leftIcon={<FileSpreadsheet size={14} />}
-                      onClick={() => setIsExcelImportOpen(true)}
-                    >
-                      Nhập Excel / CSV
-                    </Button>
-                  </div>
-                </div>
               </div>
             )}
 
-            {/* Tab 2: Trường (Fields Configuration) */}
+            {/* Tab 2: Trường (Fields Configuration Synchronized to Selected Form) */}
             {activeTab === 'fields' && (
               <div className={styles.tabContent}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
-                    Cấu hình các trường dữ liệu thu thập từ người dùng (Họ tên, Email, Điện thoại, Công ty, Nhu cầu).
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+                  <div>
+                    <div style={{ fontSize: '0.92rem', fontWeight: 600, color: 'var(--color-text-main)' }}>
+                      Cấu hình trường của biểu mẫu: <span style={{ color: 'var(--color-primary)' }}>{selectedForm.title}</span>
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+                      Đang kích hoạt {currentFormFields.length} trường thu thập độc lập. Mỗi biểu mẫu có cấu hình trường riêng, không bị đè dữ liệu lên nhau.
+                    </div>
                   </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    leftIcon={<Edit2 size={13} />}
+                    onClick={handleOpenEditFormModal}
+                  >
+                    Chỉnh Sửa Trường Biểu Mẫu
+                  </Button>
                 </div>
 
                 <div className={styles.tableWrapper}>
@@ -677,7 +803,7 @@ export const LeadCapturePage: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {fields.map((f) => (
+                      {currentFormFields.map((f) => (
                         <tr key={f.id}>
                           <td>
                             <strong>{f.label}</strong>
@@ -749,26 +875,109 @@ export const LeadCapturePage: React.FC = () => {
                     }}
                   >
                     <h3 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0 0 6px 0', textAlign: 'center' }}>
-                      {config.formTitle}
+                      {selectedForm.title}
                     </h3>
                     <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', textAlign: 'center', margin: '0 0 20px 0' }}>
-                      {config.formDescription}
+                      {selectedForm.description}
                     </p>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                      <Input label="Họ và tên của bạn" placeholder="Ví dụ: Lê Hoàng Long" readOnly />
-                      <Input label="Tên công ty / Doanh nghiệp" placeholder="Ví dụ: VietTech Solutions" readOnly />
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                        <Input label="Email liên hệ" placeholder="long@company.com" readOnly />
-                        <Input label="Số điện thoại" placeholder="0912 345 678" readOnly />
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Nhu cầu quan tâm</label>
-                        <CustomSelect options={INTEREST_OPTIONS} value="crm_consultation" onChange={() => {}} disabled />
-                      </div>
-                      <Button type="button" variant="primary" size="lg" fullWidth leftIcon={<Send size={16} />}>
-                        {config.ctaText}
+                      {(selectedForm.fields && selectedForm.fields.length > 0
+                        ? selectedForm.fields
+                        : ['fullName', 'email', 'phone', 'company', 'interest']
+                      ).map((fieldKey) => {
+                        if (fieldKey === 'fullName') {
+                          return (
+                            <Input
+                              key="fullName"
+                              label="Họ và tên của bạn *"
+                              placeholder="Ví dụ: Lê Hoàng Long"
+                              readOnly
+                            />
+                          );
+                        }
+                        if (fieldKey === 'company') {
+                          return (
+                            <Input
+                              key="company"
+                              label="Tên công ty / Doanh nghiệp"
+                              placeholder="Ví dụ: VietTech Solutions"
+                              readOnly
+                            />
+                          );
+                        }
+                        if (fieldKey === 'email') {
+                          return (
+                            <Input
+                              key="email"
+                              label="Email liên hệ *"
+                              placeholder="long@company.com"
+                              readOnly
+                            />
+                          );
+                        }
+                        if (fieldKey === 'phone') {
+                          return (
+                            <Input
+                              key="phone"
+                              label="Số điện thoại *"
+                              placeholder="0912 345 678"
+                              readOnly
+                            />
+                          );
+                        }
+                        if (fieldKey === 'interest') {
+                          return (
+                            <div key="interest" className={styles.fieldGroup}>
+                              <label className={styles.fieldLabel}>Nhu cầu quan tâm</label>
+                              <CustomSelect
+                                options={INTEREST_OPTIONS}
+                                value="crm_consultation"
+                                onChange={() => {}}
+                                disabled
+                                height="47px"
+                              />
+                            </div>
+                          );
+                        }
+                        if (fieldKey === 'notes') {
+                          return (
+                            <div key="notes" className={styles.fieldGroup}>
+                              <label className={styles.fieldLabel}>Ghi chú / Yêu cầu tùy chỉnh</label>
+                              <textarea
+                                className={styles.formTextarea}
+                                placeholder="Mô tả thêm quy mô doanh nghiệp hoặc tính năng cần tích hợp..."
+                                readOnly
+                              />
+                            </div>
+                          );
+                        }
+                        return null;
+                      })}
+
+                      <Button
+                        type="button"
+                        variant="primary"
+                        size="lg"
+                        fullWidth
+                        leftIcon={<Send size={16} />}
+                      >
+                        {selectedForm.submitAction === 'Chuyển hướng đến liên kết URL'
+                          ? 'Đăng Ký & Chuyển Hướng URL'
+                          : config.ctaText || 'Gửi Thông Tin Ngay'}
                       </Button>
+
+                      <div
+                        style={{
+                          fontSize: '0.74rem',
+                          color: 'var(--color-text-muted)',
+                          textAlign: 'center',
+                          marginTop: '2px',
+                        }}
+                      >
+                        Thông báo hiển thị sau khi gửi:{' '}
+                        <strong>&quot;{selectedForm.successMessage || 'Cảm ơn bạn đã gửi thông tin!'}&quot;</strong>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -778,11 +987,11 @@ export const LeadCapturePage: React.FC = () => {
             {/* Tab 4: Mã nhúng (Embed Code Generator - S4-01) */}
             {activeTab === 'embed' && (
               <div className={styles.tabContent}>
-                <EmbedCodeGenerator />
+                <EmbedCodeGenerator form={selectedForm} />
               </div>
             )}
 
-            {/* Tab 5: Lượt gửi (Submissions History with Edit & Delete) */}
+            {/* Tab 5: Lượt gửi (Submissions History with Edit, Delete & Form Isolation) */}
             {activeTab === 'submissions' && (
               <div className={styles.tabContent}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
@@ -818,129 +1027,164 @@ export const LeadCapturePage: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Scope filter & Synchronized status strip */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginTop: '14px', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', gap: '4px', backgroundColor: 'var(--color-bg-subtle)', padding: '3px', borderRadius: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setSubmissionFilterScope('current_form')}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        fontSize: '0.78rem',
+                        fontWeight: submissionFilterScope === 'current_form' ? 600 : 400,
+                        backgroundColor: submissionFilterScope === 'current_form' ? 'var(--color-bg-card)' : 'transparent',
+                        color: submissionFilterScope === 'current_form' ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                        boxShadow: submissionFilterScope === 'current_form' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      Chỉ Biểu Mẫu Này ({currentFormSubmissions.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSubmissionFilterScope('all')}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        fontSize: '0.78rem',
+                        fontWeight: submissionFilterScope === 'all' ? 600 : 400,
+                        backgroundColor: submissionFilterScope === 'all' ? 'var(--color-bg-card)' : 'transparent',
+                        color: submissionFilterScope === 'all' ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                        boxShadow: submissionFilterScope === 'all' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      Toàn Bộ Hệ Thống ({submissions.length})
+                    </button>
+                  </div>
+
+                  <div style={{ fontSize: '0.76rem', color: 'var(--color-text-muted)' }}>
+                    Biểu mẫu hiện tại: <strong style={{ color: 'var(--color-text-main)' }}>{selectedForm.title}</strong> (Mã: <code>{selectedForm.embedKey}</code>)
+                  </div>
+                </div>
+
                 <div className={styles.tableWrapper}>
                   <table className={styles.customTable}>
                     <thead>
                       <tr>
-                        <th>Họ &amp; Tên Khách Hàng</th>
-                        <th>Công Ty</th>
-                        <th>Email &amp; Điện Thoại</th>
-                        <th>Nhu Cầu Quan Tâm</th>
-                        <th>Nguồn Lead</th>
-                        <th>Trạng Thái CRM</th>
-                        <th>Hình Thức / Bảo Mật</th>
-                        <th>Thời Gian Nhận</th>
-                        <th style={{ textAlign: 'center' }}>Thao Tác</th>
+                        <th style={{ width: '22%' }}>Khách Hàng &amp; Doanh Nghiệp</th>
+                        <th style={{ width: '22%' }}>Email &amp; Điện Thoại</th>
+                        <th style={{ width: '22%' }}>Nhu Cầu &amp; Nguồn Lead</th>
+                        <th style={{ width: '13%' }}>Trạng Thái CRM</th>
+                        <th style={{ width: '11%' }}>Thời Gian</th>
+                        <th style={{ width: '10%', textAlign: 'center' }}>Thao Tác</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {submissions.length === 0 ? (
+                      {displayedSubmissions.length === 0 ? (
                         <tr>
-                          <td colSpan={9} style={{ textAlign: 'center', padding: '32px', color: 'var(--color-text-muted)' }}>
-                            Chưa có lead nào trong danh sách.
+                          <td colSpan={6} style={{ textAlign: 'center', padding: '42px 20px', color: 'var(--color-text-muted)' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                              <Clock size={30} style={{ opacity: 0.35, color: 'var(--color-primary)' }} />
+                              <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--color-text-main)' }}>
+                                Biểu mẫu &quot;{selectedForm.title}&quot; chưa có lượt gửi nào
+                              </div>
+                              <div style={{ fontSize: '0.78rem', maxWidth: '440px', lineHeight: 1.5 }}>
+                                Dữ liệu mỗi biểu mẫu được phân tách độc lập để đảm bảo không bị đè thông tin lên nhau. Bạn có thể nạp lead mới bằng cách gửi form nhúng, nạp Excel hoặc tạo card visit.
+                              </div>
+                              <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                                <Button
+                                  type="button"
+                                  variant="primary"
+                                  size="sm"
+                                  leftIcon={<FileSpreadsheet size={13} />}
+                                  onClick={() => setIsExcelImportOpen(true)}
+                                >
+                                  Nhập Excel Cho Biểu Mẫu Này
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="secondary"
+                                  size="sm"
+                                  leftIcon={<CreditCard size={13} />}
+                                  onClick={() => setIsCreateLeadModalOpen(true)}
+                                >
+                                  + Thêm Card Visit
+                                </Button>
+                              </div>
+                            </div>
                           </td>
                         </tr>
                       ) : (
-                        submissions.map((sub) => (
+                        displayedSubmissions.map((sub) => (
                           <tr key={sub.id}>
                             <td>
-                              <strong style={{ color: 'var(--color-text-main)' }}>{sub.fullName}</strong>
-                            </td>
-                            <td>{sub.company}</td>
-                            <td>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                <span>{sub.email}</span>
-                                <span style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>
-                                  {sub.phone}
-                                </span>
+                              <div>
+                                <strong style={{ color: 'var(--color-text-main)', fontSize: '0.84rem' }}>{sub.fullName}</strong>
+                                <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>
+                                  {sub.company || 'Doanh nghiệp chưa phân loại'}
+                                </div>
                               </div>
                             </td>
                             <td>
-                              <span style={{ fontSize: '0.82rem' }}>
-                                {interestLabelMap[sub.interest] || sub.interest}
-                              </span>
+                              <div>
+                                <div style={{ color: 'var(--color-text-main)', fontSize: '0.81rem' }}>{sub.email}</div>
+                                <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>{sub.phone}</div>
+                              </div>
                             </td>
                             <td>
-                              <span
-                                style={{
-                                  padding: '2px 8px',
-                                  borderRadius: '4px',
-                                  backgroundColor: 'rgba(37, 99, 235, 0.08)',
-                                  color: 'var(--color-primary)',
-                                  fontSize: '0.75rem',
-                                  fontWeight: 600,
-                                }}
-                              >
-                                {sub.leadSource}
-                              </span>
+                              <div>
+                                <div style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--color-text-main)' }}>
+                                  {interestLabelMap[sub.interest] || sub.interest}
+                                </div>
+                                <div style={{ marginTop: '2px' }}>
+                                  <span
+                                    style={{
+                                      padding: '2px 6px',
+                                      borderRadius: '4px',
+                                      backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                                      color: 'var(--color-primary)',
+                                      fontSize: '0.72rem',
+                                      fontWeight: 600,
+                                    }}
+                                  >
+                                    {sub.leadSource}
+                                  </span>
+                                </div>
+                              </div>
                             </td>
                             <td>
                               {sub.isSpamBlocked ? (
-                                <Badge tone="danger">Từ chối</Badge>
+                                <Badge tone="danger">Từ chối (Spam)</Badge>
                               ) : (
-                                <Badge tone="primary">Mới (New Lead)</Badge>
+                                <div>
+                                  <Badge tone="primary">Mới (New Lead)</Badge>
+                                  <div
+                                    style={{
+                                      fontSize: '0.72rem',
+                                      color: '#16A34A',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '3px',
+                                      marginTop: '3px',
+                                    }}
+                                  >
+                                    <CheckCircle2 size={11} />
+                                    {sub.ipAddress.includes('Card Visit')
+                                      ? 'Card Visit'
+                                      : sub.ipAddress.includes('Excel')
+                                      ? 'Tệp Excel'
+                                      : 'Hợp lệ'}
+                                  </div>
+                                </div>
                               )}
                             </td>
-                            <td>
-                              {sub.isSpamBlocked ? (
-                                <span
-                                  style={{
-                                    color: '#DC2626',
-                                    fontSize: '0.76rem',
-                                    fontWeight: 600,
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '4px',
-                                  }}
-                                >
-                                  <Ban size={13} />
-                                  {sub.blockReason || 'Đã chặn Spam'}
-                                </span>
-                              ) : sub.ipAddress.includes('Card Visit') ? (
-                                <span
-                                  style={{
-                                    color: '#2563EB',
-                                    fontSize: '0.76rem',
-                                    fontWeight: 600,
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '4px',
-                                  }}
-                                >
-                                  <CreditCard size={13} />
-                                  Thủ công (Danh thiếp)
-                                </span>
-                              ) : sub.ipAddress.includes('Excel') ? (
-                                <span
-                                  style={{
-                                    color: '#059669',
-                                    fontSize: '0.76rem',
-                                    fontWeight: 600,
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '4px',
-                                  }}
-                                >
-                                  <FileSpreadsheet size={13} />
-                                  Tệp Excel / CSV
-                                </span>
-                              ) : (
-                                <span
-                                  style={{
-                                    color: '#16A34A',
-                                    fontSize: '0.76rem',
-                                    fontWeight: 600,
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '4px',
-                                  }}
-                                >
-                                  <CheckCircle2 size={13} />
-                                  Hợp lệ (IP: {sub.ipAddress})
-                                </span>
-                              )}
-                            </td>
-                            <td style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
+                            <td style={{ fontSize: '0.76rem', color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
                               {sub.submittedAt}
                             </td>
                             <td style={{ textAlign: 'center' }}>
@@ -951,7 +1195,7 @@ export const LeadCapturePage: React.FC = () => {
                                   onClick={() => handleOpenEditSubModal(sub)}
                                   title="Chỉnh sửa thông tin lead"
                                 >
-                                  <Edit2 size={13} /> Sửa
+                                  <Edit2 size={12} /> Sửa
                                 </button>
                                 <button
                                   type="button"
@@ -959,7 +1203,7 @@ export const LeadCapturePage: React.FC = () => {
                                   onClick={() => setSubToDelete(sub)}
                                   title="Xóa lead khỏi danh sách"
                                 >
-                                  <Trash2 size={13} /> Xóa
+                                  <Trash2 size={12} /> Xóa
                                 </button>
                               </div>
                             </td>
@@ -979,12 +1223,15 @@ export const LeadCapturePage: React.FC = () => {
       <LeadCreateModal
         isOpen={isCreateLeadModalOpen}
         onClose={() => setIsCreateLeadModalOpen(false)}
+        formId={selectedForm?.id}
       />
 
       {/* Batch Excel Import Modal (S4-02) */}
       <LeadExcelImport
         isOpen={isExcelImportOpen}
         onClose={() => setIsExcelImportOpen(false)}
+        currentFormId={selectedForm?.id}
+        forms={forms}
       />
 
       {/* Edit Lead Modal */}
@@ -1035,27 +1282,21 @@ export const LeadCapturePage: React.FC = () => {
               required
             />
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--color-text-main, #0F172A)' }}>
-                Nhu cầu quan tâm
-              </label>
-              <CustomSelect
-                options={INTEREST_OPTIONS}
-                value={editInterest}
-                onChange={(val) => setEditInterest(val as LeadInterestType)}
-              />
-            </div>
+            <CustomSelect
+              label="Nhu cầu quan tâm"
+              options={INTEREST_OPTIONS}
+              value={editInterest}
+              onChange={(val) => setEditInterest(val as LeadInterestType)}
+              height="47px"
+            />
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--color-text-main, #0F172A)' }}>
-                Nguồn lead
-              </label>
-              <CustomSelect
-                options={LEAD_SOURCE_OPTIONS}
-                value={editLeadSource}
-                onChange={(val) => setEditLeadSource(val)}
-              />
-            </div>
+            <CustomSelect
+              label="Nguồn lead"
+              options={LEAD_SOURCE_OPTIONS}
+              value={editLeadSource}
+              onChange={(val) => setEditLeadSource(val)}
+              height="47px"
+            />
 
             <div className={styles.modalFooter}>
               <Button
@@ -1102,42 +1343,148 @@ export const LeadCapturePage: React.FC = () => {
         onCancel={() => setFormToDelete(null)}
       />
 
-      {/* Create New Form Modal */}
+      {/* Create New Form Modal matching Image 4 */}
       <Modal
         isOpen={isCreateFormModalOpen}
         onClose={() => setIsCreateFormModalOpen(false)}
-        title="Tạo Biểu Mẫu Thu Thập Lead Mới"
-        subtitle="Khởi tạo biểu mẫu thu thập thông tin khách hàng tiềm năng cho website"
-        maxWidth="md"
+        title="Tạo biểu mẫu web"
+        subtitle="Tạo biểu mẫu web mới, định nghĩa các trường và cấu hình hành động khi gửi."
+        maxWidth="xl"
       >
-        <form onSubmit={handleCreateForm} className={styles.modalForm}>
-          <Input
-            label="Tên biểu mẫu"
-            placeholder="Ví dụ: Đăng Ký Tư Vấn Triển Lãm Công Nghệ"
-            value={newFormTitle}
-            onChange={(e) => setNewFormTitle(e.target.value)}
-            required
-          />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--color-text-main, #0F172A)' }}>
-              Mô tả mục đích biểu mẫu
-            </label>
-            <textarea
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                borderRadius: '8px',
-                border: '1px solid var(--color-border, #CBD5E1)',
-                backgroundColor: 'var(--color-bg-card, #FFFFFF)',
-                color: 'var(--color-text-main, #0F172A)',
-                fontSize: '0.86rem',
-                minHeight: '70px',
-              }}
-              placeholder="Mô tả chiến dịch hoặc mục tiêu thu thập khách hàng tiềm năng..."
-              value={newFormDescription}
-              onChange={(e) => setNewFormDescription(e.target.value)}
-              rows={3}
-            />
+        <form onSubmit={handleCreateForm}>
+          <div className={styles.modal2ColLayout}>
+            {/* Left Column: Form Configuration */}
+            <div className={styles.modalFormCol}>
+              <div className={styles.formRow2}>
+                <Input
+                  label="Tên biểu mẫu"
+                  placeholder="Thu thập khách hàng tiềm năng Q2"
+                  value={newFormTitle}
+                  onChange={(e) => setNewFormTitle(e.target.value)}
+                  required
+                />
+                <CustomSelect
+                  label="Loại biểu mẫu"
+                  options={FORM_TYPE_OPTIONS}
+                  value={newFormType}
+                  onChange={(val) => setNewFormType(val)}
+                  height="47px"
+                />
+              </div>
+
+              <div className={styles.fieldGroup}>
+                <label className={styles.fieldLabel}>
+                  Mô tả
+                </label>
+                <textarea
+                  className={styles.formTextarea}
+                  placeholder="Thu thập khách hàng tiềm năng từ các landing page trả phí."
+                  value={newFormDescription}
+                  onChange={(e) => setNewFormDescription(e.target.value)}
+                />
+              </div>
+
+              <CustomSelect
+                label="Liên kết workflow"
+                options={WORKFLOW_OPTIONS}
+                value={newFormWorkflow}
+                onChange={(val) => setNewFormWorkflow(val)}
+                height="47px"
+              />
+
+              <CustomSelect
+                label="Hành động khi gửi"
+                options={SUBMIT_ACTION_OPTIONS}
+                value={newFormSubmitAction}
+                onChange={(val) => setNewFormSubmitAction(val)}
+                height="47px"
+              />
+
+              <Input
+                label="Tin nhắn thành công"
+                placeholder="Cảm ơn bạn đã gửi thông tin!"
+                value={newFormSuccessMessage}
+                onChange={(e) => setNewFormSuccessMessage(e.target.value)}
+              />
+
+              <div className={styles.fieldSection}>
+                <div className={styles.fieldSectionHeader}>
+                  <div>
+                    <strong style={{ fontSize: '0.82rem', color: 'var(--color-text-main)' }}>Trường biểu mẫu</strong>
+                    <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>
+                      Nhấp để bật/tắt các trường sẽ hiển thị trong biểu mẫu nhúng.
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleAddMoreCreateField}
+                  >
+                    + Thêm trường
+                  </Button>
+                </div>
+                <div className={styles.fieldChips}>
+                  {AVAILABLE_FORM_FIELDS.map((field) => {
+                    const isSelected = createFormFields.includes(field.key);
+                    return (
+                      <button
+                        key={field.key}
+                        type="button"
+                        className={`${styles.fieldChip} ${isSelected ? styles.fieldChipActive : ''}`}
+                        onClick={() => handleToggleCreateField(field.key)}
+                        title={`Bật/tắt trường ${field.shortLabel}`}
+                      >
+                        {isSelected ? '✓ ' : '+ '}
+                        {field.label.replace(/^✓\s*/, '')}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: PREVIEW TRỰC TIẾP matching Image 4 (Section 8) */}
+            <div className={styles.previewCol}>
+              <div className={styles.previewHeading}>PREVIEW TRỰC TIẾP</div>
+              <div className={styles.previewBrowserFrame}>
+                <div className={styles.browserTopBar}>
+                  <div className={styles.browserDots}>
+                    <span className={styles.browserDot} style={{ backgroundColor: '#EF4444' }} />
+                    <span className={styles.browserDot} style={{ backgroundColor: '#F59E0B' }} />
+                    <span className={styles.browserDot} style={{ backgroundColor: '#10B981' }} />
+                  </div>
+                  <span className={styles.browserUrl}>yoursite.com/form</span>
+                </div>
+                <div className={styles.previewFormContent}>
+                  <h4 className={styles.previewFormTitle}>
+                    {newFormTitle.trim() || 'Tên biểu mẫu'}
+                  </h4>
+                  {newFormDescription.trim() && (
+                    <div style={{ fontSize: '0.72rem', color: '#94A3B8', margin: '2px 0 4px 0', lineHeight: 1.4 }}>
+                      {newFormDescription}
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {createFormFields.map((fieldKey) => {
+                      const fieldDef = AVAILABLE_FORM_FIELDS.find((f) => f.key === fieldKey);
+                      if (!fieldDef) return null;
+                      return (
+                        <div key={fieldDef.key} className={styles.previewMockInput}>
+                          <span className={styles.previewMockLabel}>{fieldDef.mockLabel}</span>
+                          <span style={{ color: '#E2E8F0', fontSize: '0.74rem' }}>{fieldDef.mockValue}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className={styles.previewSubmitBtn}>
+                    {newFormSubmitAction === 'Chuyển hướng đến liên kết URL' ? 'Đăng ký & Chuyển hướng' : 'Gửi thông tin'}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className={styles.modalFooter}>
@@ -1160,40 +1507,109 @@ export const LeadCapturePage: React.FC = () => {
         </form>
       </Modal>
 
-      {/* Edit Form Modal */}
+      {/* Edit Form Modal matching Image 5 */}
       <Modal
         isOpen={isEditFormModalOpen}
         onClose={() => setIsEditFormModalOpen(false)}
-        title="Chỉnh Sửa Biểu Mẫu Web"
-        subtitle="Cập nhật tên và mô tả chi tiết của biểu mẫu"
-        maxWidth="md"
+        title="Chỉnh sửa biểu mẫu web"
+        subtitle="Cập nhật thông tin biểu mẫu và thay thế danh sách trường khi cần để đồng bộ với luồng embed."
+        maxWidth="lg"
       >
         <form onSubmit={handleSaveEditForm} className={styles.modalForm}>
-          <Input
-            label="Tên biểu mẫu"
-            value={editFormTitle}
-            onChange={(e) => setEditFormTitle(e.target.value)}
-            required
-          />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--color-text-main, #0F172A)' }}>
-              Mô tả mục đích
+          <div className={styles.formRow2}>
+            <Input
+              label="Tên biểu mẫu"
+              value={editFormTitle}
+              onChange={(e) => setEditFormTitle(e.target.value)}
+              required
+            />
+            <CustomSelect
+              label="Liên kết workflow"
+              options={WORKFLOW_OPTIONS}
+              value={editFormWorkflow}
+              onChange={(val) => setEditFormWorkflow(val)}
+              height="47px"
+            />
+          </div>
+
+          <div className={styles.fieldGroup}>
+            <label className={styles.fieldLabel}>
+              Mô tả
             </label>
             <textarea
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                borderRadius: '8px',
-                border: '1px solid var(--color-border, #CBD5E1)',
-                backgroundColor: 'var(--color-bg-card, #FFFFFF)',
-                color: 'var(--color-text-main, #0F172A)',
-                fontSize: '0.86rem',
-                minHeight: '70px',
-              }}
+              className={styles.formTextarea}
               value={editFormDescription}
               onChange={(e) => setEditFormDescription(e.target.value)}
-              rows={3}
             />
+          </div>
+
+          <CustomSelect
+            label="Hành động khi gửi"
+            options={SUBMIT_ACTION_OPTIONS}
+            value={editFormSubmitAction}
+            onChange={(val) => setEditFormSubmitAction(val)}
+            height="47px"
+          />
+
+          <Input
+            label="Tin nhắn thành công"
+            value={editFormSuccessMessage}
+            onChange={(e) => setEditFormSuccessMessage(e.target.value)}
+          />
+
+          <div className={styles.toggleRow}>
+            <div>
+              <strong style={{ fontSize: '0.84rem', color: 'var(--color-text-main)' }}>
+                Biểu mẫu đang hoạt động
+              </strong>
+              <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>
+                Tắt tùy chọn này để ngừng nhận lượt gửi mới qua mã nhúng.
+              </div>
+            </div>
+            <label className={styles.toggleSwitch}>
+              <input
+                type="checkbox"
+                checked={editFormStatus === 'active'}
+                onChange={(e) => setEditFormStatus(e.target.checked ? 'active' : 'inactive')}
+              />
+              <span className={styles.toggleSlider} />
+            </label>
+          </div>
+
+          <div className={styles.fieldSection}>
+            <div className={styles.fieldSectionHeader}>
+              <div>
+                <strong style={{ fontSize: '0.82rem', color: 'var(--color-text-main)' }}>Trường biểu mẫu</strong>
+                <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>
+                  Cập nhật, đổi thứ tự, thêm hoặc xóa các trường của biểu mẫu này.
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={handleAddMoreEditField}
+              >
+                + Thêm trường
+              </Button>
+            </div>
+            <div className={styles.fieldChips}>
+              {AVAILABLE_FORM_FIELDS.map((field) => {
+                const isSelected = editFormFields.includes(field.key);
+                return (
+                  <button
+                    key={field.key}
+                    type="button"
+                    className={`${styles.fieldChip} ${isSelected ? styles.fieldChipActive : ''}`}
+                    onClick={() => handleToggleEditField(field.key)}
+                    title={`Bật/tắt trường ${field.shortLabel}`}
+                  >
+                    {isSelected ? '✓ ' : '+ '}
+                    {field.label.replace(/^✓\s*/, '')}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className={styles.modalFooter}>

@@ -11,14 +11,27 @@ import {
 import { Button } from '../common';
 import { useLeadCapture } from '../../hooks/useLeadCapture';
 import { useToast } from '../../context/ToastContext';
+import { IWebFormItem } from '../../interfaces/lead-capture.interface';
+import { leadCaptureService } from '../../services/leadCaptureService';
 import styles from './EmbedCodeGenerator.module.css';
 
-export const EmbedCodeGenerator: React.FC = () => {
+export interface IEmbedCodeGeneratorProps {
+  form?: IWebFormItem | null;
+}
+
+export const EmbedCodeGenerator: React.FC<IEmbedCodeGeneratorProps> = ({ form }) => {
   const { config, updateConfig, iframeCode, scriptCode } = useLeadCapture();
   const { showToast } = useToast();
+  const [embedType, setEmbedType] = useState<'iframe' | 'script'>('iframe');
   const [copied, setCopied] = useState<boolean>(false);
 
-  const activeCode = config.embedType === 'iframe' ? iframeCode : scriptCode;
+  const activeCode = form
+    ? embedType === 'iframe'
+      ? leadCaptureService.generateFormIframeCode(form)
+      : leadCaptureService.generateFormScriptCode(form)
+    : config.embedType === 'iframe'
+    ? iframeCode
+    : scriptCode;
 
   const handleCopy = async (): Promise<void> => {
     try {
@@ -33,9 +46,13 @@ export const EmbedCodeGenerator: React.FC = () => {
   };
 
   const handleOpenPreview = (): void => {
-    const previewUrl = `/embed/lead-form?formId=${encodeURIComponent(config.id)}&source=${encodeURIComponent(config.leadSource)}`;
+    const formId = form ? form.id : config.id;
+    const key = form ? form.embedKey : config.id;
+    const previewUrl = `/embed/lead-form?formId=${encodeURIComponent(formId)}&key=${encodeURIComponent(key)}`;
     window.open(previewUrl, '_blank', 'noopener,noreferrer');
   };
+
+  const currentEmbedType = form ? embedType : config.embedType;
 
   return (
     <div className={styles.embedSection}>
@@ -43,7 +60,7 @@ export const EmbedCodeGenerator: React.FC = () => {
         <div>
           <div className={styles.headerTitle}>
             <Code size={20} color="var(--color-primary, #2563EB)" />
-            Cấu Hình &amp; Xuất Bản Mã Nhúng Website
+            Cấu Hình &amp; Xuất Bản Mã Nhúng Website {form ? `— ${form.title}` : ''}
           </div>
           <div className={styles.headerSubtitle}>
             Nhúng biểu mẫu thu thập khách hàng tiềm năng vào WordPress, Landing Page hoặc bất kỳ website nào
@@ -53,15 +70,21 @@ export const EmbedCodeGenerator: React.FC = () => {
         <div className={styles.formatToggle}>
           <button
             type="button"
-            className={`${styles.formatBtn} ${config.embedType === 'iframe' ? styles.active : ''}`}
-            onClick={() => updateConfig({ embedType: 'iframe' })}
+            className={`${styles.formatBtn} ${currentEmbedType === 'iframe' ? styles.active : ''}`}
+            onClick={() => {
+              setEmbedType('iframe');
+              updateConfig({ embedType: 'iframe' });
+            }}
           >
             <Layers size={14} /> Mã Nhúng Iframe
           </button>
           <button
             type="button"
-            className={`${styles.formatBtn} ${config.embedType === 'script' ? styles.active : ''}`}
-            onClick={() => updateConfig({ embedType: 'script' })}
+            className={`${styles.formatBtn} ${currentEmbedType === 'script' ? styles.active : ''}`}
+            onClick={() => {
+              setEmbedType('script');
+              updateConfig({ embedType: 'script' });
+            }}
           >
             <FileCode size={14} /> Mã Nhúng Script Widget
           </button>
@@ -72,7 +95,7 @@ export const EmbedCodeGenerator: React.FC = () => {
       <div className={styles.codeBox}>
         <div className={styles.codeHeader}>
           <span className={styles.codeTypeLabel}>
-            {config.embedType === 'iframe' ? 'HTML / IFRAME SNIPPET' : 'JAVASCRIPT WIDGET SDK'}
+            {currentEmbedType === 'iframe' ? 'HTML / IFRAME SNIPPET' : 'JAVASCRIPT WIDGET SDK'}
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Button

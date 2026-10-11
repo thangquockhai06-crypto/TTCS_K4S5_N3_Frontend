@@ -13,6 +13,7 @@ export interface ILeadCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  formId?: string;
 }
 
 const INTEREST_OPTIONS: ICustomSelectOption<LeadInterestType>[] = [
@@ -37,6 +38,7 @@ export const LeadCreateModal: React.FC<ILeadCreateModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
+  formId,
 }) => {
   const { createManualLead } = useLeadCapture();
 
@@ -216,7 +218,7 @@ export const LeadCreateModal: React.FC<ILeadCreateModalProps> = ({
       notes: notes.trim() || undefined,
     };
 
-    const result = createManualLead(leadDTO);
+    const result = createManualLead(leadDTO, formId);
     if (result.success) {
       resetForm();
       onClose();

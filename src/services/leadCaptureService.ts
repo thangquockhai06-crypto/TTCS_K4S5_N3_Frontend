@@ -10,10 +10,10 @@ import {
   IWebFormItem,
 } from '../interfaces/lead-capture.interface';
 
-const FORMS_STORAGE_KEY = 'nexus_crm_web_forms_v3';
-const CONFIG_STORAGE_KEY = 'nexus_crm_lead_embed_config_v3';
-const SUBMISSIONS_STORAGE_KEY = 'nexus_crm_lead_submissions_v3';
-const RATE_LIMIT_STORAGE_KEY = 'nexus_crm_lead_rate_limit_v3';
+const FORMS_STORAGE_KEY = 'nexus_crm_web_forms_v4';
+const CONFIG_STORAGE_KEY = 'nexus_crm_lead_embed_config_v4';
+const SUBMISSIONS_STORAGE_KEY = 'nexus_crm_lead_submissions_v4';
+const RATE_LIMIT_STORAGE_KEY = 'nexus_crm_lead_rate_limit_v4';
 
 export const DEFAULT_FORM_FIELDS: IEmbedFormField[] = [
   {
@@ -84,31 +84,35 @@ export const DEFAULT_FORM_FIELDS: IEmbedFormField[] = [
 export const DEFAULT_WEB_FORMS: IWebFormItem[] = [
   {
     id: 'form-web-01',
-    title: 'Biểu Mẫu Tư Vấn Giải Pháp NexusCRM',
+    title: 'Thu thập khách hàng tiềm năng Q2',
     type: 'Thu thập khách hàng tiềm năng',
     status: 'active',
     viewsCount: 382,
     submissionsCount: 4,
     conversionRate: '1.05%',
-    embedKey: 'nexus_crm_consult_01',
-    workflowConnection: 'Tự động phân bổ Salesteam Inbound Q4',
-    description:
-      'Quản lý biểu mẫu nhúng, trường biểu mẫu, mã nhúng và lịch sử gửi trong dịch vụ Marketing.',
+    embedKey: 'nexus_crm_q2_landing',
+    workflowConnection: 'Không liên kết workflow',
+    description: 'Thu thập khách hàng tiềm năng từ các landing page trả phí.',
+    submitAction: 'Hiển thị tin nhắn',
+    successMessage: 'Cảm ơn bạn đã gửi thông tin!',
+    fields: ['fullName', 'email', 'phone', 'company', 'interest'],
     createdAt: '2026-10-01 08:30',
     updatedAt: '2026-10-10 14:00',
   },
   {
     id: 'form-web-02',
-    title: 'Đăng Ký Trải Nghiệm Bản Demo Enterprise',
-    type: 'Thu thập khách hàng tiềm năng',
+    title: '[QA agent] map custom field',
+    type: 'Khảo sát & đồng bộ Custom Field',
     status: 'active',
-    viewsCount: 640,
-    submissionsCount: 15,
-    conversionRate: '2.34%',
-    embedKey: 'nexus_crm_demo_ent_02',
-    workflowConnection: 'Không liên kết workflow',
-    description:
-      'Thu thập đăng ký dùng thử phần mềm quản trị quan hệ khách hàng đa kênh cho doanh nghiệp vừa và lớn.',
+    viewsCount: 120,
+    submissionsCount: 2,
+    conversionRate: '1.67%',
+    embedKey: 'qaagentmapcustomfield',
+    workflowConnection: 'Tự động phân bổ Salesteam Inbound',
+    description: 'Form thu tu dong — xoa sau khi test',
+    submitAction: 'Hiển thị tin nhắn',
+    successMessage: 'OK',
+    fields: ['fullName', 'email', 'phone', 'notes'],
     createdAt: '2026-10-02 09:15',
     updatedAt: '2026-10-11 10:20',
   },
@@ -116,13 +120,13 @@ export const DEFAULT_WEB_FORMS: IWebFormItem[] = [
 
 export const DEFAULT_EMBED_CONFIG: IEmbedFormConfig = {
   id: 'form-web-01',
-  formTitle: 'Đăng Ký Nhận Tư Vấn Giải Pháp NexusCRM',
+  formTitle: 'Thu thập khách hàng tiềm năng Q2',
   formDescription:
-    'Điền thông tin bên dưới để chuyên viên của chúng tôi liên hệ tư vấn, giới thiệu tính năng và gửi báo giá phù hợp trong vòng 15 phút.',
-  ctaText: 'Gửi Yêu Cầu Tư Vấn Ngay',
+    'Thu thập khách hàng tiềm năng từ các landing page trả phí.',
+  ctaText: 'Gửi Thông Tin Ngay',
   themeColor: '#2563EB',
   leadSource: 'Website Landing Page',
-  campaignTag: 'Inbound Marketing Q4',
+  campaignTag: 'Inbound Marketing Q2',
   embedType: 'iframe',
   width: '100%',
   enableHoneypot: true,
@@ -130,7 +134,7 @@ export const DEFAULT_EMBED_CONFIG: IEmbedFormConfig = {
   maxSubmissionsPerMinute: 3,
   blockDurationSeconds: 60,
   successMessage:
-    'Cảm ơn bạn! Yêu cầu tư vấn đã được gửi thành công. Chuyên viên NexusCRM sẽ liên hệ với bạn trong ít phút.',
+    'Cảm ơn bạn đã gửi thông tin!',
   redirectUrl: '',
   createdAt: '2026-10-01 08:00',
   updatedAt: '2026-10-11 09:30',
@@ -154,13 +158,13 @@ const INITIAL_SUBMISSIONS: ILeadSubmission[] = [
   },
   {
     id: 'sub-002',
-    formId: 'form-web-01',
+    formId: 'form-web-02',
     fullName: 'Phạm Thu Hương',
     email: 'huong.pt@anphat-logistics.com',
     phone: '0987654321',
     company: 'An Phát Logistics',
     interest: 'crm_consultation',
-    leadSource: 'Website Landing Page',
+    leadSource: 'Chiến Dịch Google Ads',
     status: 'New Lead',
     ipAddress: '14.241.235.12',
     submittedAt: '2026-10-10 16:30',
@@ -274,6 +278,9 @@ class LeadCaptureService {
       embedKey: item.embedKey || `nexus_embed_${Date.now()}`,
       workflowConnection: item.workflowConnection || 'Không liên kết workflow',
       description: item.description,
+      submitAction: item.submitAction || 'Hiển thị tin nhắn',
+      successMessage: item.successMessage || 'Cảm ơn bạn đã gửi thông tin!',
+      fields: item.fields || ['fullName', 'email', 'phone'],
       createdAt: formattedDate,
       updatedAt: formattedDate,
     };
@@ -500,13 +507,13 @@ class LeadCaptureService {
     };
   }
 
-  public createManualLead(dto: ICreateManualLeadDTO): ILeadSubmission {
+  public createManualLead(dto: ICreateManualLeadDTO, formId?: string): ILeadSubmission {
     const now = new Date();
     const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
     const newSubmission: ILeadSubmission = {
       id: `sub-manual-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      formId: 'manual-entry',
+      formId: formId || 'manual-entry',
       fullName: dto.fullName.trim(),
       email: dto.email.trim().toLowerCase(),
       phone: dto.phone.trim(),
@@ -521,16 +528,32 @@ class LeadCaptureService {
 
     this.submissions = [newSubmission, ...this.submissions];
     this.saveSubmissionsToStorage();
+
+    if (formId) {
+      const formIdx = this.forms.findIndex((f) => f.id === formId);
+      if (formIdx !== -1) {
+        const current = this.forms[formIdx];
+        const newSubs = current.submissionsCount + 1;
+        const rate = current.viewsCount > 0 ? `${((newSubs / current.viewsCount) * 100).toFixed(1)}%` : '100%';
+        this.forms[formIdx] = {
+          ...current,
+          submissionsCount: newSubs,
+          conversionRate: rate,
+        };
+        this.saveFormsToStorage();
+      }
+    }
+
     return newSubmission;
   }
 
-  public batchImportLeads(dtos: ICreateManualLeadDTO[]): ILeadSubmission[] {
+  public batchImportLeads(dtos: ICreateManualLeadDTO[], formId?: string): ILeadSubmission[] {
     const now = new Date();
     const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
     const newSubmissions: ILeadSubmission[] = dtos.map((dto, index) => ({
       id: `sub-excel-${Date.now()}-${index}-${Math.random().toString(36).substring(2, 5)}`,
-      formId: 'excel-import',
+      formId: formId || 'excel-import',
       fullName: dto.fullName.trim(),
       email: dto.email.trim().toLowerCase(),
       phone: dto.phone.trim(),
@@ -545,6 +568,22 @@ class LeadCaptureService {
 
     this.submissions = [...newSubmissions, ...this.submissions];
     this.saveSubmissionsToStorage();
+
+    if (formId) {
+      const formIdx = this.forms.findIndex((f) => f.id === formId);
+      if (formIdx !== -1) {
+        const current = this.forms[formIdx];
+        const newSubs = current.submissionsCount + newSubmissions.length;
+        const rate = current.viewsCount > 0 ? `${((newSubs / current.viewsCount) * 100).toFixed(1)}%` : '100%';
+        this.forms[formIdx] = {
+          ...current,
+          submissionsCount: newSubs,
+          conversionRate: rate,
+        };
+        this.saveFormsToStorage();
+      }
+    }
+
     return newSubmissions;
   }
 
@@ -607,6 +646,38 @@ class LeadCaptureService {
     const scriptUrl = `${origin}/embed/lead-form?embed=script&formId=${encodeURIComponent(config.id)}`;
     return `<!-- NexusCRM Form Thu Thập Lead - Mã Nhúng JavaScript Widget -->
 <div id="nexuscrm-lead-widget" data-form-id="${config.id}"></div>
+<script>
+  (function(w, d, s, o, f, js, fjs) {
+    w['NexusCRMWidget'] = o;
+    w[o] = w[o] || function() { (w[o].q = w[o].q || []).push(arguments); };
+    js = d.createElement(s);
+    fjs = d.getElementsByTagName(s)[0];
+    js.id = 'nexuscrm-widget-js';
+    js.src = f;
+    js.async = 1;
+    fjs.parentNode.insertBefore(js, fjs);
+  }(window, document, 'script', 'nexusWidget', '${scriptUrl}'));
+</script>`;
+  }
+
+  public generateFormIframeCode(form: IWebFormItem, origin: string = window.location.origin): string {
+    const srcUrl = `${origin}/embed/lead-form?formId=${encodeURIComponent(form.id)}&key=${encodeURIComponent(form.embedKey)}`;
+    return `<!-- NexusCRM Form Thu Thập Lead: ${form.title} - Mã Nhúng Iframe -->
+<iframe
+  src="${srcUrl}"
+  width="100%"
+  height="650"
+  frameborder="0"
+  style="border: none; max-width: 100%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);"
+  title="${form.title}"
+  loading="lazy"
+></iframe>`;
+  }
+
+  public generateFormScriptCode(form: IWebFormItem, origin: string = window.location.origin): string {
+    const scriptUrl = `${origin}/embed/lead-form?embed=script&formId=${encodeURIComponent(form.id)}&key=${encodeURIComponent(form.embedKey)}`;
+    return `<!-- NexusCRM Form Thu Thập Lead: ${form.title} - Mã Nhúng JavaScript Widget SDK -->
+<div id="nexuscrm-lead-widget" data-form-id="${form.id}" data-embed-key="${form.embedKey}"></div>
 <script>
   (function(w, d, s, o, f, js, fjs) {
     w['NexusCRMWidget'] = o;

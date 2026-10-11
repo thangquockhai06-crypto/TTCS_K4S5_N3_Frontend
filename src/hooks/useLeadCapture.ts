@@ -216,7 +216,7 @@ export function useLeadCapture() {
   );
 
   const createManualLead = useCallback(
-    (dto: ICreateManualLeadDTO): { success: boolean; submission?: ILeadSubmission; message?: string } => {
+    (dto: ICreateManualLeadDTO, formId?: string): { success: boolean; submission?: ILeadSubmission; message?: string } => {
       // Validate mandatory leadSource
       if (!dto.leadSource || !dto.leadSource.trim()) {
         showToast('Lỗi: Mọi lead nhập vào hệ thống đều bắt buộc phải có nguồn!', 'error');
@@ -224,7 +224,7 @@ export function useLeadCapture() {
       }
 
       try {
-        const sub = leadCaptureService.createManualLead(dto);
+        const sub = leadCaptureService.createManualLead(dto, formId);
         reload();
 
         const interestLabelMap: Record<string, string> = {
@@ -278,7 +278,7 @@ export function useLeadCapture() {
   );
 
   const batchImportLeads = useCallback(
-    (dtos: ICreateManualLeadDTO[]): { success: boolean; importedCount: number } => {
+    (dtos: ICreateManualLeadDTO[], formId?: string): { success: boolean; importedCount: number } => {
       if (!dtos || dtos.length === 0) {
         showToast('Không có dữ liệu hợp lệ để nhập vào hệ thống.', 'warning');
         return { success: false, importedCount: 0 };
@@ -292,7 +292,7 @@ export function useLeadCapture() {
       }
 
       try {
-        const subs = leadCaptureService.batchImportLeads(dtos);
+        const subs = leadCaptureService.batchImportLeads(dtos, formId);
         reload();
 
         dtos.forEach((dto) => {

@@ -30,6 +30,9 @@ export interface IWebFormItem {
   embedKey: string;
   workflowConnection: string;
   description: string;
+  submitAction?: string;
+  successMessage?: string;
+  fields?: string[];
   createdAt: string;
   updatedAt: string;
 }

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 import { useCRMData } from '../../context/CRMDataContext';
+import inputStyles from './Input.module.css';
 
 export interface ICustomSelectOption<T extends string = string> {
   value: T;
@@ -8,6 +9,7 @@ export interface ICustomSelectOption<T extends string = string> {
 }
 
 export interface ICustomSelectProps<T extends string = string> {
+  label?: string;
   value: T;
   onChange: (val: T) => void;
   options: ICustomSelectOption<T>[];
@@ -20,12 +22,13 @@ export interface ICustomSelectProps<T extends string = string> {
 }
 
 export function CustomSelect<T extends string = string>({
+  label,
   value,
   onChange,
   options,
   placeholder = 'Chọn một mục...',
   width = '100%',
-  height = '38px',
+  height = '47px',
   disabled = false,
   error = false,
   className = '',
@@ -54,74 +57,75 @@ export function CustomSelect<T extends string = string>({
   return (
     <div
       ref={containerRef}
-      className={className || undefined}
+      className={`${inputStyles.field} ${className}`}
       style={{
         position: 'relative',
         width,
-        display: 'inline-block',
         userSelect: 'none',
       }}
     >
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => !disabled && setIsOpen((prev) => !prev)}
-        style={{
-          width: '100%',
-          height,
-          padding: '0 12px',
-          borderRadius: '6px',
-          border: isOpen
-            ? '1px solid #2563eb'
-            : error
-            ? '1px solid #ef4444'
-            : isDark
-            ? '1px solid #334155'
-            : '1px solid #cbd5e1',
-          boxShadow: isOpen
-            ? '0 0 0 3px rgba(37, 99, 235, 0.2)'
-            : error
-            ? '0 0 0 2px rgba(239, 68, 68, 0.15)'
-            : 'none',
-          backgroundColor: disabled
-            ? isDark
-              ? '#1e293b'
-              : '#f8fafc'
-            : isDark
-            ? '#111827'
-            : '#ffffff',
-          color: selectedOption
-            ? isDark
-              ? '#f8fafc'
-              : '#1e293b'
-            : isDark
-            ? '#64748b'
-            : '#94a3b8',
-          fontSize: '0.84rem',
-          fontWeight: 500,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          outline: 'none',
-          boxSizing: 'border-box',
-          transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
-        }}
-      >
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {selectedOption ? selectedOption.label : placeholder}
-        </span>
-        <ChevronDown
-          size={16}
-          color={isDark ? '#94a3b8' : '#64748b'}
+      {label && (
+        <label className={inputStyles.field__label}>
+          {label}
+        </label>
+      )}
+
+      <div style={{ position: 'relative', width: '100%' }}>
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => !disabled && setIsOpen((prev) => !prev)}
+          className={`${inputStyles.field__control} ${
+            isOpen ? inputStyles['field--focused'] : ''
+          } ${error ? inputStyles['field--error'] : ''} ${
+            disabled ? inputStyles['field--disabled'] : ''
+          }`}
           style={{
-            marginLeft: '8px',
-            flexShrink: 0,
-            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-            transition: 'transform 0.18s ease',
+            width: '100%',
+            height,
+            padding: '0 14px',
+            borderRadius: 'var(--radius-md)',
+            border: isOpen
+              ? '1.5px solid var(--color-primary, #2563EB)'
+              : error
+              ? '1.5px solid var(--color-danger, #EF4444)'
+              : '1.5px solid var(--color-border)',
+            boxShadow: isOpen
+              ? '0 0 0 4px var(--color-focus-ring, rgba(37, 99, 235, 0.28))'
+              : error
+              ? '0 0 0 3px var(--color-danger-soft, rgba(239, 68, 68, 0.2))'
+              : 'none',
+            backgroundColor: disabled
+              ? 'var(--color-bg-subtle)'
+              : 'var(--color-bg-surface)',
+            color: selectedOption
+              ? 'var(--color-text-primary)'
+              : 'var(--color-text-muted)',
+            fontSize: '0.9rem',
+            fontWeight: 400,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            cursor: disabled ? 'not-allowed' : 'pointer',
+            outline: 'none',
+            boxSizing: 'border-box',
+            textAlign: 'left',
           }}
-        />
-      </button>
+        >
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {selectedOption ? selectedOption.label : placeholder}
+          </span>
+          <ChevronDown
+            size={16}
+            style={{
+              marginLeft: '8px',
+              flexShrink: 0,
+              transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 0.18s ease',
+              color: 'var(--color-text-muted)',
+            }}
+          />
+        </button>
 
       {isOpen && (
         <div
@@ -194,6 +198,7 @@ export function CustomSelect<T extends string = string>({
           })}
         </div>
       )}
+      </div>
     </div>
   );
 }
