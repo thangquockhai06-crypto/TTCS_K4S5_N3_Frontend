@@ -24,6 +24,7 @@ import { StagnantCustomerList } from '../components/customer/StagnantCustomerLis
 import { ForecastPage } from '../pages/ForecastPage';
 import { StagnantDealsPage } from '../pages/StagnantDealsPage';
 import { DealReassignmentPage } from '../pages/DealReassignmentPage';
+import { LeadManagementPage } from '../features/lead-management';
 
 interface IProtectedRouteProps {
   children: React.ReactElement;
@@ -60,6 +61,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="forecast" element={<ForecastPage />} />
         <Route path="stagnant-deals" element={<StagnantDealsPage />} />
         <Route path="deal-reassignment" element={<DealReassignmentPage />} />
+        <Route path="leads" element={<LeadManagementPage />} />
 
         {/* User Management & Dedicated Edit */}
         <Route path="users" element={<UserManagementPage />} />

@@ -418,4 +418,20 @@
   .topbar__tokenBtn {
     display: none;
   }
+
+  .topbar__searchContainer {
+    display: none;
+  }
+
+  .topbar__right {
+    gap: 6px;
+  }
+
+  .topbar__profileGroup {
+    gap: 4px;
+  }
+
+  .topbar__avatarBtn {
+    padding-right: 4px;
+  }
 }
