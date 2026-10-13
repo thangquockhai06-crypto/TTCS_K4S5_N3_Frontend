@@ -10,6 +10,7 @@ import {
   GitCommit,
   LayoutDashboard,
   ContactRound,
+  GitBranch,
   Package,
   PanelLeftClose,
   ShieldCheck,
@@ -77,6 +78,13 @@ const ALL_MENU_ITEMS: ReadonlyArray<IMenuItem> = [
     path: '/leads',
     icon: <ContactRound size={19} />,
     requiredPermission: 'manage_customers',
+  },
+  {
+    id: 'lead-routing',
+    label: 'Điều phối Lead',
+    path: '/lead-routing-configuration',
+    icon: <GitBranch size={19} />,
+    requiredPermission: 'manage_deals',
   },
   {
     id: 'stagnant-customers',
@@ -150,14 +158,15 @@ export const Sidebar: React.FC<ISidebarProps> = ({
   onCloseMobile,
 }) => {
   const { user, lastTokenRefresh } = useAuth();
-  const { hasPermission } = useAuthorization();
+  const { hasPermission, isLeader } = useAuthorization();
 
   const menuItems = React.useMemo(() => {
     return ALL_MENU_ITEMS.filter((item) => {
+      if (item.id === 'lead-routing' && !isLeader) return false;
       if (!item.requiredPermission) return true;
       return hasPermission(item.requiredPermission);
     });
-  }, [hasPermission]);
+  }, [hasPermission, isLeader]);
 
   const sidebarClasses = [
     styles.sidebar,
