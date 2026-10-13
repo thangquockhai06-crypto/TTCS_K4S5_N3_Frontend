@@ -30,6 +30,7 @@ import { StagnantCustomerList } from '../components/customer/StagnantCustomerLis
 import { LeadCapturePage } from '../pages/LeadCapturePage';
 import { PublicLeadFormPage } from '../pages/PublicLeadFormPage';
 import { CampaignsPage } from '../pages/CampaignsPage';
+import { LeadScoringConfigPage } from '../pages/LeadScoringConfigPage';
 
 interface IProtectedRouteProps {
   children: React.ReactElement;
@@ -98,6 +99,9 @@ export const AppRoutes: React.FC = () => {
 
         {/* Marketing Campaign Tracking (S4-03) */}
         <Route path="campaigns" element={<CampaignsPage />} />
+
+        {/* Lead Scoring Config (S4-05) */}
+        <Route path="leads/scoring" element={<LeadScoringConfigPage />} />
       </Route>
 
       {/* Public Standalone Embed Form */}

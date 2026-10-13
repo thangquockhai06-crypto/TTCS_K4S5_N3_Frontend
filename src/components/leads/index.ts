@@ -5,3 +5,5 @@ export * from './CampaignTrackerView';
 export * from './LeadMergeModal';
 export * from './LeadDeduplicationBanner';
 export * from './LeadDeduplicationView';
+export * from './LeadScoreBadge';
+export * from './LeadScoringConfig';

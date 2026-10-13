@@ -25,6 +25,8 @@ import {
 } from '../../interfaces/campaign.interface';
 import { useCampaigns } from '../../hooks/useCampaigns';
 import { formatCurrency } from '../../utils/formatters';
+import { LeadScoreBadge } from './LeadScoreBadge';
+import { leadScoringService } from '../../services/leadScoringService';
 import styles from './CampaignTrackerView.module.css';
 
 const CHANNEL_OPTIONS: ICustomSelectOption<CampaignChannelType>[] = [
@@ -438,6 +440,7 @@ export const CampaignTrackerView: React.FC = () => {
                     <th>Email &amp; Điện Thoại</th>
                     <th>Nhu Cầu Quan Tâm</th>
                     <th>Nguồn Lead / Chiến Dịch</th>
+                    <th style={{ textAlign: 'center' }}>Điểm Tiềm Năng</th>
                     <th>Trạng Thái CRM</th>
                     <th>Thời Gian Tiếp Nhận</th>
                   </tr>
@@ -445,39 +448,51 @@ export const CampaignTrackerView: React.FC = () => {
                 <tbody>
                   {selectedCampaignLeads.length === 0 ? (
                     <tr>
-                      <td colSpan={6} style={{ textAlign: 'center', padding: '32px', color: 'var(--color-text-muted)' }}>
+                      <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: 'var(--color-text-muted)' }}>
                         Chưa có lead nào phát sinh từ chiến dịch này.
                       </td>
                     </tr>
                   ) : (
-                    pagedLeads.map((lead) => (
-                      <tr key={lead.id}>
-                        <td>
-                          <strong>{lead.fullName}</strong>
-                          <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>
-                            {lead.company || 'Doanh nghiệp chưa phân loại'}
-                          </div>
-                        </td>
-                        <td>
-                          <div style={{ fontSize: '0.8rem' }}>{lead.email}</div>
-                          <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>
-                            {lead.phone}
-                          </div>
-                        </td>
-                        <td>
-                          <div style={{ fontSize: '0.8rem', fontWeight: 500 }}>{lead.interest}</div>
-                        </td>
-                        <td>
-                          <Badge tone="primary">{lead.leadSource}</Badge>
-                        </td>
-                        <td>
-                          <Badge tone="success">{lead.status}</Badge>
-                        </td>
-                        <td style={{ fontSize: '0.76rem', color: 'var(--color-text-muted)' }}>
-                          {lead.submittedAt}
-                        </td>
-                      </tr>
-                    ))
+                    pagedLeads.map((lead) => {
+                      const scoreDetail = leadScoringService.calculateScore(lead);
+                      return (
+                        <tr key={lead.id}>
+                          <td>
+                            <strong>{lead.fullName}</strong>
+                            <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>
+                              {lead.company || 'Doanh nghiệp chưa phân loại'}
+                            </div>
+                          </td>
+                          <td>
+                            <div style={{ fontSize: '0.8rem' }}>{lead.email}</div>
+                            <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>
+                              {lead.phone}
+                            </div>
+                          </td>
+                          <td>
+                            <div style={{ fontSize: '0.8rem', fontWeight: 500 }}>{lead.interest}</div>
+                          </td>
+                          <td>
+                            <Badge tone="primary">{lead.leadSource}</Badge>
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <LeadScoreBadge
+                              score={scoreDetail.score}
+                              temperature={scoreDetail.temperature}
+                              size="sm"
+                              matchedCriteria={scoreDetail.matchedCriteria}
+                              recommendedAction={scoreDetail.recommendedAction}
+                            />
+                          </td>
+                          <td>
+                            <Badge tone="success">{lead.status}</Badge>
+                          </td>
+                          <td style={{ fontSize: '0.76rem', color: 'var(--color-text-muted)' }}>
+                            {lead.submittedAt}
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>

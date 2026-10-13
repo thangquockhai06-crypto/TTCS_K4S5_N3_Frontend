@@ -4,6 +4,7 @@ import {
   Building2,
   Clock,
   FileText,
+  Flame,
   FolderTree,
   GitCommit,
   Globe,
@@ -60,6 +61,13 @@ const ALL_MENU_ITEMS: ReadonlyArray<IMenuItem> = [
     label: 'Biểu mẫu web (Webform)',
     path: '/leads/capture',
     icon: <Globe size={19} />,
+    requiredPermission: 'view_dashboard',
+  },
+  {
+    id: 'lead-scoring',
+    label: 'Chấm điểm Lead',
+    path: '/leads/scoring',
+    icon: <Flame size={19} />,
     requiredPermission: 'view_dashboard',
   },
   {

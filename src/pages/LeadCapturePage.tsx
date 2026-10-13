@@ -16,13 +16,16 @@ import {
   Search,
   GitMerge,
   TrendingUp,
+  Flame,
 } from 'lucide-react';
 import {
   EmbedCodeGenerator,
   LeadCreateModal,
   LeadExcelImport,
   LeadDeduplicationView,
+  LeadScoreBadge,
 } from '../components/leads';
+import { leadScoringService } from '../services/leadScoringService';
 import { useLeadCapture } from '../hooks/useLeadCapture';
 import { Badge } from '../components/common/Badge';
 import { Button, Input, Modal, ConfirmModal } from '../components/common';
@@ -1063,6 +1066,16 @@ export const LeadCapturePage: React.FC = () => {
                     </Button>
                     <Button
                       type="button"
+                      variant="secondary"
+                      size="sm"
+                      leftIcon={<Flame size={14} color="#DC2626" />}
+                      onClick={() => navigate('/leads/scoring')}
+                      title="Chuyển đến màn hình Cấu hình Chấm điểm Lead"
+                    >
+                      Chấm điểm Lead
+                    </Button>
+                    <Button
+                      type="button"
                       variant="primary"
                       size="sm"
                       leftIcon={<FileSpreadsheet size={14} />}
@@ -1124,18 +1137,19 @@ export const LeadCapturePage: React.FC = () => {
                       <table className={styles.customTable}>
                         <thead>
                           <tr>
-                            <th style={{ width: '22%' }}>Khách Hàng &amp; Doanh Nghiệp</th>
-                            <th style={{ width: '22%' }}>Email &amp; Điện Thoại</th>
-                            <th style={{ width: '22%' }}>Nhu Cầu &amp; Nguồn Lead</th>
-                            <th style={{ width: '13%' }}>Trạng Thái CRM</th>
-                            <th style={{ width: '11%' }}>Thời Gian</th>
+                            <th style={{ width: '20%' }}>Khách Hàng &amp; Doanh Nghiệp</th>
+                            <th style={{ width: '18%' }}>Email &amp; Điện Thoại</th>
+                            <th style={{ width: '18%' }}>Nhu Cầu &amp; Nguồn Lead</th>
+                            <th style={{ width: '13%', textAlign: 'center' }}>Điểm Tiềm Năng</th>
+                            <th style={{ width: '11%' }}>Trạng Thái CRM</th>
+                            <th style={{ width: '10%' }}>Thời Gian</th>
                             <th style={{ width: '10%', textAlign: 'center' }}>Thao Tác</th>
                           </tr>
                         </thead>
                         <tbody>
                           {displayedSubmissions.length === 0 ? (
                             <tr>
-                              <td colSpan={6} style={{ textAlign: 'center', padding: '42px 20px', color: 'var(--color-text-muted)' }}>
+                              <td colSpan={7} style={{ textAlign: 'center', padding: '42px 20px', color: 'var(--color-text-muted)' }}>
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                                   <Clock size={30} style={{ opacity: 0.35, color: 'var(--color-primary)' }} />
                                   <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--color-text-main)' }}>
@@ -1204,6 +1218,20 @@ export const LeadCapturePage: React.FC = () => {
                                       </span>
                                     </div>
                                   </div>
+                                </td>
+                                <td style={{ textAlign: 'center' }}>
+                                  {(() => {
+                                    const scoreDetail = leadScoringService.calculateScore(sub);
+                                    return (
+                                      <LeadScoreBadge
+                                        score={scoreDetail.score}
+                                        temperature={scoreDetail.temperature}
+                                        size="sm"
+                                        matchedCriteria={scoreDetail.matchedCriteria}
+                                        recommendedAction={scoreDetail.recommendedAction}
+                                      />
+                                    );
+                                  })()}
                                 </td>
                                 <td>
                                   {sub.isSpamBlocked ? (

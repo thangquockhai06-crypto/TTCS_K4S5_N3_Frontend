@@ -11,3 +11,4 @@ export * from './sprint2.interface';
 export * from './lead-capture.interface';
 export * from './campaign.interface';
 export * from './lead-deduplication.interface';
+export * from './lead-scoring.interface';

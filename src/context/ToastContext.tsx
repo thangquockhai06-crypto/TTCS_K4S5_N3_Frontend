@@ -61,12 +61,16 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       message: string,
       type: ToastType = 'info',
       title?: string,
-      duration: number = 4500
+      duration: number = 3200
     ): string => {
       const id = `toast-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
       const newToast: IToastItem = { id, type, title, message, duration };
 
       setToasts((prev) => {
+        // Tránh spam thông báo trùng lặp để hiệu ứng mượt mà (smooth)
+        if (prev.some((t) => t.message === message)) {
+          return prev;
+        }
         const next = [...prev, newToast];
         return next.length > 3 ? next.slice(next.length - 3) : next;
       });
@@ -191,8 +195,9 @@ const ToastContainer: React.FC<{
                 '0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
               backdropFilter: 'blur(8px)',
               color: config.textColor,
-              animation: 'nexusToastSlideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
-              transition: 'all 0.2s ease',
+              animation: 'nexusToastSlideIn 0.35s cubic-bezier(0.2, 0.9, 0.3, 1)',
+              transition: 'all 0.25s ease',
+              willChange: 'transform, opacity',
             }}
           >
             <div style={{ flexShrink: 0, marginTop: '2px', color: config.iconColor }}>
@@ -258,11 +263,14 @@ const ToastContainer: React.FC<{
         @keyframes nexusToastSlideIn {
           0% {
             opacity: 0;
-            transform: translateY(16px) scale(0.96);
+            transform: translate3d(0, 18px, 0) scale(0.96);
+          }
+          65% {
+            transform: translate3d(0, -2px, 0) scale(1.008);
           }
           100% {
             opacity: 1;
-            transform: translateY(0) scale(1);
+            transform: translate3d(0, 0, 0) scale(1);
           }
         }
       `}</style>
