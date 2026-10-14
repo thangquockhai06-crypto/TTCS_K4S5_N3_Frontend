@@ -56,7 +56,7 @@ export const DealPipeline: React.FC<IDealPipelineProps> = ({ deals, onMoveDeal }
   };
 
   const stepStage = (deal: IDeal, delta: -1 | 1): void => {
-    const currentIndex = STAGE_ORDER.indexOf(deal.stage);
+    const currentIndex = STAGE_ORDER.indexOf(deal.stage as DealStageType);
     const nextIndex = currentIndex + delta;
     const nextStage = STAGE_ORDER[nextIndex];
     if (nextStage) {
@@ -102,7 +102,7 @@ export const DealPipeline: React.FC<IDealPipelineProps> = ({ deals, onMoveDeal }
             {/* Danh sách thẻ */}
             <div className={styles.columnCards}>
               {columnDeals.map((deal) => {
-                const currentIdx = STAGE_ORDER.indexOf(deal.stage);
+                const currentIdx = STAGE_ORDER.indexOf(deal.stage as DealStageType);
                 const canMoveLeft = currentIdx > 0;
                 const canMoveRight = currentIdx < STAGE_ORDER.length - 1;
 

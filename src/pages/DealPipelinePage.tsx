@@ -32,8 +32,8 @@ export const DealPipelinePage: React.FC = () => {
     return deals.filter(
       (d) =>
         d.title.toLowerCase().includes(q) ||
-        d.company.toLowerCase().includes(q) ||
-        d.customerName.toLowerCase().includes(q)
+        (d.company && d.company.toLowerCase().includes(q)) ||
+        (d.customerName && d.customerName.toLowerCase().includes(q))
     );
   }, [deals, query]);
 
@@ -45,7 +45,7 @@ export const DealPipelinePage: React.FC = () => {
   const weightedPipelineValue = useMemo(
     () =>
       filteredDeals.reduce(
-        (sum, d) => sum + Math.round((d.value * d.probability) / 100),
+        (sum, d) => sum + Math.round((d.value * (d.probability ?? 20)) / 100),
         0
       ),
     [filteredDeals]
