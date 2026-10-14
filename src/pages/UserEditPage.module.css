@@ -1,7 +1,13 @@
 .container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .backBtn {
@@ -14,9 +20,10 @@
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  margin-bottom: 16px;
+  margin-bottom: 0;
   padding: 4px 0;
   transition: color 0.15s ease;
+  align-self: flex-start;
 }
 
 .backBtn:hover {
@@ -24,13 +31,13 @@
 }
 
 .header {
-  margin-bottom: 24px;
+  margin-bottom: 4px;
 }
 
 .title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #0f172a;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-primary, #0f172a);
   margin: 0;
 }
 
@@ -43,9 +50,11 @@
 .card {
   background-color: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 28px;
+  border-radius: var(--radius-lg, 12px);
+  padding: 32px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .alert {
@@ -96,8 +105,8 @@
 
 .formGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
 }
 
 .fieldGroup {
@@ -206,7 +215,10 @@
   color: #64748b;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
   .card {
     padding: 20px 16px;
   }

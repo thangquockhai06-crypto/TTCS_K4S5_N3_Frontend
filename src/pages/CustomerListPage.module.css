@@ -2,6 +2,9 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .pageHeader {
@@ -154,16 +157,22 @@
 }
 
 .tableCard {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   overflow: hidden;
 }
 
 .tableResponsive {
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   overflow-x: auto;
 }
 
 .customerTable {
   width: 100%;
+  min-width: 100%;
   border-collapse: collapse;
   text-align: left;
 }

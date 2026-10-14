@@ -27,6 +27,9 @@ import { CustomerMergePage } from '../pages/CustomerMergePage';
 import { UserImportPage } from '../pages/UserImportPage';
 import { Customer360Dashboard } from '../pages/Customer360Dashboard';
 import { StagnantCustomerList } from '../components/customer/StagnantCustomerList';
+import { LeadManagementPage } from '../pages/LeadManagementPage';
+import { DealManagementPage } from '../pages/DealManagementPage';
+import { CampaignsPage } from '../pages/CampaignsPage';
 
 interface IProtectedRouteProps {
   children: React.ReactElement;
@@ -77,6 +80,15 @@ export const AppRoutes: React.FC = () => {
         <Route path="customers/:id/edit" element={<CustomerEditPage />} />
         <Route path="customers/stagnant" element={<StagnantCustomerList />} />
         <Route path="customers/:id" element={<Customer360Dashboard />} />
+
+        {/* EP-04: Lead Management */}
+        <Route path="leads" element={<LeadManagementPage />} />
+
+        {/* EP-05: Deal Management */}
+        <Route path="deals" element={<DealManagementPage />} />
+
+        {/* S4-03: Marketing Campaigns */}
+        <Route path="campaigns" element={<CampaignsPage />} />
 
         {/* Configuration & Administration Modules */}
         <Route path="profile" element={<ProfilePage />} />

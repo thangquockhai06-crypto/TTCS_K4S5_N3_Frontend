@@ -14,7 +14,7 @@ import {
 } from '../interfaces/customer.interface';
 import { customerService } from '../services/customerService';
 import { showGlobalToast } from '../context/ToastContext';
-import styles from './CustomerCreatePage.module.css';
+import styles from './CustomerImportPage.module.css';
 
 export const CustomerImportPage: React.FC = () => {
   const navigate = useNavigate();

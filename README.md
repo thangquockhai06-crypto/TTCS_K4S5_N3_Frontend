@@ -46,15 +46,11 @@ npm run dev
 ```
 *(Trên Windows, bạn có thể nhấp đúp vào `start-all.bat` để chạy đồng thời cả Backend và Frontend).*
 
-### 4. Tài khoản Quản trị viên (Admin) & Đăng nhập Đa phương thức
+### 4. Tài khoản Quản trị viên (Admin)
 - **Tên hiển thị:** `Quản Trị Viên Hệ Thống`
-- **Email:** `admin@nexuscrm.vn`
-- **Mật khẩu:** `Admin@2026`
+- **Email:** `admin@nexuscrm.com`
+- **Mật khẩu:** `password123`
 - **Đăng ký tài khoản mới:** Tạo tài khoản trực tiếp tại trang **Đăng ký (`/register`)**.
-- **Đăng nhập / Đăng ký bằng Mạng xã hội & Số điện thoại (OAuth 2.0 / OIDC):**
-  - Hỗ trợ 4 phương thức: **Google cá nhân**, **Apple ID**, **LinkedIn**, và **Số điện thoại (SMS OTP)**.
-  - Thiết kế chuẩn **Google Identity Services (GSI) Account Chooser** (`#g_id_onload`, giải mã JWT ID Token chuẩn OpenID Connect).
-  - Người dùng có thể chọn mục **"Sử dụng một tài khoản ... khác"** để tự thêm/liên kết tài khoản thực tế của mình vào dữ liệu hệ thống (`localStorage`) và đăng nhập nhanh cho các lần tiếp theo (mã OTP thử nghiệm cho Số điện thoại: `123456`).
 
 ---
 

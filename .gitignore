@@ -88,12 +88,13 @@ TTCS_K4S5_N3/
 app.py
 database.py
 pytest.ini
-start-all.bat
 start-server.bat
 
 # Documentation and screenshot scripts
-NexusCRM_DacTa_ChucNang_EP02_EP03.docx
+*.docx
+~$*
 capture_*.py
-generate_word_doc.py
-test_5173.py
+generate_word_doc*.py
+debug_*.py
+test_*.py
 screenshots/

@@ -1,4 +1,7 @@
 .tableContainer {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   background: var(--surface-primary, #ffffff);
   border: 1px solid var(--border-subtle, #e2e8f0);
   border-top-left-radius: var(--radius-lg, 12px);

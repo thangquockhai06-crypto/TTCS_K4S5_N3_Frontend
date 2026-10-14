@@ -19,7 +19,7 @@ import { ImportJobHistoryPanel } from '../components/users/ImportJobHistoryPanel
 import { IExcelImportUserRow } from '../interfaces';
 import { userImportService, IUserImportPreviewRow, IUserImportJob } from '../services/userImportService';
 import { showGlobalToast } from '../context/ToastContext';
-import styles from './CustomerCreatePage.module.css';
+import styles from './UserImportPage.module.css';
 
 export const UserImportPage: React.FC = () => {
   const navigate = useNavigate();

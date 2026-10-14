@@ -8,3 +8,4 @@ export * from './user-management.interface';
 export * from './userManagement.interface';
 export * from './menu.interface';
 export * from './sprint2.interface';
+export * from './lead.interface';
