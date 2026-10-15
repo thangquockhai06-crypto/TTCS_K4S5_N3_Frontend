@@ -17,6 +17,11 @@ class CampaignService {
     return response.data;
   }
 
+  async updateCampaign(id: string, payload: Partial<ICampaignCreatePayload>): Promise<ICampaign> {
+    const response = await axiosInstance.put<ICampaign>(`/campaigns/${id}`, payload);
+    return response.data;
+  }
+
   async deleteCampaign(id: string): Promise<{ success: boolean; message: string }> {
     const response = await axiosInstance.delete<{ success: boolean; message: string }>(`/campaigns/${id}`);
     return response.data;

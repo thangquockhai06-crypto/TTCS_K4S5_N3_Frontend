@@ -117,6 +117,7 @@ export interface ICampaign {
   expected_revenue: number;
   start_date?: string | null;
   end_date?: string | null;
+  description?: string | null;
   leads_count: number;
   deals_count: number;
   actual_revenue: number;
@@ -133,6 +134,7 @@ export interface ICampaignCreatePayload {
   expected_revenue?: number;
   start_date?: string;
   end_date?: string;
+  description?: string;
 }
 
 export interface ILeadEmbedSnippetResponse {
