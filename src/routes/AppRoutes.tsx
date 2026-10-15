@@ -25,6 +25,7 @@ import { ForecastPage } from '../pages/ForecastPage';
 import { StagnantDealsPage } from '../pages/StagnantDealsPage';
 import { DealReassignmentPage } from '../pages/DealReassignmentPage';
 import { LeadManagementPage } from '../features/lead-management';
+import { LeadAssignmentResponseSlaPage } from '../features/lead-assignment-response-sla';
 import { LeadRoutingConfigurationPage } from '../features/lead-routing-configuration';
 
 interface IProtectedRouteProps {
@@ -63,6 +64,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="stagnant-deals" element={<StagnantDealsPage />} />
         <Route path="deal-reassignment" element={<DealReassignmentPage />} />
         <Route path="leads" element={<LeadManagementPage />} />
+        <Route path="lead-assignment-response-sla" element={<LeadAssignmentResponseSlaPage />} />
         <Route path="lead-routing-configuration" element={<LeadRoutingConfigurationPage />} />
 
         {/* User Management & Dedicated Edit */}
