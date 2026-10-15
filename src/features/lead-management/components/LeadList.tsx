@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, ChevronLeft, ChevronRight, Mail, Phone, UserRound } from 'lucide-react';
+import { Building2, ChevronLeft, ChevronRight, Mail, Phone, Repeat2, UserRound } from 'lucide-react';
 import {
   ILead,
   LEAD_SOURCE_OPTIONS,
@@ -19,6 +19,7 @@ export interface ILeadListProps {
   now: Date;
   onPageChange: (page: number) => void;
   onRetry: () => void;
+  onConvertLead?: (lead: ILead) => void;
 }
 
 function getOptionLabel(
@@ -49,6 +50,7 @@ export const LeadList: React.FC<ILeadListProps> = ({
   now,
   onPageChange,
   onRetry,
+  onConvertLead,
 }) => {
   if (isLoading) {
     return (
@@ -128,6 +130,25 @@ export const LeadList: React.FC<ILeadListProps> = ({
               <span>Ngày tạo: {formatCreatedAt(lead.createdAt)}</span>
               <LeadSlaBadge lead={lead} now={now} />
             </div>
+
+            {onConvertLead && (
+              <div className={styles.leadCard__actions}>
+                <button
+                  type="button"
+                  className={styles.conversionAction}
+                  onClick={() => onConvertLead(lead)}
+                  disabled={lead.status !== 'qualified'}
+                  aria-label={`Chuyển đổi lead ${lead.fullName}`}
+                >
+                  <Repeat2 size={14} aria-hidden="true" />
+                  {lead.status === 'converted'
+                    ? 'Đã chuyển đổi'
+                    : lead.status === 'qualified'
+                      ? 'Chuyển đổi Lead'
+                      : 'Không đủ điều kiện'}
+                </button>
+              </div>
+            )}
           </article>
         ))}
       </div>

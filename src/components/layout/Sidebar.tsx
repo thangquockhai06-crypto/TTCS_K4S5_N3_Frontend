@@ -5,6 +5,7 @@ import {
   ArrowRightLeft,
   Building2,
   Clock,
+  Clock3,
   FileText,
   FolderTree,
   GitCommit,
@@ -78,6 +79,13 @@ const ALL_MENU_ITEMS: ReadonlyArray<IMenuItem> = [
     path: '/leads',
     icon: <ContactRound size={19} />,
     requiredPermission: 'manage_customers',
+  },
+  {
+    id: 'lead-assignment-response-sla',
+    label: 'Lead Response & SLA',
+    path: '/lead-assignment-response-sla',
+    icon: <Clock3 size={19} />,
+    requiredPermission: 'manage_deals',
   },
   {
     id: 'lead-routing',

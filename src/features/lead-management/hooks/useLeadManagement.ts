@@ -38,6 +38,7 @@ export interface IUseLeadManagementResult {
   createSavedFilter: (name: string) => Promise<boolean>;
   renameSavedFilter: (id: string, name: string) => Promise<boolean>;
   deleteSavedFilter: (id: string) => Promise<void>;
+  markLeadConverted: (leadId: string, convertedCustomerId?: string) => void;
   clearActionError: () => void;
 }
 
@@ -173,6 +174,21 @@ export function useLeadManagement(): IUseLeadManagementResult {
     }
   }, []);
 
+  const markLeadConverted = useCallback((leadId: string, convertedCustomerId?: string): void => {
+    setLeads((currentLeads) =>
+      currentLeads.map((lead) =>
+        lead.id === leadId
+          ? {
+              ...lead,
+              status: 'converted',
+              convertedAt: new Date().toISOString(),
+              convertedCustomerId: convertedCustomerId ?? lead.convertedCustomerId,
+            }
+          : lead
+      )
+    );
+  }, []);
+
   return {
     leads,
     now,
@@ -197,6 +213,7 @@ export function useLeadManagement(): IUseLeadManagementResult {
     createSavedFilter,
     renameSavedFilter,
     deleteSavedFilter,
+    markLeadConverted,
     clearActionError: () => setActionError(null),
   };
 }

@@ -3,6 +3,7 @@ export const LEAD_STATUS_OPTIONS = [
   { value: 'contacted', label: 'Đã liên hệ' },
   { value: 'qualified', label: 'Đủ điều kiện' },
   { value: 'disqualified', label: 'Không phù hợp' },
+  { value: 'converted', label: 'Đã chuyển đổi' },
 ] as const;
 
 export const LEAD_SOURCE_OPTIONS = [
@@ -39,6 +40,8 @@ export interface ILead {
   owner: ILeadOwner;
   createdAt: string;
   slaDueAt?: string;
+  convertedAt?: string;
+  convertedCustomerId?: string;
 }
 
 export interface ILeadFilter {
