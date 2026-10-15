@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
   ChevronRight,
   Clock,
+  Edit2,
   Kanban,
   List,
   Loader2,
@@ -17,11 +19,9 @@ import {
 import {
   IDeal,
   ISalesForecast,
-  ICampaign,
   ICreateDealItemPayload,
 } from '../interfaces';
 import { dealService } from '../services/dealService';
-import { campaignService } from '../services/campaignService';
 import { sprint2Service } from '../services/sprint2Service';
 import { formatCurrency, formatCompactCurrency } from '../utils/formatters';
 import { showGlobalToast, ToastType } from '../context/ToastContext';
@@ -48,6 +48,7 @@ export const normalizeStage = (st?: string): string => {
 };
 
 export const DealManagementPage: React.FC = () => {
+  const navigate = useNavigate();
   // Main state
   const [deals, setDeals] = useState<IDeal[]>([]);
   const [forecast, setForecast] = useState<ISalesForecast | null>(null);
@@ -64,11 +65,9 @@ export const DealManagementPage: React.FC = () => {
   const [activeDropStage, setActiveDropStage] = useState<string | null>(null);
 
   // Catalogs
-  const [campaigns, setCampaigns] = useState<ICampaign[]>([]);
   const [products, setProducts] = useState<any[]>([]);
 
   // Modals
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
   const [isCloseModalOpen, setIsCloseModalOpen] = useState<boolean>(false);
   const [isItemsModalOpen, setIsItemsModalOpen] = useState<boolean>(false);
   const [isReassignModalOpen, setIsReassignModalOpen] = useState<boolean>(false);
@@ -80,16 +79,6 @@ export const DealManagementPage: React.FC = () => {
   const [overrideReason, setOverrideReason] = useState<string>('');
 
   // Forms
-  const [createForm, setCreateForm] = useState({
-    title: '',
-    customerId: '',
-    value: 50000000,
-    stage: 'lead',
-    probability: 20,
-    expectedCloseDate: '',
-    campaignId: '',
-  });
-
   const [closeForm, setCloseForm] = useState({
     stage: 'won' as 'won' | 'lost',
     actualValue: 50000000,
@@ -114,7 +103,6 @@ export const DealManagementPage: React.FC = () => {
 
   // Load Catalogs
   useEffect(() => {
-    campaignService.getCampaigns().then(setCampaigns).catch(() => {});
     sprint2Service.getProducts().then(setProducts).catch(() => {});
   }, []);
 
@@ -245,38 +233,7 @@ export const DealManagementPage: React.FC = () => {
     }
   };
 
-  // Create Deal
-  const handleCreateDeal = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await dealService.createDeal({
-        ...createForm,
-        customerId: createForm.customerId || 'cust-001',
-      });
-      notifyToast({
-        title: 'Tạo Deal thành công',
-        description: `Cơ hội "${createForm.title}" đã được thêm vào hệ thống.`,
-        type: 'success',
-      });
-      setIsCreateModalOpen(false);
-      setCreateForm({
-        title: '',
-        customerId: '',
-        value: 50000000,
-        stage: 'lead',
-        probability: 20,
-        expectedCloseDate: '',
-        campaignId: '',
-      });
-      fetchDealsAndForecast();
-    } catch (err: any) {
-      notifyToast({
-        title: 'Không thể tạo Deal',
-        description: err.response?.data?.detail || 'Dữ liệu không hợp lệ',
-        type: 'error',
-      });
-    }
-  };
+
 
   // Scan stalled deals
   const handleScanStalled = async () => {
@@ -407,7 +364,7 @@ export const DealManagementPage: React.FC = () => {
               <UserCheck size={16} /> Bàn giao {selectedDeals.length} Deal
             </Button>
           )}
-          <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
+          <Button variant="primary" onClick={() => navigate('/deals/create')}>
             <Plus size={16} /> Tạo Cơ hội mới
           </Button>
         </div>
@@ -601,6 +558,14 @@ export const DealManagementPage: React.FC = () => {
                           <Package size={13} /> {deal.items?.length || 0} SP
                         </button>
 
+                        <button
+                          className={styles.cardActionBtn}
+                          title="Chỉnh sửa Deal"
+                          onClick={() => navigate(`/deals/${deal.id}/edit`)}
+                        >
+                          <Edit2 size={13} /> Sửa
+                        </button>
+
                         {/* Stage progress buttons */}
                         {stage.id !== 'won' && stage.id !== 'lost' && (
                           <>
@@ -750,6 +715,13 @@ export const DealManagementPage: React.FC = () => {
                           >
                             <Package size={13} /> {deal.items?.length || 0} SP
                           </button>
+                          <button
+                            className={styles.cardActionBtn}
+                            title="Chỉnh sửa Deal"
+                            onClick={() => navigate(`/deals/${deal.id}/edit`)}
+                          >
+                            <Edit2 size={13} /> Sửa
+                          </button>
                           {deal.stage !== 'won' && deal.stage !== 'lost' && (
                             <button
                               className={styles.cardActionBtn}
@@ -770,93 +742,7 @@ export const DealManagementPage: React.FC = () => {
         </div>
       )}
 
-      {/* S5-01: Create Deal Modal */}
-      <Modal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        title="Tạo Cơ hội Bán hàng mới"
-        maxWidth="lg"
-      >
-        <form onSubmit={handleCreateDeal}>
-          <div className={styles.formGrid}>
-            <div className={styles['formGroup--full']}>
-              <label className={styles.formLabel}>Tên cơ hội bán hàng *</label>
-              <input
-                className={styles.formInput}
-                required
-                value={createForm.title}
-                onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })}
-                placeholder="VD: Triển khai Hệ thống CRM Doanh nghiệp Q4"
-              />
-            </div>
 
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Quy mô trị giá (VNĐ) *</label>
-              <input
-                type="number"
-                className={styles.formInput}
-                required
-                value={createForm.value}
-                onChange={(e) => setCreateForm({ ...createForm, value: Number(e.target.value) })}
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Giai đoạn Phễu</label>
-              <select
-                className={styles.formSelect}
-                value={createForm.stage}
-                onChange={(e) => {
-                  const st = e.target.value;
-                  const prob = STAGES.find((s) => s.id === st)?.prob || 20;
-                  setCreateForm({ ...createForm, stage: st, probability: prob });
-                }}
-              >
-                {STAGES.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name} ({s.prob}%)
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Hạn chốt dự kiến (Expected Close Date)</label>
-              <input
-                type="date"
-                className={styles.formInput}
-                value={createForm.expectedCloseDate}
-                onChange={(e) => setCreateForm({ ...createForm, expectedCloseDate: e.target.value })}
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Chiến dịch Marketing (S4-03 / EP-05)</label>
-              <select
-                className={styles.formSelect}
-                value={createForm.campaignId}
-                onChange={(e) => setCreateForm({ ...createForm, campaignId: e.target.value })}
-              >
-                <option value="">Không gắn chiến dịch</option>
-                {campaigns.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 24 }}>
-            <Button variant="secondary" type="button" onClick={() => setIsCreateModalOpen(false)}>
-              Hủy
-            </Button>
-            <Button variant="primary" type="submit">
-              Lưu Cơ hội Bán hàng
-            </Button>
-          </div>
-        </form>
-      </Modal>
 
       {/* S5-03: Products and Deal Items Drawer / Modal */}
       <Modal
