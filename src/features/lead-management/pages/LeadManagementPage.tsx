@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { RefreshCw, Save } from 'lucide-react';
 import { Button } from '../../../components/common';
+import { LeadConversionDialog, useLeadConversion } from '../../lead-conversion';
 import { useLeadManagement } from '../hooks/useLeadManagement';
 import { ILead, ISavedLeadFilter } from '../types/Lead.types';
 import { LeadFilters } from '../components/LeadFilters';
@@ -20,6 +21,7 @@ function getOwners(leads: readonly ILead[]): Array<{ id: string; name: string }>
 
 export const LeadManagementPage: React.FC = () => {
   const management = useLeadManagement();
+  const conversion = useLeadConversion();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingPreset, setEditingPreset] = useState<ISavedLeadFilter | null>(null);
@@ -54,6 +56,12 @@ export const LeadManagementPage: React.FC = () => {
   const closeDialog = (): void => {
     setIsDialogOpen(false);
     setEditingPreset(null);
+  };
+
+  const handleLeadConversionSubmit = async (request: Parameters<typeof conversion.submit>[0]): Promise<Awaited<ReturnType<typeof conversion.submit>>> => {
+    const result = await conversion.submit(request);
+    management.markLeadConverted(result.leadId, result.customerId);
+    return result;
   };
 
   return (
@@ -111,6 +119,7 @@ export const LeadManagementPage: React.FC = () => {
             now={management.now}
             onPageChange={management.setPage}
             onRetry={() => void management.loadData()}
+            onConvertLead={conversion.open}
           />
         </div>
 
@@ -138,6 +147,16 @@ export const LeadManagementPage: React.FC = () => {
         isSubmitting={isSubmitting}
         onClose={closeDialog}
         onSave={savePreset}
+      />
+
+      <LeadConversionDialog
+        lead={conversion.lead}
+        isOpen={conversion.isOpen}
+        isSubmitting={conversion.isSubmitting}
+        errorMessage={conversion.errorMessage}
+        success={conversion.success}
+        onClose={conversion.close}
+        onSubmit={handleLeadConversionSubmit}
       />
     </main>
   );

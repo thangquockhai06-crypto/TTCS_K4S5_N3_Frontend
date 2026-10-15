@@ -1,0 +1,209 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.summaryCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.summaryLabel {
+  margin: 0 0 4px;
+  color: var(--color-text-secondary);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.summaryCard h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.summaryBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--color-text-secondary);
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
+.formField--wide {
+  grid-column: 1 / -1;
+}
+
+.formField input,
+.formField textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 10px;
+  color: var(--color-text-primary);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  font: inherit;
+}
+
+.formField textarea {
+  resize: vertical;
+}
+
+.formField input:focus-visible,
+.formField textarea:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.formField small {
+  color: var(--color-danger);
+  font-weight: 700;
+}
+
+.contactSummary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+}
+
+.contactSummary > div {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.devWarning,
+.errorBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+}
+
+.devWarning {
+  color: var(--color-warning);
+  background: var(--color-warning-soft);
+  border: 1px solid rgba(255, 190, 92, 0.35);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.errorBanner {
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
+  border: 1px solid rgba(211, 73, 73, 0.25);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.footerActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.successPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.successHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  color: var(--color-success);
+}
+
+.successHeader h3 {
+  margin: 0 0 4px;
+  font-size: 1.08rem;
+}
+
+.successHeader p,
+.successMeta p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+}
+
+.successMeta {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.successActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.routeLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 12px;
+  color: var(--color-text-on-dark);
+  background: var(--color-primary);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.routeLink:hover {
+  background: var(--color-primary-hover);
+}
+
+@media (max-width: 640px) {
+  .formGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .summaryCard,
+  .footerActions {
+    flex-direction: column;
+  }
+
+  .footerActions > * {
+    width: 100%;
+  }
+}
