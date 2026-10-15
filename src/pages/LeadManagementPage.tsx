@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
   ArrowRight,
@@ -6,6 +7,7 @@ import {
   Clock,
   Code,
   Copy,
+  Edit2,
   Flame,
   GitMerge,
   Layers,
@@ -45,6 +47,7 @@ const PRESET_FILTERS = [
 ];
 
 export const LeadManagementPage: React.FC = () => {
+  const navigate = useNavigate();
   // Main Data States
   const [leads, setLeads] = useState<ILead[]>([]);
   const [total, setTotal] = useState<number>(0);
@@ -62,7 +65,6 @@ export const LeadManagementPage: React.FC = () => {
   const [campaigns, setCampaigns] = useState<ICampaign[]>([]);
 
   // Modals
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
   const [isEmbedModalOpen, setIsEmbedModalOpen] = useState<boolean>(false);
   const [isRoutingModalOpen, setIsRoutingModalOpen] = useState<boolean>(false);
@@ -77,19 +79,6 @@ export const LeadManagementPage: React.FC = () => {
   const [embedCode, setEmbedCode] = useState<{ embed_html: string; form_action_url: string } | null>(null);
 
   // Form states
-  const [createForm, setCreateForm] = useState({
-    first_name: '',
-    last_name: '',
-    email: '',
-    phone: '',
-    company_name: '',
-    title: '',
-    industry: '',
-    region: 'Miền Bắc',
-    source: 'Website Form',
-    campaign_id: '',
-  });
-
   const [convertForm, setConvertForm] = useState({
     create_customer: true,
     create_deal: true,
@@ -166,38 +155,6 @@ export const LeadManagementPage: React.FC = () => {
   }, [leads]);
 
   // Actions
-  const handleCreateLead = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await leadService.createLead(createForm);
-      notifyToast({
-        title: 'Thành công',
-        description: `Lead "${createForm.last_name} ${createForm.first_name}" đã được tạo và tự động tính điểm & định tuyến.`,
-        type: 'success',
-      });
-      setIsCreateModalOpen(false);
-      setCreateForm({
-        first_name: '',
-        last_name: '',
-        email: '',
-        phone: '',
-        company_name: '',
-        title: '',
-        industry: '',
-        region: 'Miền Bắc',
-        source: 'Website Form',
-        campaign_id: '',
-      });
-      fetchLeads();
-    } catch (err: any) {
-      notifyToast({
-        title: 'Không thể tạo Lead',
-        description: err.response?.data?.detail || 'Dữ liệu không hợp lệ',
-        type: 'error',
-      });
-    }
-  };
-
   const handleAcceptLead = async (lead: ILead) => {
     try {
       await leadService.acceptLead(lead.id);
@@ -446,7 +403,7 @@ export const LeadManagementPage: React.FC = () => {
           >
             <Layers size={16} /> Cấu hình Định tuyến
           </Button>
-          <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
+          <Button variant="primary" onClick={() => navigate('/leads/create')}>
             <Plus size={16} /> Tạo Lead mới
           </Button>
         </div>
@@ -730,6 +687,14 @@ export const LeadManagementPage: React.FC = () => {
 
                             <button
                               className={styles.iconBtn}
+                              title="Chỉnh sửa Lead"
+                              onClick={() => navigate(`/leads/${lead.id}/edit`)}
+                            >
+                              <Edit2 size={15} color="#0284c7" />
+                            </button>
+
+                            <button
+                              className={styles.iconBtn}
                               title="Từ chối Lead (Yêu cầu lý do)"
                               onClick={() => {
                                 setActiveLead(lead);
@@ -775,144 +740,7 @@ export const LeadManagementPage: React.FC = () => {
         </div>
       </div>
 
-      {/* S4-02: Create Lead Modal */}
-      <Modal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        title="Thêm mới Lead tiềm năng"
-        maxWidth="lg"
-      >
-        <form onSubmit={handleCreateLead}>
-          <div className={styles.formGrid}>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Họ đệm *</label>
-              <input
-                className={styles.formInput}
-                required
-                value={createForm.last_name}
-                onChange={(e) => setCreateForm({ ...createForm, last_name: e.target.value })}
-                placeholder="Nguyễn Văn"
-              />
-            </div>
 
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Tên *</label>
-              <input
-                className={styles.formInput}
-                required
-                value={createForm.first_name}
-                onChange={(e) => setCreateForm({ ...createForm, first_name: e.target.value })}
-                placeholder="An"
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Email</label>
-              <input
-                type="email"
-                className={styles.formInput}
-                value={createForm.email}
-                onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
-                placeholder="an.nguyen@example.com"
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Số điện thoại</label>
-              <input
-                className={styles.formInput}
-                value={createForm.phone}
-                onChange={(e) => setCreateForm({ ...createForm, phone: e.target.value })}
-                placeholder="0987654321"
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Công ty / Doanh nghiệp</label>
-              <input
-                className={styles.formInput}
-                value={createForm.company_name}
-                onChange={(e) => setCreateForm({ ...createForm, company_name: e.target.value })}
-                placeholder="Công ty Cổ phần Alpha"
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Chức danh</label>
-              <input
-                className={styles.formInput}
-                value={createForm.title}
-                onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })}
-                placeholder="Giám đốc Kinh doanh"
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Ngành nghề (Industry)</label>
-              <input
-                className={styles.formInput}
-                value={createForm.industry}
-                onChange={(e) => setCreateForm({ ...createForm, industry: e.target.value })}
-                placeholder="Công nghệ / Tài chính / Bán lẻ..."
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Khu vực (Region)</label>
-              <select
-                className={styles.formSelect}
-                value={createForm.region}
-                onChange={(e) => setCreateForm({ ...createForm, region: e.target.value })}
-              >
-                <option value="Miền Bắc">Miền Bắc</option>
-                <option value="Miền Trung">Miền Trung</option>
-                <option value="Miền Nam">Miền Nam</option>
-              </select>
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Nguồn khách hàng</label>
-              <select
-                className={styles.formSelect}
-                value={createForm.source}
-                onChange={(e) => setCreateForm({ ...createForm, source: e.target.value })}
-              >
-                <option value="Website Form">Website Form</option>
-                <option value="Facebook Ads">Facebook Ads</option>
-                <option value="Google Ads">Google Ads</option>
-                <option value="Giới thiệu">Giới thiệu (Referral)</option>
-                <option value="Hội thảo">Hội thảo (Event)</option>
-                <option value="Khác">Khác</option>
-              </select>
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Chiến dịch Marketing</label>
-              <select
-                className={styles.formSelect}
-                value={createForm.campaign_id}
-                onChange={(e) => setCreateForm({ ...createForm, campaign_id: e.target.value })}
-              >
-                <option value="">Không liên kết chiến dịch</option>
-                {campaigns.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} ({c.code})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
-            <Button variant="secondary" type="button" onClick={() => setIsCreateModalOpen(false)}>
-              Hủy
-            </Button>
-            <Button variant="primary" type="submit">
-              Lưu Lead & Chạy Tự Động Định Tuyến
-            </Button>
-          </div>
-        </form>
-      </Modal>
 
       {/* Embed Snippet Modal */}
       <Modal
