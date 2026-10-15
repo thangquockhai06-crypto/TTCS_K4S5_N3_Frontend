@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Plus,
   Search,
@@ -8,7 +9,6 @@ import {
   Lock,
   AlertCircle,
   Check,
-  X,
 } from 'lucide-react';
 import { IProduct } from '../../interfaces';
 import { useAuth } from '../../hooks/useAuth';
@@ -17,32 +17,21 @@ import { showGlobalToast } from '../../context/ToastContext';
 import { PriceListModal } from './PriceListModal';
 
 export const ProductList: React.FC = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const isDirector =
     user?.role?.toLowerCase() === 'director' ||
     user?.role?.toLowerCase() === 'admin' ||
     user?.role?.toLowerCase() === 'system_admin' ||
-    user?.role?.toLowerCase() === 'giam_doc';
+    user?.role?.toLowerCase() === 'giam_doc' ||
+    user?.role === 'Super Admin' ||
+    user?.role === 'VP of Sales';
 
   const [products, setProducts] = useState<IProduct[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [isPriceListOpen, setIsPriceListOpen] = useState(false);
-
-  // Modal thêm/sửa sản phẩm
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<IProduct | null>(null);
-  const [formData, setFormData] = useState({
-    sku: '',
-    name: '',
-    category: 'Phần mềm CRM',
-    description: '',
-    selling_price: 1000000,
-    cost_price: 500000,
-    unit: 'Gói/Năm',
-  });
-
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const fetchProducts = useCallback(async () => {
@@ -64,69 +53,6 @@ export const ProductList: React.FC = () => {
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
-
-  const handleOpenCreate = () => {
-    setEditingProduct(null);
-    setFormData({
-      sku: `PRD-${Math.floor(100 + Math.random() * 900)}`,
-      name: '',
-      category: 'Phần mềm CRM',
-      description: '',
-      selling_price: 10000000,
-      cost_price: 6000000,
-      unit: 'Gói/Năm',
-    });
-    setIsFormOpen(true);
-  };
-
-  const handleOpenEdit = (p: IProduct) => {
-    setEditingProduct(p);
-    setFormData({
-      sku: p.sku,
-      name: p.name,
-      category: p.category,
-      description: p.description || '',
-      selling_price: p.selling_price,
-      cost_price: p.cost_price || 0,
-      unit: p.unit,
-    });
-    setIsFormOpen(true);
-  };
-
-  const handleSubmitForm = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      if (editingProduct) {
-        await sprint2Service.updateProduct(editingProduct.id, {
-          ...formData,
-          code: formData.sku,
-          selling_price: Number(formData.selling_price),
-          cost_price: isDirector ? Number(formData.cost_price) : undefined,
-        });
-        const msg = 'Cập nhật thông tin sản phẩm thành công!';
-        setStatusMsg({ type: 'success', text: msg });
-        showGlobalToast(msg, 'success');
-      } else {
-        await sprint2Service.createProduct({
-          ...formData,
-          code: formData.sku,
-          selling_price: Number(formData.selling_price),
-          cost_price: isDirector ? Number(formData.cost_price) : 0,
-        });
-        const msg = 'Thêm mới sản phẩm thành công!';
-        setStatusMsg({ type: 'success', text: msg });
-        showGlobalToast(msg, 'success');
-      }
-      setIsFormOpen(false);
-      fetchProducts();
-    } catch (err: unknown) {
-      const errorMsg =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
-        'Lỗi lưu sản phẩm.';
-      setStatusMsg({ type: 'error', text: errorMsg });
-      showGlobalToast(errorMsg, 'error');
-    }
-  };
 
   // S2-05: Prevent deletion if product has quotes
   const handleDelete = async (p: IProduct) => {
@@ -245,7 +171,7 @@ export const ProductList: React.FC = () => {
 
           <button
             type="button"
-            onClick={handleOpenCreate}
+            onClick={() => navigate('/products/create')}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -378,7 +304,7 @@ export const ProductList: React.FC = () => {
                     <div style={{ display: 'inline-flex', gap: '6px' }}>
                       <button
                         type="button"
-                        onClick={() => handleOpenEdit(p)}
+                        onClick={() => navigate(`/products/${p.id}/edit`)}
                         style={{
                           padding: '4px',
                           border: 'none',
@@ -419,171 +345,6 @@ export const ProductList: React.FC = () => {
           </tbody>
         </table>
       </div>
-
-      {/* Modal Add / Edit Product */}
-      {isFormOpen && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.45)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 9999,
-            padding: '16px',
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '8px',
-              width: '100%',
-              maxWidth: '540px',
-              padding: '20px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '16px',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
-                {editingProduct ? 'Chỉnh sửa Sản phẩm' : 'Thêm mới Sản phẩm'}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setIsFormOpen(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmitForm} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '10px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
-                    Mã SKU *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.sku}
-                    onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                    style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', boxSizing: 'border-box' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
-                    Tên sản phẩm *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', boxSizing: 'border-box' }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
-                    Nhóm sản phẩm
-                  </label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', backgroundColor: '#ffffff', boxSizing: 'border-box' }}
-                  >
-                    <option value="Phần mềm CRM">Phần mềm CRM</option>
-                    <option value="Dịch vụ Đào tạo & Onboarding">Dịch vụ Onboarding</option>
-                    <option value="Gói Hạ tầng">Gói Hạ tầng</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
-                    Đơn vị tính (ĐVT)
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.unit}
-                    onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                    style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', boxSizing: 'border-box' }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
-                    Giá bán niêm yết (VNĐ) *
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    required
-                    value={formData.selling_price}
-                    onChange={(e) => setFormData({ ...formData, selling_price: Number(e.target.value) })}
-                    style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', boxSizing: 'border-box' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
-                    Giá vốn (VNĐ) {isDirector ? '' : '(Chỉ Giám Đốc)'}
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    disabled={!isDirector}
-                    value={formData.cost_price}
-                    onChange={(e) => setFormData({ ...formData, cost_price: Number(e.target.value) })}
-                    style={{
-                      width: '100%',
-                      padding: '6px 10px',
-                      borderRadius: '4px',
-                      border: '1px solid #cbd5e1',
-                      fontSize: '0.8rem',
-                      backgroundColor: !isDirector ? '#f1f5f9' : '#ffffff',
-                      boxSizing: 'border-box',
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
-                  Mô tả chi tiết
-                </label>
-                <textarea
-                  rows={2}
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', boxSizing: 'border-box' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => setIsFormOpen(false)}
-                  style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #cbd5e1', backgroundColor: '#ffffff', fontSize: '0.8rem', cursor: 'pointer' }}
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  style={{ padding: '6px 14px', borderRadius: '4px', border: 'none', backgroundColor: '#2563eb', color: '#ffffff', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
-                >
-                  {editingProduct ? 'Cập nhật' : 'Thêm sản phẩm'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Price list modal */}
       <PriceListModal isOpen={isPriceListOpen} onClose={() => setIsPriceListOpen(false)} />
