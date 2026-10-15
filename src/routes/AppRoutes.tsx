@@ -28,8 +28,16 @@ import { UserImportPage } from '../pages/UserImportPage';
 import { Customer360Dashboard } from '../pages/Customer360Dashboard';
 import { StagnantCustomerList } from '../components/customer/StagnantCustomerList';
 import { LeadManagementPage } from '../pages/LeadManagementPage';
+import { LeadCreatePage } from '../pages/LeadCreatePage';
+import { LeadEditPage } from '../pages/LeadEditPage';
 import { DealManagementPage } from '../pages/DealManagementPage';
+import { DealCreatePage } from '../pages/DealCreatePage';
+import { DealEditPage } from '../pages/DealEditPage';
 import { CampaignsPage } from '../pages/CampaignsPage';
+import { CampaignCreatePage } from '../pages/CampaignCreatePage';
+import { CampaignEditPage } from '../pages/CampaignEditPage';
+import { ProductCreatePage } from '../pages/ProductCreatePage';
+import { ProductEditPage } from '../pages/ProductEditPage';
 
 interface IProtectedRouteProps {
   children: React.ReactElement;
@@ -81,20 +89,32 @@ export const AppRoutes: React.FC = () => {
         <Route path="customers/stagnant" element={<StagnantCustomerList />} />
         <Route path="customers/:id" element={<Customer360Dashboard />} />
 
-        {/* EP-04: Lead Management */}
+        {/* EP-04: Lead Management & Dedicated Create/Edit */}
         <Route path="leads" element={<LeadManagementPage />} />
+        <Route path="leads/create" element={<LeadCreatePage />} />
+        <Route path="leads/new" element={<Navigate to="/leads/create" replace />} />
+        <Route path="leads/:id/edit" element={<LeadEditPage />} />
 
-        {/* EP-05: Deal Management */}
+        {/* EP-05: Deal Management & Dedicated Create/Edit */}
         <Route path="deals" element={<DealManagementPage />} />
+        <Route path="deals/create" element={<DealCreatePage />} />
+        <Route path="deals/new" element={<Navigate to="/deals/create" replace />} />
+        <Route path="deals/:id/edit" element={<DealEditPage />} />
 
-        {/* S4-03: Marketing Campaigns */}
+        {/* S4-03: Marketing Campaigns & Dedicated Create/Edit */}
         <Route path="campaigns" element={<CampaignsPage />} />
+        <Route path="campaigns/create" element={<CampaignCreatePage />} />
+        <Route path="campaigns/new" element={<Navigate to="/campaigns/create" replace />} />
+        <Route path="campaigns/:id/edit" element={<CampaignEditPage />} />
 
         {/* Configuration & Administration Modules */}
         <Route path="profile" element={<ProfilePage />} />
         <Route path="organization" element={<OrgTreePage />} />
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="products" element={<ProductsPage />} />
+        <Route path="products/create" element={<ProductCreatePage />} />
+        <Route path="products/new" element={<Navigate to="/products/create" replace />} />
+        <Route path="products/:id/edit" element={<ProductEditPage />} />
         <Route path="pipeline" element={<PipelineConfigPage />} />
         <Route path="win-loss" element={<WinLossPage />} />
         <Route path="custom-fields" element={<CustomFieldsPage />} />

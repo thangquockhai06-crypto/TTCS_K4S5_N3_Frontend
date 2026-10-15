@@ -20,8 +20,15 @@ if not defined PYTHON_CMD (
     if %ERRORLEVEL% equ 0 set "PYTHON_CMD=py"
 )
 
-if exist "%~dp0serverenv\Scripts\python.exe" (
-    set "PYTHON_CMD=%~dp0serverenv\Scripts\python.exe"
+if not defined PYTHON_CMD (
+    if exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" (
+        set "PYTHON_CMD=%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
+        set "PATH=%LOCALAPPDATA%\Programs\Python\Python312\Scripts\;%LOCALAPPDATA%\Programs\Python\Python312\;%PATH%"
+    )
+)
+
+if exist "%~dp0server env\Scripts\python.exe" (
+    set "PYTHON_CMD=%~dp0server env\Scripts\python.exe"
 ) else if exist "%~dp0venv\Scripts\python.exe" (
     set "PYTHON_CMD=%~dp0venv\Scripts\python.exe"
 ) else if exist "%~dp0.venv\Scripts\python.exe" (
@@ -36,6 +43,17 @@ if not defined PYTHON_CMD (
 )
 
 REM 2. Kiem tra Node va npm
+where npm >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+    for /d %%D in ("%LOCALAPPDATA%\Microsoft\WinGet\Packages\OpenJS.NodeJS*") do (
+        for /d %%S in ("%%D\node-*") do (
+            if exist "%%S\npm.cmd" set "PATH=%%S;%PATH%"
+        )
+    )
+    if exist "C:\Program Files\nodejs\npm.cmd" (
+        set "PATH=C:\Program Files\nodejs;%PATH%"
+    )
+)
 where npm >nul 2>&1
 if %ERRORLEVEL% neq 0 (
     echo [LOI] Khong tim thay Node.js / npm!
@@ -58,7 +76,7 @@ echo [*] Kiem tra thu vien Python Backend...
 %PYTHON_CMD% -c "import fastapi, uvicorn, sqlalchemy" >nul 2>&1
 if %ERRORLEVEL% neq 0 (
     echo [THONG BAO] Dang cai dat thu vien Backend...
-    %PYTHON_CMD% -m pip install -r "%~dp0serverequirements.txt"
+    %PYTHON_CMD% -m pip install -r "%~dp0server\requirements.txt"
 )
 
 REM 5. Kiem tra thu vien Frontend
