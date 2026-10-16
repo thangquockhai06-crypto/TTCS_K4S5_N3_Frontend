@@ -169,7 +169,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
             </div>
             <div>
               <h1 className={styles.pageTitle}>
-                Soạn Thảo Báo Giá Thương Mại (Task S7-01)
+                Soạn Thảo Báo Giá Thương Mại
               </h1>
               <div className={styles.pageSubtitle}>
                 <span>Mã báo giá:</span>
