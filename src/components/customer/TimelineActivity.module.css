@@ -1,0 +1,780 @@
+/* S6-08: TimelineActivity.module.css
+ * BEM & CSS Modules chuẩn kỹ thuật Frontend
+ * Responsive mượt mà từ 360px, Flexbox & CSS Grid
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+/* ==========================================================================
+   1. Bảng Tóm Tắt Bối Cảnh Bàn Giao 5 Phút (Handover Executive Brief)
+   ========================================================================== */
+.handoverCard {
+  background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+  border: 1.5px solid #E2E8F0;
+  border-left: 4px solid #2563EB;
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: all 0.2s ease;
+}
+
+.handoverHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.handoverTitleWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.handoverIconBadge {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background-color: #EFF6FF;
+  color: #2563EB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.handoverTitle {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+}
+
+.handoverSubtitle {
+  font-size: 0.78rem;
+  color: #64748B;
+  margin: 0;
+}
+
+.handoverToggleBtn {
+  background: none;
+  border: none;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #2563EB;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background-color 0.15s ease;
+}
+
+.handoverToggleBtn:hover {
+  background-color: #EFF6FF;
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.metricChip {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.metricChipIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.metricChipContent {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.metricChipLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metricChipValue {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #0F172A;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.contextSummaryBox {
+  background-color: #F8FAFC;
+  border: 1px dashed #CBD5E1;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: #334155;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.contextSummaryLead {
+  font-weight: 600;
+  color: #1E293B;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.handoverAdviceHighlight {
+  background-color: #FEF3C7;
+  border-left: 3px solid #D97706;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  color: #92400E;
+  margin-top: 4px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* ==========================================================================
+   2. Bộ Lọc Đa Chiều & Công Cụ (Filter & Toolbar Section)
+   ========================================================================== */
+.filterCard {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.categoryPillsWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+
+.categoryPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #E2E8F0;
+  background-color: #F8FAFC;
+  color: #475569;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+}
+
+.categoryPill:hover {
+  background-color: #F1F5F9;
+  border-color: #CBD5E1;
+  color: #1E293B;
+}
+
+.categoryPill--active {
+  background-color: #2563EB;
+  border-color: #2563EB;
+  color: #FFFFFF;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+}
+
+.categoryPill--active:hover {
+  background-color: #1D4ED8;
+  border-color: #1D4ED8;
+  color: #FFFFFF;
+}
+
+.pillCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background-color: rgba(0, 0, 0, 0.08);
+  font-weight: 700;
+}
+
+.categoryPill--active .pillCount {
+  background-color: rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+}
+
+.toolbarRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filterControlsLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 280px;
+  flex-wrap: wrap;
+}
+
+.searchBox {
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+  max-width: 360px;
+}
+
+.searchInput {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px 0 34px;
+  border-radius: 8px;
+  border: 1px solid #CBD5E1;
+  font-size: 0.84rem;
+  outline: none;
+  background: #FFFFFF;
+  color: #0F172A;
+  transition: border-color 0.18s ease;
+}
+
+.searchInput:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.searchIcon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94A3B8;
+  pointer-events: none;
+}
+
+.performerSelect {
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid #CBD5E1;
+  font-size: 0.84rem;
+  outline: none;
+  background: #FFFFFF;
+  color: #1E293B;
+  cursor: pointer;
+  min-width: 190px;
+}
+
+.performerSelect:focus {
+  border-color: #2563EB;
+}
+
+/* ==========================================================================
+   3. Dòng Thời Gian Trực Quan (Vertical Visual Timeline)
+   ========================================================================== */
+.timelineSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+}
+
+.timelineFeed {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-left: 28px;
+}
+
+/* Đường chỉ nối dòng thời gian xuyên suốt */
+.timelineFeed::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: 13px;
+  width: 2px;
+  background-color: #E2E8F0;
+  z-index: 1;
+}
+
+.timelineItemWrap {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  z-index: 2;
+}
+
+/* Nút icon tròn trên trục thời gian */
+.timelineNodeIcon {
+  position: absolute;
+  left: -28px;
+  top: 14px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  z-index: 3;
+}
+
+.timelineNodeIcon--call {
+  background-color: #10B981;
+  color: #FFFFFF;
+}
+
+.timelineNodeIcon--meeting {
+  background-color: #8B5CF6;
+  color: #FFFFFF;
+}
+
+.timelineNodeIcon--email {
+  background-color: #3B82F6;
+  color: #FFFFFF;
+}
+
+.timelineNodeIcon--deal_change {
+  background-color: #F59E0B;
+  color: #FFFFFF;
+}
+
+.timelineNodeIcon--quote_sent {
+  background-color: #6366F1;
+  color: #FFFFFF;
+}
+
+.timelineNodeIcon--support_ticket {
+  background-color: #EF4444;
+  color: #FFFFFF;
+}
+
+.timelineNodeIcon--note {
+  background-color: #64748B;
+  color: #FFFFFF;
+}
+
+.timelineNodeIcon--status_touch {
+  background-color: #06B6D4;
+  color: #FFFFFF;
+}
+
+/* Thẻ nội dung của từng mốc tương tác */
+.timelineCard {
+  width: 100%;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.timelineCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  border-color: #CBD5E1;
+}
+
+.timelineCard--pinned {
+  border-color: #FDE68A;
+  background: linear-gradient(180deg, #FFFDF5 0%, #FFFFFF 100%);
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.08);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cardTitleArea {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cardTypeBadge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.cardTypeBadge--call {
+  background-color: #ECFDF5;
+  color: #047857;
+}
+
+.cardTypeBadge--meeting {
+  background-color: #F5F3FF;
+  color: #6D28D9;
+}
+
+.cardTypeBadge--email {
+  background-color: #EFF6FF;
+  color: #1D4ED8;
+}
+
+.cardTypeBadge--deal_change {
+  background-color: #FFFBEB;
+  color: #B45309;
+}
+
+.cardTypeBadge--quote_sent {
+  background-color: #EEF2FF;
+  color: #4338CA;
+}
+
+.cardTypeBadge--support_ticket {
+  background-color: #FEF2F2;
+  color: #B91C1C;
+}
+
+.cardTypeBadge--note {
+  background-color: #F1F5F9;
+  color: #475569;
+}
+
+.cardTypeBadge--status_touch {
+  background-color: #ECFEFF;
+  color: #0E7490;
+}
+
+.cardTitleText {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.cardHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.timestampText {
+  font-size: 0.75rem;
+  color: #64748B;
+  white-space: nowrap;
+}
+
+.pinBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 4px;
+  color: #94A3B8;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.pinBtn:hover {
+  background-color: #F1F5F9;
+  color: #D97706;
+}
+
+.pinBtn--active {
+  color: #D97706;
+}
+
+/* Thông tin người thực hiện */
+.performerBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: #475569;
+}
+
+.performerAvatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.performerName {
+  font-weight: 600;
+  color: #1E293B;
+}
+
+.performerRole {
+  color: #64748B;
+}
+
+/* Thân mô tả tương tác */
+.cardDescription {
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: #334155;
+  margin: 0;
+  background-color: #F8FAFC;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #F1F5F9;
+}
+
+/* Các thẻ dữ liệu bổ trợ (Metadata Pills) */
+.metadataPillsRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.metaPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  color: #475569;
+}
+
+.metaPill--highlight {
+  background-color: #EFF6FF;
+  border-color: #BFDBFE;
+  color: #1D4ED8;
+  font-weight: 600;
+}
+
+.metaPill--success {
+  background-color: #DCFCE7;
+  border-color: #86EFAC;
+  color: #15803D;
+  font-weight: 600;
+}
+
+.metaPill--warning {
+  background-color: #FEF3C7;
+  border-color: #FDE68A;
+  color: #B45309;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   4. Thành Phần Cuộn Vô Hạn (Infinite Scroll Sentinel & Controls)
+   ========================================================================== */
+.infiniteScrollArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  gap: 12px;
+}
+
+.loadingSpinnerWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  color: #64748B;
+}
+
+.allLoadedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #059669;
+  background-color: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+
+.emptyStateWrap {
+  padding: 48px 20px;
+  text-align: center;
+  background: #FFFFFF;
+  border: 1px dashed #CBD5E1;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #64748B;
+}
+
+/* ==========================================================================
+   5. Modal Ghi Nhận Tương Tác Mới (Add Touchpoint Modal Form)
+   ========================================================================== */
+.modalForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.formRow2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.modalFieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.modalFieldLabel {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+}
+
+.modalFieldControl {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1.5px solid #CBD5E1;
+  background-color: #FFFFFF;
+  color: #0F172A;
+  font-size: 0.875rem;
+  box-sizing: border-box;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.modalFieldControl:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.modalTextarea {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #CBD5E1;
+  background-color: #FFFFFF;
+  color: #0F172A;
+  font-size: 0.875rem;
+  box-sizing: border-box;
+  outline: none;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 85px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.modalTextarea:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* ==========================================================================
+   6. Responsive Mobile từ 360px
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .metricsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .metricsGrid {
+    grid-template-columns: 1fr;
+  }
+  .formRow2 {
+    grid-template-columns: 1fr;
+  }
+  .toolbarRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filterControlsLeft {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .searchBox {
+    max-width: 100%;
+  }
+  .performerSelect {
+    width: 100%;
+  }
+  .timelineFeed {
+    padding-left: 24px;
+  }
+  .timelineFeed::before {
+    left: 10px;
+  }
+  .timelineNodeIcon {
+    left: -24px;
+    width: 26px;
+    height: 26px;
+  }
+}

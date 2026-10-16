@@ -12,10 +12,8 @@ import {
   GitMerge,
   Globe,
   LifeBuoy,
-  Loader2,
   MapPin,
   Plus,
-  Send,
 } from 'lucide-react';
 import { ICustomer360, ISupportTicket } from '../interfaces/customer.interface';
 import { customerService } from '../services/customerService';
@@ -27,6 +25,7 @@ import { CorporateTree } from '../components/customer/CorporateTree';
 import { CustomerForm } from '../components/customer/CustomerForm';
 import { SupportTicketModal } from '../components/customer/SupportTicketModal';
 import { MergeCustomerModal } from '../components/customer/MergeCustomerModal';
+import { TimelineActivity } from '../components/customer/TimelineActivity';
 import { showGlobalToast } from '../context/ToastContext';
 
 type TabKey = 'info' | 'deals' | 'activities' | 'docs';
@@ -45,12 +44,6 @@ export const Customer360Dashboard: React.FC = () => {
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [isMergeModalOpen, setIsMergeModalOpen] = useState(false);
 
-  // Activity form
-  const [newActivityType, setNewActivityType] = useState<'call' | 'meeting' | 'email' | 'note'>('call');
-  const [newActivityTitle, setNewActivityTitle] = useState('');
-  const [newActivityDesc, setNewActivityDesc] = useState('');
-  const [isSubmittingActivity, setIsSubmittingActivity] = useState(false);
-
   useEffect(() => {
     if (id) {
       loadCustomer360(id);
@@ -68,26 +61,6 @@ export const Customer360Dashboard: React.FC = () => {
       setError(err.response?.data?.detail || 'Không tìm thấy hồ sơ khách hàng 360 này.');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleAddActivity = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!id || !newActivityTitle.trim()) return;
-
-    setIsSubmittingActivity(true);
-    try {
-      await customerService.quickTouchCustomer(id);
-      showGlobalToast('Đã ghi nhận tương tác khách hàng thành công!', 'success');
-      setNewActivityTitle('');
-      setNewActivityDesc('');
-      loadCustomer360(id);
-    } catch (err: any) {
-      const errMsg = err?.response?.data?.detail || 'Lỗi khi thêm hoạt động';
-      showGlobalToast(errMsg, 'error');
-      console.error('Lỗi khi thêm hoạt động:', err);
-    } finally {
-      setIsSubmittingActivity(false);
     }
   };
 
@@ -303,7 +276,7 @@ export const Customer360Dashboard: React.FC = () => {
             gap: 6,
           }}
         >
-          <Clock size={16} /> 3. Nhật Ký Hoạt Động ({activities?.length || 0})
+          <Clock size={16} /> 3. Dòng Thời Gian Tương Tác (Timeline)
         </button>
 
         <button
@@ -436,119 +409,13 @@ export const Customer360Dashboard: React.FC = () => {
         </Card>
       )}
 
-      {/* Tab 3: Activities */}
+      {/* Tab 3: Activities / Timeline (S6-08) */}
       {activeTab === 'activities' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {/* Quick add activity form */}
-          <Card padding="md">
-            <form onSubmit={handleAddActivity} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
-                Ghi nhận tương tác mới
-              </h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr 140px', gap: 10 }}>
-                <select
-                  value={newActivityType}
-                  onChange={(e) => setNewActivityType(e.target.value as any)}
-                  style={{
-                    padding: '8px 10px',
-                    borderRadius: 6,
-                    border: '1px solid #CBD5E1',
-                    fontSize: '0.875rem',
-                  }}
-                >
-                  <option value="call">📞 Cuộc gọi</option>
-                  <option value="meeting">🤝 Cuộc họp</option>
-                  <option value="email">✉ Email</option>
-                  <option value="note">📝 Ghi chú</option>
-                </select>
-
-                <input
-                  type="text"
-                  placeholder="Tiêu đề tương tác (ví dụ: Họp demo giải pháp, Gọi tư vấn gói dịch vụ...)"
-                  value={newActivityTitle}
-                  onChange={(e) => setNewActivityTitle(e.target.value)}
-                  required
-                  style={{
-                    padding: '8px 12px',
-                    borderRadius: 6,
-                    border: '1px solid #CBD5E1',
-                    fontSize: '0.875rem',
-                  }}
-                />
-
-                <Button
-                  variant="primary"
-                  type="submit"
-                  disabled={isSubmittingActivity}
-                  leftIcon={isSubmittingActivity ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-                >
-                  {isSubmittingActivity ? 'Đang lưu...' : 'Lưu'}
-                </Button>
-              </div>
-
-              <textarea
-                rows={2}
-                placeholder="Nội dung tóm tắt buổi làm việc / cam kết tiếp theo..."
-                value={newActivityDesc}
-                onChange={(e) => setNewActivityDesc(e.target.value)}
-                style={{
-                  padding: '8px 12px',
-                  borderRadius: 6,
-                  border: '1px solid #CBD5E1',
-                  fontSize: '0.875rem',
-                }}
-              />
-            </form>
-          </Card>
-
-          {/* Activities list feed */}
-          <Card padding="md">
-            <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', marginBottom: 16 }}>
-              Dòng thời gian tương tác ({activities?.length || 0})
-            </h3>
-            {(!activities || activities.length === 0) ? (
-              <div style={{ padding: 32, textAlign: 'center', color: '#94A3B8', fontStyle: 'italic' }}>
-                Chưa có nhật ký hoạt động nào được ghi nhận.
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                {activities.map((act: any) => (
-                  <div
-                    key={act.id}
-                    style={{
-                      padding: 12,
-                      backgroundColor: '#F8FAFC',
-                      borderRadius: 6,
-                      border: '1px solid #E2E8F0',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 4,
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontWeight: 600, color: '#1E293B', fontSize: '0.875rem' }}>
-                        {act.type === 'call' ? '📞' : act.type === 'meeting' ? '🤝' : '📝'} {act.title}
-                      </span>
-                      <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                        {formatDate(act.createdAt)}
-                      </span>
-                    </div>
-                    {act.description && (
-                      <p style={{ margin: 0, fontSize: '0.8125rem', color: '#475569' }}>
-                        {act.description}
-                      </p>
-                    )}
-                    {act.userName && (
-                      <div style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
-                        Thực hiện bởi: {act.userName}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
-        </div>
+        <TimelineActivity
+          customerId={customer.id}
+          customer360={data360}
+          onActivityAdded={() => id && loadCustomer360(id)}
+        />
       )}
 
       {/* Tab 4: Docs & Support Tickets */}
