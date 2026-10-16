@@ -1,0 +1,830 @@
+/* S7-01: QuoteBuilder.module.css
+ * BEM & CSS Modules chuẩn kỹ thuật Frontend
+ * Giao diện phóng to chuẩn hệ thống, đồng bộ Dashboard & Lead Management
+ * Cảnh báo đỏ chiết khấu vượt ngưỡng, layout chống đè nút, responsive từ 360px
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   1. Breadcrumbs & Header
+   ========================================================================== */
+.topNavRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: #64748B;
+}
+
+.breadcrumbLink {
+  color: #2563EB;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.breadcrumbLink:hover {
+  text-decoration: underline;
+  color: #1D4ED8;
+}
+
+.headerCard {
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 22px 28px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-sizing: border-box;
+}
+
+.headerTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.headerTitleWrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.headerIconBadge {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background-color: #EFF6FF;
+  color: #2563EB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.12);
+}
+
+.pageTitle {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.pageSubtitle {
+  font-size: 0.875rem;
+  color: #64748B;
+  margin: 4px 0 0 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.quoteNumberBadge {
+  background-color: #EFF6FF;
+  color: #1D4ED8;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.875rem;
+  border: 1px solid #BFDBFE;
+}
+
+/* ==========================================================================
+   2. Deal & Customer Context Information Card
+   ========================================================================== */
+.contextGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  background-color: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 18px 22px;
+  box-sizing: border-box;
+}
+
+.contextCol {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.contextRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9375rem;
+  gap: 12px;
+}
+
+.contextLabel {
+  color: #64748B;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.contextValue {
+  color: #0F172A;
+  font-weight: 700;
+  text-align: right;
+  word-break: break-word;
+}
+
+/* ==========================================================================
+   3. CẢNH BÁO ĐỎ KHI CHẠM NGƯỠNG CẦN DUYỆT (Red Alert Banner)
+   ========================================================================== */
+.redAlertBanner {
+  background: linear-gradient(135deg, #FEF2F2 0%, #FFF5F5 100%);
+  border: 2px solid #EF4444;
+  border-left: 8px solid #DC2626;
+  border-radius: 14px;
+  padding: 20px 24px;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.12);
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  animation: pulseAlert 2.5s infinite;
+  box-sizing: border-box;
+}
+
+@keyframes pulseAlert {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.2);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(220, 38, 38, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+  }
+}
+
+.redAlertIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background-color: #FEE2E2;
+  color: #DC2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.18);
+}
+
+.redAlertContent {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.redAlertHeading {
+  font-size: 1.0625rem;
+  font-weight: 800;
+  color: #991B1B;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  letter-spacing: -0.01em;
+}
+
+.redAlertBadge {
+  background-color: #DC2626;
+  color: #FFFFFF;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.redAlertDesc {
+  font-size: 0.9375rem;
+  color: #B91C1C;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.redAlertList {
+  margin: 6px 0 0 0;
+  padding-left: 20px;
+  font-size: 0.875rem;
+  color: #991B1B;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* Trạng thái hợp lệ (Xanh lá) khi không vượt ngưỡng */
+.greenApprovalNotice {
+  background: #F0FDF4;
+  border: 1.5px solid #BBF7D0;
+  border-left: 5px solid #16A34A;
+  border-radius: 12px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #166534;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   4. Bảng Dòng Sản Phẩm Kế Thừa Từ Deal (Items Table)
+   ========================================================================== */
+.tableSectionCard {
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 24px 28px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-sizing: border-box;
+}
+
+.tableSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.tableTitleWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tableSectionTitle {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0;
+}
+
+.itemCountBadge {
+  background-color: #F1F5F9;
+  color: #475569;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.tableActionsRight {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tableResponsive {
+  width: 100%;
+  overflow-x: auto;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 10px;
+  background-color: #FFFFFF;
+  scrollbar-width: thin;
+}
+
+.quoteTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  text-align: left;
+}
+
+.quoteTable th {
+  background-color: #F8FAFC;
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 12px 14px;
+  border-bottom: 1.5px solid #E2E8F0;
+  white-space: nowrap;
+}
+
+.quoteTable td {
+  padding: 14px;
+  border-bottom: 1px solid #F1F5F9;
+  vertical-align: middle;
+}
+
+.quoteTable tr:last-child td {
+  border-bottom: none;
+}
+
+.quoteTable tr:hover td {
+  background-color: #F8FAFC;
+}
+
+/* Các ô input nhập liệu bên trong bảng */
+.tableInput {
+  height: 40px;
+  padding: 0 10px;
+  border-radius: 6px;
+  border: 1.5px solid #CBD5E1;
+  background-color: #FFFFFF;
+  color: #0F172A;
+  font-size: 0.875rem;
+  font-weight: 600;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+}
+
+.tableInput:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.tableTextarea {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1.5px solid #CBD5E1;
+  background-color: #FFFFFF;
+  color: #0F172A;
+  font-size: 0.8125rem;
+  outline: none;
+  resize: vertical;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.tableTextarea:focus {
+  border-color: #2563EB;
+}
+
+/* Cụm input chiết khấu (% hoặc VNĐ) */
+.discountInputWrap {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: #FFFFFF;
+  width: 140px;
+}
+
+.discountTypeToggle {
+  height: 38px;
+  padding: 0 8px;
+  border: none;
+  background-color: #F1F5F9;
+  color: #1E293B;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-right: 1px solid #CBD5E1;
+  transition: background-color 0.15s ease;
+}
+
+.discountTypeToggle:hover {
+  background-color: #E2E8F0;
+}
+
+.discountInputField {
+  width: 100%;
+  height: 38px;
+  padding: 0 8px;
+  border: none;
+  outline: none;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #DC2626;
+  text-align: right;
+  box-sizing: border-box;
+}
+
+.discountResultTag {
+  display: block;
+  font-size: 0.75rem;
+  color: #DC2626;
+  font-weight: 600;
+  margin-top: 3px;
+  text-align: right;
+}
+
+.lineTotalText {
+  font-weight: 800;
+  color: #059669;
+  font-size: 1.05rem;
+  white-space: nowrap;
+}
+
+.deleteItemBtn {
+  background: none;
+  border: 1px solid transparent;
+  color: #94A3B8;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.deleteItemBtn:hover {
+  background-color: #FEE2E2;
+  color: #DC2626;
+  border-color: #FECACA;
+}
+
+/* ==========================================================================
+   5. Điều Khoản Hiệu Lực, Thanh Toán & Giao Hàng (Terms & Conditions)
+   ========================================================================== */
+.termsSectionCard {
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 24px 28px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-sizing: border-box;
+}
+
+.termsTitle {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.termsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.termsFieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.termsLabel {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #374151;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.termsInput {
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1.5px solid #CBD5E1;
+  background-color: #FFFFFF;
+  color: #0F172A;
+  font-size: 0.9375rem;
+  outline: none;
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
+}
+
+.termsInput:focus {
+  border-color: #2563EB;
+}
+
+.termsTextarea {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #CBD5E1;
+  background-color: #FFFFFF;
+  color: #0F172A;
+  font-size: 0.9375rem;
+  outline: none;
+  min-height: 80px;
+  line-height: 1.5;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.termsTextarea:focus {
+  border-color: #2563EB;
+}
+
+/* ==========================================================================
+   6. Bảng Tổng Hợp Chi Phí (Financial Summary Card)
+   ========================================================================== */
+.summarySectionCard {
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 24px 28px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  display: flex;
+  justify-content: flex-end;
+  box-sizing: border-box;
+}
+
+.summaryBox {
+  width: 440px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.summaryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9375rem;
+  color: #475569;
+}
+
+.summaryLabel {
+  font-weight: 500;
+}
+
+.summaryValue {
+  font-weight: 700;
+  color: #0F172A;
+  font-size: 1rem;
+}
+
+.summaryRow--discount {
+  color: #DC2626;
+}
+
+.summaryRow--discount .summaryValue {
+  color: #DC2626;
+  font-weight: 800;
+}
+
+.summaryDivider {
+  height: 1px;
+  background-color: #E2E8F0;
+  margin: 4px 0;
+}
+
+.grandTotalRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background-color: #EFF6FF;
+  border-radius: 8px;
+  border: 1.5px solid #BFDBFE;
+}
+
+.grandTotalLabel {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #1E3A8A;
+}
+
+.grandTotalValue {
+  font-size: 1.45rem;
+  font-weight: 900;
+  color: #1D4ED8;
+  letter-spacing: -0.01em;
+}
+
+/* ==========================================================================
+   7. Thanh Thao Tác Cố Định (Sticky Bottom Action Bar)
+   ========================================================================== */
+.stickyActionBar {
+  position: sticky;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(8px);
+  border: 1.5px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 16px 24px;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+.actionsLeft {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.actionsRight {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ==========================================================================
+   8. Modal Chọn Sản Phẩm Từ Danh Mục
+   ========================================================================== */
+.catalogGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.catalogItemCard {
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.catalogItemCard:hover {
+  border-color: #2563EB;
+  background-color: #EFF6FF;
+  transform: translateY(-1px);
+}
+
+.catalogItemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.catalogItemCode {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #2563EB;
+  background-color: #DBEAFE;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.catalogItemName {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+}
+
+.catalogItemPrice {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: #059669;
+}
+
+/* ==========================================================================
+   9. Modal Xem Trước Báo Giá (Print Preview Layout)
+   ========================================================================== */
+.previewDocWrap {
+  background-color: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  padding: 32px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-height: 70vh;
+  overflow-y: auto;
+  font-family: inherit;
+  color: #1E293B;
+  box-sizing: border-box;
+}
+
+.previewDocHeader {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 2px solid #2563EB;
+  padding-bottom: 16px;
+}
+
+.previewDocTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.previewDocTable th {
+  background-color: #F1F5F9;
+  border: 1px solid #CBD5E1;
+  padding: 8px 10px;
+  font-size: 0.8125rem;
+  text-align: left;
+}
+
+.previewDocTable td {
+  border: 1px solid #E2E8F0;
+  padding: 10px;
+  font-size: 0.875rem;
+}
+
+.previewSignatureRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  margin-top: 30px;
+  text-align: center;
+}
+
+.signatureBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 60px;
+}
+
+/* ==========================================================================
+   10. Responsive Mobile từ 360px
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .termsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .contextGrid {
+    grid-template-columns: 1fr;
+  }
+  .catalogGrid {
+    grid-template-columns: 1fr;
+  }
+  .summaryBox {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .headerCard {
+    padding: 16px;
+  }
+  .tableSectionCard {
+    padding: 16px;
+  }
+  .termsSectionCard {
+    padding: 16px;
+  }
+  .summarySectionCard {
+    padding: 16px;
+  }
+  .redAlertBanner {
+    flex-direction: column;
+    padding: 16px;
+  }
+  .stickyActionBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .actionsLeft, .actionsRight {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

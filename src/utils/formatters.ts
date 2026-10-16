@@ -6,6 +6,14 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
+export function formatVndCurrency(amount: number): string {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
 export function formatCompactCurrency(amount: number): string {
   if (amount >= 1_000_000) {
     return `$${(amount / 1_000_000).toFixed(2)}M`;

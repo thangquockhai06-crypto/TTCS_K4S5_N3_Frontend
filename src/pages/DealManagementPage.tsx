@@ -5,6 +5,7 @@ import {
   ChevronRight,
   Clock,
   Edit2,
+  FileText,
   Kanban,
   List,
   Loader2,
@@ -566,6 +567,15 @@ export const DealManagementPage: React.FC = () => {
                           <Edit2 size={13} /> Sửa
                         </button>
 
+                        <button
+                          className={styles.cardActionBtn}
+                          title="Soạn thảo báo giá thương mại từ cơ hội này (S7-01)"
+                          onClick={() => navigate(`/deals/${deal.id}/quote-builder`)}
+                          style={{ color: '#2563EB', fontWeight: 600 }}
+                        >
+                          <FileText size={13} /> Báo giá
+                        </button>
+
                         {/* Stage progress buttons */}
                         {stage.id !== 'won' && stage.id !== 'lost' && (
                           <>
@@ -721,6 +731,14 @@ export const DealManagementPage: React.FC = () => {
                             onClick={() => navigate(`/deals/${deal.id}/edit`)}
                           >
                             <Edit2 size={13} /> Sửa
+                          </button>
+                          <button
+                            className={styles.cardActionBtn}
+                            title="Soạn thảo báo giá thương mại từ cơ hội này (S7-01)"
+                            onClick={() => navigate(`/deals/${deal.id}/quote-builder`)}
+                            style={{ color: '#2563EB', fontWeight: 600 }}
+                          >
+                            <FileText size={13} /> Báo giá
                           </button>
                           {deal.stage !== 'won' && deal.stage !== 'lost' && (
                             <button
