@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   PhoneCall,
   Users,
@@ -15,11 +15,16 @@ import {
   Sparkles,
   ChevronDown,
   ChevronUp,
-  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   CheckCircle2,
   ArrowRight,
   Download,
   DollarSign,
+  X,
+  RotateCcw,
 } from 'lucide-react';
 import {
   ITimelineItem,
@@ -49,21 +54,26 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
   const {
     allItems,
     filteredItems,
-    visibleItems,
-    hasMore,
-    isLoadingMore,
+    paginatedItems,
     totalCount,
     filters,
+    pagination,
+    currentPage,
+    pageSize,
+    totalPages,
     availablePerformers,
     handoverBrief,
-    loadMore,
+    goToPage,
+    nextPage,
+    prevPage,
+    changePageSize,
     addTouchpoint,
     togglePin,
     setTypeFilter,
     setPerformerFilter,
     setSearchQuery,
     resetFilters,
-  } = useTimelineActivity({ customerId, customer360, initialPageSize: 6 });
+  } = useTimelineActivity({ customerId, customer360, initialPageSize: 5 });
 
   // Trạng thái thu gọn/mở rộng bảng tóm tắt bàn giao 5 phút
   const [isBriefExpanded, setIsBriefExpanded] = useState<boolean>(true);
@@ -79,29 +89,6 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
   const [newOutcome, setNewOutcome] = useState<TimelineTouchOutcomeType>('success');
   const [newNextAction, setNewNextAction] = useState<string>('');
   const [newNextActionDate, setNewNextActionDate] = useState<string>('');
-
-  // Ref cho sentinel cuộn vô hạn (Infinite Scroll IntersectionObserver)
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const target = sentinelRef.current;
-    if (!target) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const firstEntry = entries[0];
-        if (firstEntry && firstEntry.isIntersecting && hasMore && !isLoadingMore) {
-          loadMore();
-        }
-      },
-      { threshold: 0.1, rootMargin: '100px' }
-    );
-
-    observer.observe(target);
-    return () => {
-      observer.disconnect();
-    };
-  }, [hasMore, isLoadingMore, loadMore]);
 
   // Thống kê số lượng theo từng loại tương tác
   const countsByType = useMemo(() => {
@@ -158,24 +145,42 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
   const renderItemIcon = (type: TimelineItemType) => {
     switch (type) {
       case 'call':
-        return <PhoneCall size={15} />;
+        return <PhoneCall size={17} />;
       case 'meeting':
-        return <Users size={15} />;
+        return <Users size={17} />;
       case 'email':
-        return <Mail size={15} />;
+        return <Mail size={17} />;
       case 'deal_change':
-        return <Briefcase size={15} />;
+        return <Briefcase size={17} />;
       case 'quote_sent':
-        return <FileText size={15} />;
+        return <FileText size={17} />;
       case 'support_ticket':
-        return <AlertCircle size={15} />;
+        return <AlertCircle size={17} />;
       case 'note':
-        return <MessageSquare size={15} />;
+        return <MessageSquare size={17} />;
       case 'status_touch':
       default:
-        return <ShieldCheck size={15} />;
+        return <ShieldCheck size={17} />;
     }
   };
+
+  // Tạo dải số trang phân trang thông minh
+  const pageNumbers = useMemo(() => {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = startPage + maxVisiblePages - 1;
+
+    if (endPage > totalPages) {
+      endPage = totalPages;
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }, [currentPage, totalPages]);
 
   return (
     <div className={`${styles.container} ${className}`}>
@@ -186,7 +191,7 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
         <div className={styles.handoverHeader}>
           <div className={styles.handoverTitleWrap}>
             <div className={styles.handoverIconBadge}>
-              <Sparkles size={18} />
+              <Sparkles size={20} />
             </div>
             <div>
               <h3 className={styles.handoverTitle}>
@@ -202,15 +207,16 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
             type="button"
             className={styles.handoverToggleBtn}
             onClick={() => setIsBriefExpanded(!isBriefExpanded)}
+            title={isBriefExpanded ? 'Thu gọn bảng tóm tắt bối cảnh bàn giao' : 'Mở rộng bảng tóm tắt bối cảnh bàn giao'}
             aria-expanded={isBriefExpanded}
           >
             {isBriefExpanded ? (
               <>
-                <ChevronUp size={15} /> Thu gọn
+                <ChevronUp size={16} /> Thu gọn
               </>
             ) : (
               <>
-                <ChevronDown size={15} /> Mở rộng bối cảnh
+                <ChevronDown size={16} /> Mở rộng bối cảnh
               </>
             )}
           </button>
@@ -220,9 +226,9 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
           <>
             {/* 4 Chỉ số tóm tắt nhanh */}
             <div className={styles.metricsGrid}>
-              <div className={styles.metricChip}>
+              <div className={styles.metricChip} title="Tổng số lượt tương tác đa kênh đã thực hiện">
                 <div className={styles.metricChipIcon} style={{ backgroundColor: '#ECFDF5', color: '#059669' }}>
-                  <Clock size={16} />
+                  <Clock size={18} />
                 </div>
                 <div className={styles.metricChipContent}>
                   <span className={styles.metricChipLabel}>Tổng Lần Chạm</span>
@@ -230,9 +236,9 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
                 </div>
               </div>
 
-              <div className={styles.metricChip}>
+              <div className={styles.metricChip} title="Tổng giá trị cơ hội đang thảo luận với khách hàng">
                 <div className={styles.metricChipIcon} style={{ backgroundColor: '#FFFBEB', color: '#D97706' }}>
-                  <Briefcase size={16} />
+                  <Briefcase size={18} />
                 </div>
                 <div className={styles.metricChipContent}>
                   <span className={styles.metricChipLabel}>Cơ Hội Đang Chạy</span>
@@ -242,9 +248,9 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
                 </div>
               </div>
 
-              <div className={styles.metricChip}>
+              <div className={styles.metricChip} title="Giá trị bản báo giá gần đây nhất gửi cho khách">
                 <div className={styles.metricChipIcon} style={{ backgroundColor: '#EEF2FF', color: '#4F46E5' }}>
-                  <FileText size={16} />
+                  <FileText size={18} />
                 </div>
                 <div className={styles.metricChipContent}>
                   <span className={styles.metricChipLabel}>Báo Giá Gần Nhất</span>
@@ -254,9 +260,9 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
                 </div>
               </div>
 
-              <div className={styles.metricChip}>
+              <div className={styles.metricChip} title="Thời điểm diễn ra tương tác chăm sóc mới nhất">
                 <div className={styles.metricChipIcon} style={{ backgroundColor: '#EFF6FF', color: '#2563EB' }}>
-                  <PhoneCall size={16} />
+                  <PhoneCall size={18} />
                 </div>
                 <div className={styles.metricChipContent}>
                   <span className={styles.metricChipLabel}>Chăm Sóc Gần Nhất</span>
@@ -268,13 +274,13 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
             {/* Bối cảnh cốt lõi & Lời khuyên hành động tiếp theo */}
             <div className={styles.contextSummaryBox}>
               <div className={styles.contextSummaryLead}>
-                <ShieldCheck size={16} color="#2563EB" />
+                <ShieldCheck size={18} color="#2563EB" />
                 <span>Bối cảnh quan hệ &amp; tiến độ hiện tại:</span>
               </div>
               <div>{handoverBrief.keyContextSummary}</div>
 
               <div className={styles.handoverAdviceHighlight}>
-                <ArrowRight size={15} style={{ flexShrink: 0, marginTop: 2 }} />
+                <ArrowRight size={16} style={{ flexShrink: 0, marginTop: 2 }} />
                 <span>
                   <strong>Hành động tiếp theo đề xuất:</strong> {handoverBrief.handoverAdvice}
                 </span>
@@ -285,15 +291,16 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
       </section>
 
       {/* ====================================================================
-          2. Bộ Lọc Đa Chiều & Công Cụ (Filter & Toolbar)
+          2. Bộ Lọc Đa Chiều & Tìm Kiếm & Công Cụ (Filter & Toolbar)
           ==================================================================== */}
-      <section className={styles.filterCard} aria-label="Bộ lọc dòng thời gian">
-        {/* Pills chọn loại hoạt động */}
+      <section className={styles.filterCard} aria-label="Bộ lọc và tìm kiếm dòng thời gian">
+        {/* Pills chọn loại hoạt động - Không để đè nhau */}
         <div className={styles.categoryPillsWrap} role="tablist">
           <button
             type="button"
             className={`${styles.categoryPill} ${filters.type === 'all' ? styles['categoryPill--active'] : ''}`}
             onClick={() => setTypeFilter('all')}
+            title="Lọc xem tất cả tương tác khách hàng"
           >
             Tất cả <span className={styles.pillCount}>{countsByType.all}</span>
           </button>
@@ -301,56 +308,63 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
             type="button"
             className={`${styles.categoryPill} ${filters.type === 'call' ? styles['categoryPill--active'] : ''}`}
             onClick={() => setTypeFilter('call')}
+            title="Lọc chỉ hiển thị các cuộc gọi tư vấn"
           >
-            <PhoneCall size={13} /> Cuộc gọi{' '}
+            <PhoneCall size={15} /> Cuộc gọi{' '}
             <span className={styles.pillCount}>{countsByType.call}</span>
           </button>
           <button
             type="button"
             className={`${styles.categoryPill} ${filters.type === 'meeting' ? styles['categoryPill--active'] : ''}`}
             onClick={() => setTypeFilter('meeting')}
+            title="Lọc chỉ hiển thị các cuộc họp & trao đổi"
           >
-            <Users size={13} /> Cuộc họp{' '}
+            <Users size={15} /> Cuộc họp{' '}
             <span className={styles.pillCount}>{countsByType.meeting}</span>
           </button>
           <button
             type="button"
             className={`${styles.categoryPill} ${filters.type === 'email' ? styles['categoryPill--active'] : ''}`}
             onClick={() => setTypeFilter('email')}
+            title="Lọc chỉ hiển thị các email trao đổi"
           >
-            <Mail size={13} /> Email{' '}
+            <Mail size={15} /> Email{' '}
             <span className={styles.pillCount}>{countsByType.email}</span>
           </button>
           <button
             type="button"
             className={`${styles.categoryPill} ${filters.type === 'deal_change' ? styles['categoryPill--active'] : ''}`}
             onClick={() => setTypeFilter('deal_change')}
+            title="Lọc chỉ hiển thị thay đổi giai đoạn cơ hội & giá trị deal"
           >
-            <Briefcase size={13} /> Thay đổi Cơ hội{' '}
+            <Briefcase size={15} /> Thay đổi Cơ hội{' '}
             <span className={styles.pillCount}>{countsByType.deal_change}</span>
           </button>
           <button
             type="button"
             className={`${styles.categoryPill} ${filters.type === 'quote_sent' ? styles['categoryPill--active'] : ''}`}
             onClick={() => setTypeFilter('quote_sent')}
+            title="Lọc chỉ hiển thị các báo giá & hợp đồng thương mại đã gửi"
           >
-            <FileText size={13} /> Báo giá &amp; Hợp đồng{' '}
+            <FileText size={15} /> Báo giá &amp; Hợp đồng{' '}
             <span className={styles.pillCount}>{countsByType.quote_sent}</span>
           </button>
           <button
             type="button"
             className={`${styles.categoryPill} ${filters.type === 'note' ? styles['categoryPill--active'] : ''}`}
             onClick={() => setTypeFilter('note')}
+            title="Lọc chỉ hiển thị ghi chú chăm sóc khách hàng nội bộ"
           >
-            <MessageSquare size={13} /> Ghi chú CSKH{' '}
+            <MessageSquare size={15} /> Ghi chú CSKH{' '}
             <span className={styles.pillCount}>{countsByType.note}</span>
           </button>
           <button
             type="button"
             className={`${styles.categoryPill} ${filters.type === 'support_ticket' ? styles['categoryPill--active'] : ''}`}
             onClick={() => setTypeFilter('support_ticket')}
+            title="Lọc chỉ hiển thị các phiếu hỗ trợ kỹ thuật"
           >
-            <AlertCircle size={13} /> Phiếu hỗ trợ{' '}
+            <AlertCircle size={15} /> Phiếu hỗ trợ{' '}
             <span className={styles.pillCount}>{countsByType.support_ticket}</span>
           </button>
         </div>
@@ -363,6 +377,7 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
               className={styles.performerSelect}
               value={filters.performerId}
               onChange={(e) => setPerformerFilter(e.target.value)}
+              title="Chọn nhân viên để lọc danh sách tương tác"
               aria-label="Lọc theo người thực hiện"
             >
               <option value="all">👥 Tất cả người thực hiện</option>
@@ -373,25 +388,52 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
               ))}
             </select>
 
-            {/* Ô tìm kiếm từ khóa */}
+            {/* Ô tìm kiếm từ khóa với icon xóa tức thì */}
             <div className={styles.searchBox}>
-              <Search size={15} className={styles.searchIcon} />
+              <Search size={16} className={styles.searchIcon} />
               <input
                 type="text"
-                placeholder="Tìm theo tiêu đề, nội dung, ghi chú..."
+                placeholder="Tìm theo tiêu đề, ghi chú, người phụ trách..."
                 className={styles.searchInput}
                 value={filters.searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                title="Nhập từ khóa để tìm kiếm tương tác (tiêu đề, ghi chú, người phụ trách...)"
               />
+              {filters.searchQuery && (
+                <button
+                  type="button"
+                  className={styles.clearSearchBtn}
+                  onClick={() => setSearchQuery('')}
+                  title="Xóa từ khóa tìm kiếm và hiển thị lại toàn bộ"
+                  aria-label="Xóa từ khóa tìm kiếm"
+                >
+                  <X size={15} />
+                </button>
+              )}
             </div>
+
+            {/* Nút đặt lại bộ lọc nếu đang có bộ lọc hoặc từ khóa */}
+            {(filters.type !== 'all' || filters.performerId !== 'all' || filters.searchQuery) && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                leftIcon={<RotateCcw size={14} />}
+                onClick={resetFilters}
+                title="Đặt lại toàn bộ bộ lọc và ô tìm kiếm về mặc định"
+              >
+                Đặt lại
+              </Button>
+            )}
           </div>
 
           <Button
             type="button"
             variant="primary"
-            size="sm"
-            leftIcon={<Plus size={15} />}
+            size="md"
+            leftIcon={<Plus size={16} />}
             onClick={() => setIsAddModalOpen(true)}
+            title="Ghi nhận thêm một lần chạm hoặc tương tác mới với khách hàng"
           >
             + Ghi nhận tương tác mới
           </Button>
@@ -404,21 +446,35 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
       <section className={styles.timelineSection} aria-label="Danh sách tương tác">
         {filteredItems.length === 0 ? (
           <div className={styles.emptyStateWrap}>
-            <Clock size={36} style={{ opacity: 0.35, color: '#2563EB' }} />
-            <strong style={{ color: '#0F172A' }}>Không tìm thấy tương tác nào phù hợp</strong>
-            <p style={{ margin: 0, fontSize: '0.84rem' }}>
-              Hãy thử thay đổi điều kiện lọc loại hoạt động hoặc người thực hiện.
+            <Clock size={40} style={{ opacity: 0.35, color: '#2563EB' }} />
+            <strong style={{ color: '#0F172A', fontSize: '1.05rem' }}>
+              Không tìm thấy tương tác nào phù hợp
+            </strong>
+            <p style={{ margin: 0, fontSize: '0.9375rem' }}>
+              {filters.searchQuery
+                ? `Không có kết quả nào chứa từ khóa "${filters.searchQuery}". Hãy thử từ khóa khác hoặc xóa bộ lọc.`
+                : 'Hãy thử thay đổi điều kiện lọc loại hoạt động hoặc người thực hiện.'}
             </p>
-            <Button type="button" variant="secondary" size="sm" onClick={resetFilters}>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              leftIcon={<RotateCcw size={14} />}
+              onClick={resetFilters}
+              title="Đặt lại toàn bộ bộ lọc và ô tìm kiếm về mặc định"
+            >
               Đặt lại bộ lọc
             </Button>
           </div>
         ) : (
           <div className={styles.timelineFeed}>
-            {visibleItems.map((item: ITimelineItem) => (
+            {paginatedItems.map((item: ITimelineItem) => (
               <div key={item.id} className={styles.timelineItemWrap}>
                 {/* Nút icon tròn trên trục thời gian */}
-                <div className={`${styles.timelineNodeIcon} ${styles[`timelineNodeIcon--${item.type}`]}`}>
+                <div
+                  className={`${styles.timelineNodeIcon} ${styles[`timelineNodeIcon--${item.type}`]}`}
+                  title={`Loại tương tác: ${item.typeLabel}`}
+                >
                   {renderItemIcon(item.type)}
                 </div>
 
@@ -445,10 +501,10 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
                         type="button"
                         className={`${styles.pinBtn} ${item.isPinned ? styles['pinBtn--active'] : ''}`}
                         onClick={() => togglePin(item.id)}
-                        title={item.isPinned ? 'Bỏ ghim khỏi đầu dòng thời gian' : 'Ghim tương tác quan trọng'}
+                        title={item.isPinned ? 'Bỏ ghim tương tác này khỏi đầu trang' : 'Ghim tương tác quan trọng này lên đầu dòng thời gian'}
                         aria-label="Ghim tương tác"
                       >
-                        <Pin size={14} />
+                        <Pin size={15} />
                       </button>
                     </div>
                   </div>
@@ -469,38 +525,38 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
                     <p className={styles.cardDescription}>{item.description}</p>
                   )}
 
-                  {/* Nhãn bổ trợ (Metadata Tags) */}
+                  {/* Nhãn bổ trợ (Metadata Tags) - Không để đè nhau */}
                   {item.metadata && (
                     <div className={styles.metadataPillsRow}>
                       {item.metadata.duration && (
-                        <span className={styles.metaPill}>
-                          <Clock size={12} /> Thời lượng: <strong>{item.metadata.duration}</strong>
+                        <span className={styles.metaPill} title={`Thời lượng diễn ra tương tác: ${item.metadata.duration}`}>
+                          <Clock size={13} /> Thời lượng: <strong>{item.metadata.duration}</strong>
                         </span>
                       )}
 
                       {item.metadata.dealValue !== undefined && item.metadata.dealValue > 0 && (
-                        <span className={`${styles.metaPill} ${styles['metaPill--highlight']}`}>
-                          <DollarSign size={12} /> Giá trị cơ hội:{' '}
+                        <span className={`${styles.metaPill} ${styles['metaPill--highlight']}`} title={`Giá trị cơ hội: ${formatCurrency(item.metadata.dealValue)}`}>
+                          <DollarSign size={13} /> Giá trị cơ hội:{' '}
                           <strong>{formatCurrency(item.metadata.dealValue)}</strong>
                         </span>
                       )}
 
                       {item.metadata.newStage && (
-                        <span className={`${styles.metaPill} ${styles['metaPill--warning']}`}>
-                          <Briefcase size={12} /> Giai đoạn: <strong>{item.metadata.newStage}</strong>
+                        <span className={`${styles.metaPill} ${styles['metaPill--warning']}`} title={`Giai đoạn cơ hội mới: ${item.metadata.newStage}`}>
+                          <Briefcase size={13} /> Giai đoạn: <strong>{item.metadata.newStage}</strong>
                         </span>
                       )}
 
                       {item.metadata.quoteAmount !== undefined && item.metadata.quoteAmount > 0 && (
-                        <span className={`${styles.metaPill} ${styles['metaPill--success']}`}>
-                          <FileText size={12} /> Báo giá:{' '}
+                        <span className={`${styles.metaPill} ${styles['metaPill--success']}`} title={`Giá trị báo giá: ${formatCurrency(item.metadata.quoteAmount)}`}>
+                          <FileText size={13} /> Báo giá:{' '}
                           <strong>{formatCurrency(item.metadata.quoteAmount)}</strong>
                         </span>
                       )}
 
                       {item.metadata.attachmentName && (
-                        <span className={styles.metaPill} title="Tài liệu đính kèm">
-                          <Download size={12} /> {item.metadata.attachmentName}{' '}
+                        <span className={styles.metaPill} title={`Tải xuống tài liệu đính kèm: ${item.metadata.attachmentName}`}>
+                          <Download size={13} /> {item.metadata.attachmentName}{' '}
                           {item.metadata.attachmentSize && `(${item.metadata.attachmentSize})`}
                         </span>
                       )}
@@ -514,14 +570,15 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
                               ? styles['metaPill--warning']
                               : ''
                           }`}
+                          title={`Kết quả ghi nhận: ${item.metadata.outcomeLabel}`}
                         >
-                          <CheckCircle2 size={12} /> {item.metadata.outcomeLabel}
+                          <CheckCircle2 size={13} /> {item.metadata.outcomeLabel}
                         </span>
                       )}
 
                       {item.metadata.nextAction && (
-                        <span className={styles.metaPill} style={{ color: '#2563EB' }}>
-                          <ArrowRight size={12} /> Tiếp theo: <strong>{item.metadata.nextAction}</strong>
+                        <span className={styles.metaPill} style={{ color: '#2563EB' }} title={`Hành động tiếp theo cần làm: ${item.metadata.nextAction}`}>
+                          <ArrowRight size={13} /> Tiếp theo: <strong>{item.metadata.nextAction}</strong>
                         </span>
                       )}
                     </div>
@@ -533,36 +590,94 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
         )}
 
         {/* ====================================================================
-            4. Khu Vực Cuộn Vô Hạn (Infinite Scroll Sentinel & Indicator)
+            4. Khu Vực Phân Trang Chuẩn Hệ Thống (Pagination Bar)
             ==================================================================== */}
-        <div className={styles.infiniteScrollArea}>
-          {/* Phần tử Sentinel để IntersectionObserver nhận diện khi chạm đáy */}
-          <div ref={sentinelRef} style={{ height: '1px', width: '100%' }} />
+        {filteredItems.length > 0 && (
+          <div className={styles.paginationWrap}>
+            <div className={styles.paginationInfo}>
+              <span>
+                Hiển thị <strong>{pagination.startIndex} - {pagination.endIndex}</strong> trên <strong>{pagination.totalItems}</strong> tương tác (Trang {currentPage} / {totalPages})
+              </span>
 
-          {isLoadingMore ? (
-            <div className={styles.loadingSpinnerWrap}>
-              <Loader2 size={18} className="animate-spin" color="#2563EB" />
-              <span>Đang tải các lần chạm cũ hơn...</span>
-            </div>
-          ) : hasMore ? (
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              leftIcon={<Clock size={14} />}
-              onClick={loadMore}
-            >
-              Tải thêm tương tác cũ hơn (Còn {totalCount - visibleItems.length} lần chạm)
-            </Button>
-          ) : (
-            filteredItems.length > 0 && (
-              <div className={styles.allLoadedBadge}>
-                <CheckCircle2 size={14} />
-                Đã tải toàn bộ lịch sử tương tác của khách hàng này ({totalCount} lần chạm)
+              <div className={styles.pageSizeWrap}>
+                <label htmlFor="timelinePageSize" style={{ fontSize: '0.875rem', color: '#64748B' }}>
+                  Hiển thị:
+                </label>
+                <select
+                  id="timelinePageSize"
+                  className={styles.pageSizeSelect}
+                  value={pageSize}
+                  onChange={(e) => changePageSize(Number(e.target.value))}
+                  title="Chọn số lượng tương tác hiển thị trên mỗi trang"
+                >
+                  <option value={5}>5 mục / trang</option>
+                  <option value={10}>10 mục / trang</option>
+                  <option value={15}>15 mục / trang</option>
+                  <option value={20}>20 mục / trang</option>
+                </select>
               </div>
-            )
-          )}
-        </div>
+            </div>
+
+            <div className={styles.paginationButtons}>
+              {/* Trang đầu */}
+              <button
+                type="button"
+                className={styles.paginationBtn}
+                disabled={currentPage <= 1}
+                onClick={() => goToPage(1)}
+                title="Về trang đầu tiên"
+              >
+                <ChevronsLeft size={16} />
+              </button>
+
+              {/* Trang trước */}
+              <button
+                type="button"
+                className={styles.paginationBtn}
+                disabled={currentPage <= 1}
+                onClick={prevPage}
+                title="Chuyển về trang trước"
+              >
+                <ChevronLeft size={16} /> Trước
+              </button>
+
+              {/* Các số trang */}
+              {pageNumbers.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  className={`${styles.paginationBtn} ${p === currentPage ? styles['paginationBtn--active'] : ''}`}
+                  onClick={() => goToPage(p)}
+                  title={`Chuyển đến trang ${p}`}
+                >
+                  {p}
+                </button>
+              ))}
+
+              {/* Trang sau */}
+              <button
+                type="button"
+                className={styles.paginationBtn}
+                disabled={currentPage >= totalPages}
+                onClick={nextPage}
+                title="Chuyển sang trang tiếp theo"
+              >
+                Sau <ChevronRight size={16} />
+              </button>
+
+              {/* Trang cuối */}
+              <button
+                type="button"
+                className={styles.paginationBtn}
+                disabled={currentPage >= totalPages}
+                onClick={() => goToPage(totalPages)}
+                title="Đến trang cuối cùng"
+              >
+                <ChevronsRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* ====================================================================
@@ -583,6 +698,7 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
                 className={styles.modalFieldControl}
                 value={newType}
                 onChange={(e) => setNewType(e.target.value as TimelineItemType)}
+                title="Chọn loại hoạt động tương tác"
               >
                 <option value="call">📞 Cuộc gọi tư vấn</option>
                 <option value="meeting">🤝 Cuộc họp trực tiếp / Online</option>
@@ -599,6 +715,7 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
                 className={styles.modalFieldControl}
                 value={newPerformerName}
                 onChange={(e) => setNewPerformerName(e.target.value)}
+                title="Chọn nhân viên thực hiện tương tác này"
               >
                 {availablePerformers.map((p) => (
                   <option key={p.id} value={p.name}>
@@ -617,6 +734,7 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
               placeholder="Ví dụ: Họp bàn giao yêu cầu kỹ thuật & thống nhất điều khoản hợp đồng..."
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
+              title="Nhập tiêu đề tóm tắt buổi làm việc"
               required
             />
           </div>
@@ -631,6 +749,7 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
                   placeholder="Ví dụ: 30 phút, 1 giờ..."
                   value={newDuration}
                   onChange={(e) => setNewDuration(e.target.value)}
+                  title="Nhập thời lượng cuộc gọi hoặc cuộc họp"
                 />
               </div>
             ) : newType === 'quote_sent' ? (
@@ -642,6 +761,7 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
                   placeholder="Ví dụ: 185000000"
                   value={newQuoteAmount || ''}
                   onChange={(e) => setNewQuoteAmount(Number(e.target.value))}
+                  title="Nhập tổng giá trị bản báo giá"
                 />
               </div>
             ) : (
@@ -650,9 +770,9 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
                 <input
                   type="text"
                   className={styles.modalFieldControl}
-                  placeholder="Ví dụ: Chăm sóc định kỳ, Hỗ trợ kỹ thuật..."
                   value="Chăm sóc khách hàng"
                   readOnly
+                  title="Giai đoạn nghiệp vụ"
                 />
               </div>
             )}
@@ -663,6 +783,7 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
                 className={styles.modalFieldControl}
                 value={newOutcome}
                 onChange={(e) => setNewOutcome(e.target.value as TimelineTouchOutcomeType)}
+                title="Chọn kết quả đạt được sau buổi làm việc"
               >
                 <option value="success">✓ Thành công tốt đẹp</option>
                 <option value="followup_required">⚠️ Cần theo dõi tiếp</option>
@@ -679,6 +800,7 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
               placeholder="Ghi lại các ý chính trao đổi, thắc mắc của khách và hành động cần bàn giao cho đồng nghiệp..."
               value={newDesc}
               onChange={(e) => setNewDesc(e.target.value)}
+              title="Nhập nội dung biên bản trao đổi và các lưu ý"
               required
             />
           </div>
@@ -692,6 +814,7 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
                 placeholder="Ví dụ: Gọi lại chốt lịch ký số hợp đồng..."
                 value={newNextAction}
                 onChange={(e) => setNewNextAction(e.target.value)}
+                title="Nhập hành động tiếp theo cần người tiếp nhận thực hiện"
               />
             </div>
 
@@ -702,15 +825,26 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
                 className={styles.modalFieldControl}
                 value={newNextActionDate}
                 onChange={(e) => setNewNextActionDate(e.target.value)}
+                title="Chọn ngày hạn chót thực hiện hành động tiếp theo"
               />
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
-            <Button type="button" variant="secondary" onClick={() => setIsAddModalOpen(false)}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 12 }}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setIsAddModalOpen(false)}
+              title="Hủy bỏ và đóng cửa sổ ghi nhận"
+            >
               Hủy bỏ
             </Button>
-            <Button type="submit" variant="primary" leftIcon={<CheckCircle2 size={16} />}>
+            <Button
+              type="submit"
+              variant="primary"
+              leftIcon={<CheckCircle2 size={16} />}
+              title="Lưu tương tác này vào hồ sơ khách hàng"
+            >
               Lưu tương tác
             </Button>
           </div>

@@ -5,6 +5,7 @@ import {
   ICreateTimelineItemDTO,
   ITimelineHandoverBrief,
   ITimelinePerformer,
+  ITimelinePaginationState,
   TimelineItemType,
 } from '../interfaces/timeline.interface';
 import { ICustomer360 } from '../interfaces/customer.interface';
@@ -20,7 +21,7 @@ interface IUseTimelineActivityOptions {
 export function useTimelineActivity({
   customerId,
   customer360,
-  initialPageSize = 6,
+  initialPageSize = 5,
 }: IUseTimelineActivityOptions) {
   // Toàn bộ danh sách tương tác tổng hợp
   const [allItems, setAllItems] = useState<ITimelineItem[]>(() =>
@@ -34,7 +35,11 @@ export function useTimelineActivity({
     searchQuery: '',
   });
 
-  // Cơ chế cuộn vô hạn (Infinite Scroll): số lượng item đang hiển thị
+  // Phân trang chuẩn (Pagination)
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(initialPageSize);
+
+  // Cơ chế cuộn vô hạn (Infinite Scroll fallback): số lượng item đang hiển thị
   const [visibleCount, setVisibleCount] = useState<number>(initialPageSize);
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
 
@@ -49,10 +54,11 @@ export function useTimelineActivity({
     reload();
   }, [reload]);
 
-  // Reset số lượng hiển thị khi đổi bộ lọc
+  // Reset trang và số lượng hiển thị khi đổi bộ lọc hoặc từ khóa tìm kiếm
   useEffect(() => {
-    setVisibleCount(initialPageSize);
-  }, [filters, initialPageSize]);
+    setCurrentPage(1);
+    setVisibleCount(pageSize);
+  }, [filters, pageSize]);
 
   // Lọc danh sách theo các tiêu chí (Loại hoạt động & Người thực hiện & Từ khóa)
   const filteredItems = useMemo(() => {
@@ -64,15 +70,33 @@ export function useTimelineActivity({
 
       // 2. Lọc theo người thực hiện
       if (filters.performerId !== 'all') {
-        if (item.performer.id !== filters.performerId && item.performer.name !== filters.performerId) {
+        if (
+          item.performer.id !== filters.performerId &&
+          item.performer.name !== filters.performerId
+        ) {
           return false;
         }
       }
 
-      // 3. Tìm kiếm theo từ khóa
+      // 3. Tìm kiếm theo từ khóa đa trường
       if (filters.searchQuery.trim()) {
         const query = filters.searchQuery.toLowerCase().trim();
-        const searchTarget = `${item.title} ${item.description || ''} ${item.performer.name} ${item.typeLabel}`.toLowerCase();
+        const searchTarget = [
+          item.title,
+          item.description || '',
+          item.performer.name,
+          item.performer.role,
+          item.typeLabel,
+          item.metadata?.nextAction || '',
+          item.metadata?.outcomeLabel || '',
+          item.metadata?.attachmentName || '',
+          item.metadata?.quoteNumber || '',
+          item.metadata?.ticketId || '',
+          item.metadata?.newStage || '',
+        ]
+          .join(' ')
+          .toLowerCase();
+
         if (!searchTarget.includes(query)) {
           return false;
         }
@@ -82,12 +106,44 @@ export function useTimelineActivity({
     });
   }, [allItems, filters]);
 
-  // Các mục hiển thị hiện tại phục vụ cuộn vô hạn
+  // Tổng số trang tính theo phân trang
+  const totalPages = useMemo(() => {
+    return Math.max(1, Math.ceil(filteredItems.length / pageSize));
+  }, [filteredItems.length, pageSize]);
+
+  // Đảm bảo currentPage không vượt quá totalPages
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  // Danh sách các mục cho trang hiện tại (Paginated Items)
+  const paginatedItems = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredItems.slice(start, start + pageSize);
+  }, [filteredItems, currentPage, pageSize]);
+
+  // Thông số phân trang chi tiết
+  const pagination: ITimelinePaginationState = useMemo(() => {
+    const totalItems = filteredItems.length;
+    const startIndex = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+    const endIndex = Math.min(currentPage * pageSize, totalItems);
+    return {
+      currentPage,
+      pageSize,
+      totalPages,
+      totalItems,
+      startIndex,
+      endIndex,
+    };
+  }, [currentPage, pageSize, totalPages, filteredItems.length]);
+
+  // Các mục hiển thị cho cơ chế cuộn vô hạn (backward compatibility)
   const visibleItems = useMemo(() => {
     return filteredItems.slice(0, visibleCount);
   }, [filteredItems, visibleCount]);
 
-  // Còn dữ liệu để cuộn tiếp không
   const hasMore = useMemo(() => {
     return visibleCount < filteredItems.length;
   }, [visibleCount, filteredItems.length]);
@@ -107,12 +163,33 @@ export function useTimelineActivity({
     if (isLoadingMore || !hasMore) return;
 
     setIsLoadingMore(true);
-    // Giả lập tải bất đồng bộ mượt mà (smooth async loading)
     window.setTimeout(() => {
-      setVisibleCount((prev) => prev + initialPageSize);
+      setVisibleCount((prev) => prev + pageSize);
       setIsLoadingMore(false);
     }, 280);
-  }, [isLoadingMore, hasMore, initialPageSize]);
+  }, [isLoadingMore, hasMore, pageSize]);
+
+  // Các hàm điều hướng phân trang
+  const goToPage = useCallback(
+    (page: number) => {
+      const target = Math.max(1, Math.min(page, totalPages));
+      setCurrentPage(target);
+    },
+    [totalPages]
+  );
+
+  const nextPage = useCallback(() => {
+    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+  }, [totalPages]);
+
+  const prevPage = useCallback(() => {
+    setCurrentPage((prev) => Math.max(1, prev - 1));
+  }, []);
+
+  const changePageSize = useCallback((newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
+  }, []);
 
   // Thêm mới một lần chạm khách hàng
   const addTouchpoint = useCallback(
@@ -139,7 +216,9 @@ export function useTimelineActivity({
           if (item.id === itemId) {
             const nextPinned = !item.isPinned;
             showGlobalToast(
-              nextPinned ? 'Đã ghim tương tác lên đầu dòng thời gian' : 'Đã bỏ ghim tương tác',
+              nextPinned
+                ? 'Đã ghim tương tác lên đầu dòng thời gian'
+                : 'Đã bỏ ghim tương tác',
               'info',
               undefined,
               2000
@@ -148,7 +227,6 @@ export function useTimelineActivity({
           }
           return item;
         });
-        // Sắp xếp lại sau khi ghim
         return [...updated].sort((a, b) => {
           if (a.isPinned && !b.isPinned) return -1;
           if (!a.isPinned && b.isPinned) return 1;
@@ -178,20 +256,30 @@ export function useTimelineActivity({
       performerId: 'all',
       searchQuery: '',
     });
+    setCurrentPage(1);
   }, []);
 
   return {
     allItems,
     filteredItems,
+    paginatedItems,
     visibleItems,
     hasMore,
     isLoadingMore,
     totalCount: filteredItems.length,
     visibleCount,
     filters,
+    pagination,
+    currentPage,
+    pageSize,
+    totalPages,
     availablePerformers,
     handoverBrief,
     loadMore,
+    goToPage,
+    nextPage,
+    prevPage,
+    changePageSize,
     addTouchpoint,
     togglePin,
     setTypeFilter,

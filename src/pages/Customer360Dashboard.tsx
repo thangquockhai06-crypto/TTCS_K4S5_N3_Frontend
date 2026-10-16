@@ -95,6 +95,7 @@ export const Customer360Dashboard: React.FC = () => {
           size="sm"
           onClick={() => navigate('/customers')}
           leftIcon={<ArrowLeft size={16} />}
+          title="Quay lại danh bạ khách hàng"
         >
           Quay lại danh sách
         </Button>
@@ -105,6 +106,7 @@ export const Customer360Dashboard: React.FC = () => {
             size="sm"
             onClick={() => navigate(`/customers/merge?primaryId=${customer.id}`)}
             leftIcon={<GitMerge size={15} />}
+            title="Gộp trùng hồ sơ khách hàng này với hồ sơ khác"
           >
             Gộp trùng
           </Button>
@@ -114,6 +116,7 @@ export const Customer360Dashboard: React.FC = () => {
             size="sm"
             onClick={() => setIsTicketModalOpen(true)}
             leftIcon={<LifeBuoy size={15} />}
+            title="Xem và tạo phiếu yêu cầu hỗ trợ kỹ thuật"
           >
             Phiếu hỗ trợ ({tickets?.length || 0})
           </Button>
@@ -123,6 +126,7 @@ export const Customer360Dashboard: React.FC = () => {
             size="sm"
             onClick={() => navigate(`/customers/${customer.id}/edit`)}
             leftIcon={<Edit size={15} />}
+            title="Chỉnh sửa thông tin chi tiết hồ sơ khách hàng"
           >
             Chỉnh sửa thông tin
           </Button>
@@ -219,6 +223,7 @@ export const Customer360Dashboard: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveTab('info')}
+          title="Xem thông tin chi tiết doanh nghiệp, cơ cấu công ty và danh bạ liên hệ"
           style={{
             padding: '10px 4px',
             fontSize: '0.9375rem',
@@ -240,6 +245,7 @@ export const Customer360Dashboard: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveTab('deals')}
+          title="Xem danh sách cơ hội kinh doanh và tiến trình thương mại"
           style={{
             padding: '10px 4px',
             fontSize: '0.9375rem',
@@ -261,6 +267,7 @@ export const Customer360Dashboard: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveTab('activities')}
+          title="Xem dòng thời gian tương tác đa kênh và bảng tóm tắt bàn giao 5 phút"
           style={{
             padding: '10px 4px',
             fontSize: '0.9375rem',
@@ -282,6 +289,7 @@ export const Customer360Dashboard: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveTab('docs')}
+          title="Xem các tài liệu hợp đồng và danh sách phiếu hỗ trợ kỹ thuật"
           style={{
             padding: '10px 4px',
             fontSize: '0.9375rem',

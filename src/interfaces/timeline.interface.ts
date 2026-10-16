@@ -95,3 +95,12 @@ export interface ICreateTimelineItemDTO {
   nextAction?: string;
   nextActionDate?: string;
 }
+
+export interface ITimelinePaginationState {
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  totalItems: number;
+  startIndex: number;
+  endIndex: number;
+}

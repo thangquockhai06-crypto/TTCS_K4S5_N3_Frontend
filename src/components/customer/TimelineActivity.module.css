@@ -1,13 +1,15 @@
 /* S6-08: TimelineActivity.module.css
  * BEM & CSS Modules chuẩn kỹ thuật Frontend
- * Responsive mượt mà từ 360px, Flexbox & CSS Grid
+ * Giao diện phóng to chuẩn hệ thống, đồng bộ Dashboard & Lead Management
+ * Responsive mượt mà từ 360px, Flexbox & CSS Grid, các nút không bị đè nhau
  */
 
 .container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 22px;
   width: 100%;
+  box-sizing: border-box;
 }
 
 /* ==========================================================================
@@ -16,14 +18,15 @@
 .handoverCard {
   background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
   border: 1.5px solid #E2E8F0;
-  border-left: 4px solid #2563EB;
-  border-radius: 12px;
-  padding: 18px 20px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  border-left: 5px solid #2563EB;
+  border-radius: 14px;
+  padding: 24px 28px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 18px;
   transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .handoverHeader {
@@ -31,80 +34,92 @@
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 14px;
 }
 
 .handoverTitleWrap {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
 }
 
 .handoverIconBadge {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
   background-color: #EFF6FF;
   color: #2563EB;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.12);
 }
 
 .handoverTitle {
-  font-size: 0.9375rem;
-  font-weight: 700;
+  font-size: 1.125rem;
+  font-weight: 800;
   color: #0F172A;
   margin: 0;
+  line-height: 1.35;
 }
 
 .handoverSubtitle {
-  font-size: 0.78rem;
+  font-size: 0.875rem;
   color: #64748B;
-  margin: 0;
+  margin: 3px 0 0 0;
+  line-height: 1.4;
 }
 
 .handoverToggleBtn {
-  background: none;
-  border: none;
-  font-size: 0.78rem;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  font-size: 0.875rem;
   font-weight: 600;
   color: #2563EB;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: background-color 0.15s ease;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .handoverToggleBtn:hover {
-  background-color: #EFF6FF;
+  background-color: #DBEAFE;
+  color: #1D4ED8;
 }
 
 .metricsGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  gap: 16px;
 }
 
 .metricChip {
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-  padding: 10px 14px;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 14px 18px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  gap: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+}
+
+.metricChip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
 }
 
 .metricChipIcon {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -115,60 +130,65 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  gap: 2px;
 }
 
 .metricChipLabel {
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #64748B;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .metricChipValue {
-  font-size: 0.9375rem;
-  font-weight: 700;
+  font-size: 1.25rem;
+  font-weight: 800;
   color: #0F172A;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: -0.01em;
 }
 
 .contextSummaryBox {
   background-color: #F8FAFC;
-  border: 1px dashed #CBD5E1;
-  border-radius: 8px;
-  padding: 12px 14px;
-  font-size: 0.8125rem;
-  line-height: 1.5;
+  border: 1.5px dashed #CBD5E1;
+  border-radius: 12px;
+  padding: 16px 20px;
+  font-size: 0.9375rem;
+  line-height: 1.65;
   color: #334155;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  box-sizing: border-box;
 }
 
 .contextSummaryLead {
-  font-weight: 600;
+  font-weight: 700;
   color: #1E293B;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  font-size: 0.9375rem;
 }
 
 .handoverAdviceHighlight {
   background-color: #FEF3C7;
-  border-left: 3px solid #D97706;
-  padding: 8px 12px;
-  border-radius: 4px;
-  font-size: 0.78rem;
+  border-left: 4px solid #D97706;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.875rem;
   color: #92400E;
-  margin-top: 4px;
+  margin-top: 6px;
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 10px;
+  line-height: 1.5;
 }
 
 /* ==========================================================================
@@ -176,70 +196,70 @@
    ========================================================================== */
 .filterCard {
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 12px;
-  padding: 16px 20px;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  gap: 18px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  box-sizing: border-box;
 }
 
+/* Các pills chọn loại tương tác - Không để đè nhau */
 .categoryPillsWrap {
   display: flex;
   align-items: center;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 2px;
-  scrollbar-width: thin;
+  flex-wrap: wrap;
+  gap: 10px;
+  box-sizing: border-box;
 }
 
 .categoryPill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 20px;
-  border: 1px solid #E2E8F0;
+  gap: 8px;
+  height: 42px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1.5px solid #E2E8F0;
   background-color: #F8FAFC;
   color: #475569;
-  font-size: 0.8125rem;
-  font-weight: 500;
+  font-size: 0.9375rem;
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.18s ease;
-  flex-shrink: 0;
+  user-select: none;
+  box-sizing: border-box;
 }
 
 .categoryPill:hover {
-  background-color: #F1F5F9;
+  background-color: #EDF2F7;
+  color: #0F172A;
   border-color: #CBD5E1;
-  color: #1E293B;
 }
 
 .categoryPill--active {
-  background-color: #2563EB;
-  border-color: #2563EB;
-  color: #FFFFFF;
-  font-weight: 600;
+  background-color: #2563EB !important;
+  color: #FFFFFF !important;
+  border-color: #2563EB !important;
   box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
-}
-
-.categoryPill--active:hover {
-  background-color: #1D4ED8;
-  border-color: #1D4ED8;
-  color: #FFFFFF;
 }
 
 .pillCount {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.72rem;
-  padding: 1px 6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
   border-radius: 10px;
-  background-color: rgba(0, 0, 0, 0.08);
+  font-size: 0.8125rem;
   font-weight: 700;
+  background-color: #E2E8F0;
+  color: #475569;
+  transition: all 0.18s ease;
 }
 
 .categoryPill--active .pillCount {
@@ -247,41 +267,72 @@
   color: #FFFFFF;
 }
 
+/* Thanh công cụ: Người thực hiện, Tìm kiếm & Nút thêm */
 .toolbarRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
   flex-wrap: wrap;
+  gap: 14px;
 }
 
 .filterControlsLeft {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex: 1;
-  min-width: 280px;
   flex-wrap: wrap;
+  gap: 12px;
+  flex: 1;
+}
+
+.performerSelect {
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 1.5px solid #CBD5E1;
+  background-color: #FFFFFF;
+  color: #0F172A;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  min-width: 240px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  box-sizing: border-box;
+}
+
+.performerSelect:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .searchBox {
   position: relative;
+  display: flex;
+  align-items: center;
   flex: 1;
-  min-width: 220px;
-  max-width: 360px;
+  min-width: 280px;
+  max-width: 440px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 14px;
+  color: #94A3B8;
+  pointer-events: none;
 }
 
 .searchInput {
   width: 100%;
-  height: 38px;
-  padding: 0 12px 0 34px;
+  height: 44px;
+  padding: 0 38px 0 40px;
   border-radius: 8px;
-  border: 1px solid #CBD5E1;
-  font-size: 0.84rem;
-  outline: none;
-  background: #FFFFFF;
+  border: 1.5px solid #CBD5E1;
+  background-color: #FFFFFF;
   color: #0F172A;
-  transition: border-color 0.18s ease;
+  font-size: 0.9375rem;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  box-sizing: border-box;
 }
 
 .searchInput:focus {
@@ -289,276 +340,291 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
-.searchIcon {
+.clearSearchBtn {
   position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 12px;
+  background: none;
+  border: none;
   color: #94A3B8;
-  pointer-events: none;
-}
-
-.performerSelect {
-  height: 38px;
-  padding: 0 12px;
-  border-radius: 8px;
-  border: 1px solid #CBD5E1;
-  font-size: 0.84rem;
-  outline: none;
-  background: #FFFFFF;
-  color: #1E293B;
   cursor: pointer;
-  min-width: 190px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.15s ease;
 }
 
-.performerSelect:focus {
-  border-color: #2563EB;
+.clearSearchBtn:hover {
+  color: #0F172A;
+  background-color: #F1F5F9;
 }
 
 /* ==========================================================================
-   3. Dòng Thời Gian Trực Quan (Vertical Visual Timeline)
+   3. Dòng Thời Gian Trực Quan (Vertical Timeline Feed)
    ========================================================================== */
 .timelineSection {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  position: relative;
+  gap: 20px;
+  width: 100%;
 }
 
 .timelineFeed {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  padding-left: 28px;
+  gap: 26px;
+  padding-left: 36px;
 }
 
-/* Đường chỉ nối dòng thời gian xuyên suốt */
+/* Trục dọc nối các mốc thời gian */
 .timelineFeed::before {
   content: '';
   position: absolute;
-  top: 14px;
-  bottom: 14px;
-  left: 13px;
+  top: 10px;
+  bottom: 10px;
+  left: 17px;
   width: 2px;
-  background-color: #E2E8F0;
-  z-index: 1;
+  background: linear-gradient(180deg, #3B82F6 0%, #CBD5E1 90%, transparent 100%);
 }
 
 .timelineItemWrap {
   position: relative;
   display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  z-index: 2;
+  flex-direction: column;
+  width: 100%;
 }
 
-/* Nút icon tròn trên trục thời gian */
+/* Điểm mốc tròn có icon đại diện */
 .timelineNodeIcon {
   position: absolute;
-  left: -28px;
-  top: 14px;
-  width: 30px;
-  height: 30px;
+  left: -36px;
+  top: 16px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  border: 2px solid #FFFFFF;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  z-index: 3;
+  background-color: #FFFFFF;
+  border: 2px solid #CBD5E1;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  z-index: 2;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.timelineItemWrap:hover .timelineNodeIcon {
+  transform: scale(1.1);
 }
 
 .timelineNodeIcon--call {
-  background-color: #10B981;
-  color: #FFFFFF;
+  background-color: #EFF6FF;
+  border-color: #3B82F6;
+  color: #2563EB;
 }
 
 .timelineNodeIcon--meeting {
-  background-color: #8B5CF6;
-  color: #FFFFFF;
+  background-color: #F5F3FF;
+  border-color: #8B5CF6;
+  color: #7C3AED;
 }
 
 .timelineNodeIcon--email {
-  background-color: #3B82F6;
-  color: #FFFFFF;
+  background-color: #ECFDF5;
+  border-color: #10B981;
+  color: #059669;
 }
 
 .timelineNodeIcon--deal_change {
-  background-color: #F59E0B;
-  color: #FFFFFF;
+  background-color: #FFFBEB;
+  border-color: #F59E0B;
+  color: #D97706;
 }
 
 .timelineNodeIcon--quote_sent {
-  background-color: #6366F1;
-  color: #FFFFFF;
+  background-color: #EEF2FF;
+  border-color: #6366F1;
+  color: #4F46E5;
 }
 
 .timelineNodeIcon--support_ticket {
-  background-color: #EF4444;
-  color: #FFFFFF;
+  background-color: #FEF2F2;
+  border-color: #EF4444;
+  color: #DC2626;
 }
 
 .timelineNodeIcon--note {
-  background-color: #64748B;
-  color: #FFFFFF;
+  background-color: #F8FAFC;
+  border-color: #94A3B8;
+  color: #475569;
 }
 
 .timelineNodeIcon--status_touch {
-  background-color: #06B6D4;
-  color: #FFFFFF;
+  background-color: #F0FDF4;
+  border-color: #22C55E;
+  color: #16A34A;
 }
 
-/* Thẻ nội dung của từng mốc tương tác */
+/* Thẻ mốc tương tác */
 .timelineCard {
-  width: 100%;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 12px;
-  padding: 16px 18px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 22px 26px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  box-sizing: border-box;
 }
 
 .timelineCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
-  border-color: #CBD5E1;
+  border-color: #93C5FD;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08);
 }
 
 .timelineCard--pinned {
-  border-color: #FDE68A;
-  background: linear-gradient(180deg, #FFFDF5 0%, #FFFFFF 100%);
-  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.08);
+  border-left: 5px solid #F59E0B;
+  background: linear-gradient(180deg, #FFFDF8 0%, #FFFFFF 100%);
+  box-shadow: 0 3px 10px rgba(245, 158, 11, 0.08);
 }
 
 .cardHeader {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
   flex-wrap: wrap;
+  gap: 14px;
 }
 
 .cardTitleArea {
   display: flex;
   align-items: center;
-  gap: 8px;
   flex-wrap: wrap;
+  gap: 10px;
+  flex: 1;
 }
 
 .cardTypeBadge {
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 3px 8px;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
   border-radius: 6px;
-  letter-spacing: 0.02em;
+  font-size: 0.8125rem;
+  font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .cardTypeBadge--call {
-  background-color: #ECFDF5;
-  color: #047857;
+  background-color: #DBEAFE;
+  color: #1D4ED8;
 }
 
 .cardTypeBadge--meeting {
-  background-color: #F5F3FF;
+  background-color: #EDE9FE;
   color: #6D28D9;
 }
 
 .cardTypeBadge--email {
-  background-color: #EFF6FF;
-  color: #1D4ED8;
+  background-color: #D1FAE5;
+  color: #065F46;
 }
 
 .cardTypeBadge--deal_change {
-  background-color: #FFFBEB;
-  color: #B45309;
+  background-color: #FEF3C7;
+  color: #92400E;
 }
 
 .cardTypeBadge--quote_sent {
-  background-color: #EEF2FF;
-  color: #4338CA;
+  background-color: #E0E7FF;
+  color: #3730A3;
 }
 
 .cardTypeBadge--support_ticket {
-  background-color: #FEF2F2;
-  color: #B91C1C;
+  background-color: #FEE2E2;
+  color: #991B1B;
 }
 
 .cardTypeBadge--note {
   background-color: #F1F5F9;
-  color: #475569;
+  color: #334155;
 }
 
 .cardTypeBadge--status_touch {
-  background-color: #ECFEFF;
-  color: #0E7490;
+  background-color: #DCFCE7;
+  color: #166534;
 }
 
 .cardTitleText {
-  font-size: 0.9375rem;
+  font-size: 1.125rem;
   font-weight: 700;
   color: #0F172A;
   margin: 0;
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
 .cardHeaderRight {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .timestampText {
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   color: #64748B;
+  font-weight: 500;
   white-space: nowrap;
 }
 
 .pinBtn {
   background: none;
-  border: none;
-  cursor: pointer;
-  padding: 3px 6px;
-  border-radius: 4px;
+  border: 1px solid transparent;
   color: #94A3B8;
-  transition: all 0.15s ease;
-  display: inline-flex;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
   align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
 }
 
 .pinBtn:hover {
-  background-color: #F1F5F9;
+  background-color: #FEF3C7;
   color: #D97706;
+  border-color: #FDE68A;
 }
 
 .pinBtn--active {
   color: #D97706;
+  background-color: #FEF3C7;
+  border-color: #F59E0B;
 }
 
-/* Thông tin người thực hiện */
+/* Thanh thông tin người thực hiện */
 .performerBar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.78rem;
+  gap: 10px;
+  font-size: 0.875rem;
   color: #475569;
 }
 
 .performerAvatar {
-  width: 22px;
-  height: 22px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   object-fit: cover;
+  border: 1.5px solid #E2E8F0;
 }
 
 .performerName {
-  font-weight: 600;
+  font-weight: 700;
   color: #1E293B;
 }
 
@@ -566,108 +632,168 @@
   color: #64748B;
 }
 
-/* Thân mô tả tương tác */
 .cardDescription {
-  font-size: 0.84rem;
-  line-height: 1.5;
-  color: #334155;
   margin: 0;
-  background-color: #F8FAFC;
-  padding: 10px 14px;
-  border-radius: 8px;
-  border: 1px solid #F1F5F9;
+  font-size: 0.9375rem;
+  color: #334155;
+  line-height: 1.65;
+  white-space: pre-line;
 }
 
-/* Các thẻ dữ liệu bổ trợ (Metadata Pills) */
+/* Nhãn bổ trợ (Metadata Pills) - Không để đè nhau */
 .metadataPillsRow {
   display: flex;
   align-items: center;
-  gap: 8px;
   flex-wrap: wrap;
-  margin-top: 2px;
+  gap: 10px;
 }
 
 .metaPill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.75rem;
-  padding: 3px 8px;
-  border-radius: 6px;
-  background-color: #FFFFFF;
+  gap: 6px;
+  padding: 6px 14px;
+  background-color: #F8FAFC;
   border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  font-size: 0.875rem;
   color: #475569;
+  line-height: 1.4;
+  white-space: nowrap;
 }
 
 .metaPill--highlight {
   background-color: #EFF6FF;
   border-color: #BFDBFE;
   color: #1D4ED8;
-  font-weight: 600;
 }
 
 .metaPill--success {
-  background-color: #DCFCE7;
-  border-color: #86EFAC;
-  color: #15803D;
-  font-weight: 600;
+  background-color: #ECFDF5;
+  border-color: #A7F3D0;
+  color: #065F46;
 }
 
 .metaPill--warning {
-  background-color: #FEF3C7;
+  background-color: #FFFBEB;
   border-color: #FDE68A;
-  color: #B45309;
-  font-weight: 600;
+  color: #92400E;
 }
 
 /* ==========================================================================
-   4. Thành Phần Cuộn Vô Hạn (Infinite Scroll Sentinel & Controls)
+   4. Thanh Phân Trang & Điều Hướng (Pagination Controls Bar)
    ========================================================================== */
-.infiniteScrollArea {
+.paginationWrap {
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 16px 24px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 24px 16px;
-  gap: 12px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  box-sizing: border-box;
 }
 
-.loadingSpinnerWrap {
+.paginationInfo {
+  font-size: 0.9375rem;
+  color: #475569;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.pageSizeWrap {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.8125rem;
-  color: #64748B;
 }
 
-.allLoadedBadge {
+.pageSizeSelect {
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1.5px solid #CBD5E1;
+  background-color: #FFFFFF;
+  color: #0F172A;
+  font-size: 0.875rem;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.pageSizeSelect:focus {
+  border-color: #2563EB;
+}
+
+.paginationButtons {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.paginationBtn {
+  height: 38px;
+  min-width: 38px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1.5px solid #E2E8F0;
+  background-color: #FFFFFF;
+  color: #334155;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #059669;
-  background-color: #ECFDF5;
-  border: 1px solid #A7F3D0;
-  padding: 6px 14px;
-  border-radius: 20px;
+  transition: all 0.15s ease;
+  user-select: none;
+  white-space: nowrap;
 }
 
+.paginationBtn:hover:not(:disabled):not(.paginationBtn--active) {
+  background-color: #F1F5F9;
+  border-color: #CBD5E1;
+  color: #0F172A;
+}
+
+.paginationBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: #E2E8F0;
+}
+
+.paginationBtn--active {
+  background-color: #2563EB !important;
+  color: #FFFFFF !important;
+  border-color: #2563EB !important;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25);
+}
+
+/* Trạng thái trống không có dữ liệu */
 .emptyStateWrap {
-  padding: 48px 20px;
-  text-align: center;
   background: #FFFFFF;
-  border: 1px dashed #CBD5E1;
-  border-radius: 12px;
+  border: 1.5px dashed #CBD5E1;
+  border-radius: 14px;
+  padding: 48px 24px;
+  text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
   color: #64748B;
+  box-sizing: border-box;
 }
 
 /* ==========================================================================
-   5. Modal Ghi Nhận Tương Tác Mới (Add Touchpoint Modal Form)
+   5. Form Modal Ghi Nhận Lần Chạm Mới
    ========================================================================== */
 .modalForm {
   display: flex;
@@ -678,19 +804,19 @@
 .formRow2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 16px;
 }
 
 .modalFieldGroup {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
 }
 
 .modalFieldLabel {
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: 0.875rem;
+  font-weight: 700;
   color: #374151;
   margin: 0;
 }
@@ -703,7 +829,7 @@
   border: 1.5px solid #CBD5E1;
   background-color: #FFFFFF;
   color: #0F172A;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   box-sizing: border-box;
   outline: none;
   font-family: inherit;
@@ -717,17 +843,18 @@
 
 .modalTextarea {
   width: 100%;
-  padding: 10px 14px;
+  padding: 12px 14px;
   border-radius: 8px;
   border: 1.5px solid #CBD5E1;
   background-color: #FFFFFF;
   color: #0F172A;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   box-sizing: border-box;
   outline: none;
   font-family: inherit;
   resize: vertical;
-  min-height: 85px;
+  min-height: 90px;
+  line-height: 1.5;
   transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
@@ -746,6 +873,12 @@
 }
 
 @media (max-width: 640px) {
+  .handoverCard {
+    padding: 18px 16px;
+  }
+  .filterCard {
+    padding: 16px;
+  }
   .metricsGrid {
     grid-template-columns: 1fr;
   }
@@ -762,19 +895,31 @@
   }
   .searchBox {
     max-width: 100%;
+    min-width: 100%;
   }
   .performerSelect {
     width: 100%;
+    min-width: 100%;
   }
   .timelineFeed {
-    padding-left: 24px;
+    padding-left: 28px;
   }
   .timelineFeed::before {
-    left: 10px;
+    left: 13px;
   }
   .timelineNodeIcon {
-    left: -24px;
-    width: 26px;
-    height: 26px;
+    left: -28px;
+    width: 30px;
+    height: 30px;
+  }
+  .timelineCard {
+    padding: 16px;
+  }
+  .paginationWrap {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .paginationButtons {
+    justify-content: center;
   }
 }
