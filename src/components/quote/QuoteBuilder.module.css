@@ -263,6 +263,7 @@
    4. Bảng Dòng Sản Phẩm Kế Thừa Từ Deal (Items Table)
    ========================================================================== */
 .tableSectionCard {
+  min-width: 0;
   background: #FFFFFF;
   border: 1.5px solid #E2E8F0;
   border-radius: 14px;
@@ -313,15 +314,20 @@
 
 .tableResponsive {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
   border: 1.5px solid #E2E8F0;
   border-radius: 10px;
-  background-color: #FFFFFF;
+  background-color: #F8FAFC;
   scrollbar-width: thin;
+  scrollbar-color: #CBD5E1 #F1F5F9;
 }
 
 .quoteTable {
   width: 100%;
+  min-width: 1160px;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 0.9375rem;
   text-align: left;
@@ -340,9 +346,10 @@
 }
 
 .quoteTable td {
-  padding: 14px;
-  border-bottom: 1px solid #F1F5F9;
+  padding: 14px 12px;
+  border-bottom: 1px solid #E8EEF5;
   vertical-align: middle;
+  background-color: #FFFFFF;
 }
 
 .quoteTable tr:last-child td {
@@ -350,27 +357,35 @@
 }
 
 .quoteTable tr:hover td {
-  background-color: #F8FAFC;
+  background-color: #F8FBFF;
 }
 
 /* Các ô input nhập liệu bên trong bảng */
 .tableInput {
+  display: block;
+  width: 100%;
+  min-width: 0;
   height: 40px;
-  padding: 0 10px;
-  border-radius: 6px;
-  border: 1.5px solid #CBD5E1;
+  padding: 0 11px;
+  border-radius: 8px;
+  border: 1.5px solid #D5DEE9;
   background-color: #FFFFFF;
   color: #0F172A;
   font-size: 0.875rem;
   font-weight: 600;
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
   box-sizing: border-box;
+}
+
+.tableInput:hover {
+  border-color: #94A3B8;
 }
 
 .tableInput:focus {
   border-color: #2563EB;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  background-color: #FFFFFF;
 }
 
 .tableTextarea {
@@ -394,11 +409,13 @@
 .discountInputWrap {
   display: flex;
   align-items: center;
-  border: 1.5px solid #CBD5E1;
-  border-radius: 6px;
+  border: 1.5px solid #D5DEE9;
+  border-radius: 8px;
   overflow: hidden;
   background-color: #FFFFFF;
-  width: 140px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .discountTypeToggle {
@@ -419,7 +436,9 @@
 }
 
 .discountInputField {
-  width: 100%;
+  width: 0;
+  min-width: 0;
+  flex: 1;
   height: 38px;
   padding: 0 8px;
   border: none;
@@ -549,25 +568,33 @@
 }
 
 /* ==========================================================================
-   6. Bảng Tổng Hợp Chi Phí (Financial Summary Card)
+   6. Tổng Kết & Thao Tác Báo Giá
    ========================================================================== */
-.summarySectionCard {
+.quoteClosingCard {
+  width: 100%;
+  min-width: 0;
+  align-self: stretch;
+  padding: 18px 20px;
   background: #FFFFFF;
   border: 1.5px solid #E2E8F0;
   border-radius: 14px;
-  padding: 24px 28px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  box-sizing: border-box;
+}
+
+.summarySectionCard {
+  width: 100%;
   display: flex;
   justify-content: flex-start;
   box-sizing: border-box;
 }
 
 .summaryBox {
-  width: 440px;
+  width: 100%;
   max-width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .summaryRow {
@@ -607,7 +634,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  gap: 16px;
+  padding: 10px 14px;
   background-color: #EFF6FF;
   border-radius: 8px;
   border: 1.5px solid #BFDBFE;
@@ -631,16 +659,15 @@
    ========================================================================== */
 .stickyActionBar {
   position: static;
-  background: #FFFFFF;
-  border: 1.5px solid #E2E8F0;
-  border-radius: 14px;
-  padding: 16px 24px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  width: 100%;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #E2E8F0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 8px 18px;
   box-sizing: border-box;
 }
 
@@ -648,14 +675,14 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .actionsRight {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 /* ==========================================================================
@@ -797,6 +824,22 @@
   .summaryBox {
     width: 100%;
   }
+  .quoteClosingCard {
+    width: 100%;
+    padding: 16px;
+  }
+  .stickyActionBar {
+    align-items: stretch;
+    gap: 12px;
+  }
+  .actionsLeft,
+  .actionsRight {
+    width: 100%;
+  }
+  .actionsLeft,
+  .actionsRight {
+    justify-content: flex-start;
+  }
 }
 
 @media (max-width: 640px) {
@@ -809,8 +852,8 @@
   .termsSectionCard {
     padding: 16px;
   }
-  .summarySectionCard {
-    padding: 16px;
+  .quoteClosingCard {
+    padding: 14px;
   }
   .redAlertBanner {
     flex-direction: column;
@@ -822,6 +865,14 @@
   }
   .actionsLeft, .actionsRight {
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
+  }
+  .grandTotalRow {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .grandTotalValue {
+    font-size: 1.25rem;
   }
 }

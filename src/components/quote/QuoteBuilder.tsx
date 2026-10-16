@@ -577,107 +577,109 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
       </section>
 
       {/* ====================================================================
-          5. Bảng Tổng Hợp Chi Phí & Trạng Thái Phê Duyệt
+          5. Tổng Hợp Chi Phí & Thao Tác Báo Giá
           ==================================================================== */}
-      <section className={styles.summarySectionCard} aria-label="Tổng hợp tài chính báo giá">
-        <div className={styles.summaryBox}>
-          <div className={styles.summaryRow}>
-            <span className={styles.summaryLabel}>Tổng tiền hàng (Chưa giảm giá):</span>
-            <span className={styles.summaryValue}>{formatVndCurrency(quote.subtotal)}</span>
+      <section className={styles.quoteClosingCard} aria-label="Tổng kết và thao tác báo giá">
+        <section className={styles.summarySectionCard} aria-label="Tổng hợp tài chính báo giá">
+          <div className={styles.summaryBox}>
+            <div className={styles.summaryRow}>
+              <span className={styles.summaryLabel}>Tổng tiền hàng (Chưa giảm giá):</span>
+              <span className={styles.summaryValue}>{formatVndCurrency(quote.subtotal)}</span>
+            </div>
+
+            <div className={`${styles.summaryRow} ${styles['summaryRow--discount']}`}>
+              <span className={styles.summaryLabel}>
+                Tổng chiết khấu ({quote.totalDiscountPercent}%):
+              </span>
+              <span className={styles.summaryValue}>
+                - {formatVndCurrency(quote.totalDiscountAmount)}
+              </span>
+            </div>
+
+            <div className={styles.summaryRow}>
+              <span className={styles.summaryLabel}>Tổng tiền thuế GTGT (VAT):</span>
+              <span className={styles.summaryValue}>{formatVndCurrency(quote.totalVatAmount)}</span>
+            </div>
+
+            <div className={styles.summaryDivider} />
+
+            <div className={styles.grandTotalRow}>
+              <span className={styles.grandTotalLabel}>TỔNG CỘNG THANH TOÁN:</span>
+              <span className={styles.grandTotalValue}>{formatVndCurrency(quote.grandTotal)}</span>
+            </div>
+          </div>
+        </section>
+
+        {/* ====================================================================
+            6. Thao Tác Báo Giá
+            ==================================================================== */}
+        <div className={styles.stickyActionBar}>
+          <div className={styles.actionsLeft}>
+            <Button
+              type="button"
+              variant="secondary"
+              size="md"
+              leftIcon={<ArrowLeft size={16} />}
+              onClick={() => navigate('/deals')}
+              title="Quay lại danh sách cơ hội bán hàng"
+            >
+              Quay lại Deal
+            </Button>
+
+            <Button
+              type="button"
+              variant="secondary"
+              size="md"
+              leftIcon={<RotateCcw size={15} />}
+              onClick={resetToInitial}
+              title="Khôi phục lại danh sách dòng sản phẩm ban đầu từ cơ hội"
+            >
+              Đặt lại từ Deal
+            </Button>
           </div>
 
-          <div className={`${styles.summaryRow} ${styles['summaryRow--discount']}`}>
-            <span className={styles.summaryLabel}>
-              Tổng chiết khấu ({quote.totalDiscountPercent}%):
-            </span>
-            <span className={styles.summaryValue}>
-              - {formatVndCurrency(quote.totalDiscountAmount)}
-            </span>
-          </div>
+          <div className={styles.actionsRight}>
+            <Button
+              type="button"
+              variant="secondary"
+              size="md"
+              leftIcon={<Printer size={16} />}
+              onClick={() => setIsPreviewModalOpen(true)}
+              title="Mở cửa sổ xem trước bản in / xuất file PDF gửi cho khách hàng"
+            >
+              Xem trước &amp; In
+            </Button>
 
-          <div className={styles.summaryRow}>
-            <span className={styles.summaryLabel}>Tổng tiền thuế GTGT (VAT):</span>
-            <span className={styles.summaryValue}>{formatVndCurrency(quote.totalVatAmount)}</span>
-          </div>
+            <Button
+              type="button"
+              variant="secondary"
+              size="md"
+              disabled={isSaving}
+              leftIcon={<Save size={16} />}
+              onClick={handleSaveDraft}
+              title="Lưu bản nháp vào hệ thống để tiếp tục chỉnh sửa bất kỳ lúc nào"
+            >
+              {isSaving ? 'Đang lưu...' : 'Lưu nháp báo giá'}
+            </Button>
 
-          <div className={styles.summaryDivider} />
-
-          <div className={styles.grandTotalRow}>
-            <span className={styles.grandTotalLabel}>TỔNG CỘNG THANH TOÁN:</span>
-            <span className={styles.grandTotalValue}>{formatVndCurrency(quote.grandTotal)}</span>
+            <Button
+              type="button"
+              variant="primary"
+              size="md"
+              disabled={isSaving}
+              leftIcon={quote.requiresApproval ? <ShieldAlert size={16} /> : <Send size={16} />}
+              onClick={handleSubmit}
+              title={
+                quote.requiresApproval
+                  ? 'Chiết khấu vượt ngưỡng: Bấm để gửi Giám đốc Kinh doanh phê duyệt'
+                  : 'Báo giá hợp lệ: Bấm để phát hành và gửi cho khách hàng'
+              }
+            >
+              {quote.requiresApproval ? 'Gửi Giám Đốc Phê Duyệt' : 'Phát Hành Báo Giá'}
+            </Button>
           </div>
         </div>
       </section>
-
-      {/* ====================================================================
-          6. Thanh Thao Tác Cố Định (Sticky Bottom Action Bar)
-          ==================================================================== */}
-      <div className={styles.stickyActionBar}>
-        <div className={styles.actionsLeft}>
-          <Button
-            type="button"
-            variant="secondary"
-            size="md"
-            leftIcon={<ArrowLeft size={16} />}
-            onClick={() => navigate('/deals')}
-            title="Quay lại danh sách cơ hội bán hàng"
-          >
-            Quay lại Deal
-          </Button>
-
-          <Button
-            type="button"
-            variant="secondary"
-            size="md"
-            leftIcon={<RotateCcw size={15} />}
-            onClick={resetToInitial}
-            title="Khôi phục lại danh sách dòng sản phẩm ban đầu từ cơ hội"
-          >
-            Đặt lại từ Deal
-          </Button>
-        </div>
-
-        <div className={styles.actionsRight}>
-          <Button
-            type="button"
-            variant="secondary"
-            size="md"
-            leftIcon={<Printer size={16} />}
-            onClick={() => setIsPreviewModalOpen(true)}
-            title="Mở cửa sổ xem trước bản in / xuất file PDF gửi cho khách hàng"
-          >
-            Xem trước &amp; In
-          </Button>
-
-          <Button
-            type="button"
-            variant="secondary"
-            size="md"
-            disabled={isSaving}
-            leftIcon={<Save size={16} />}
-            onClick={handleSaveDraft}
-            title="Lưu bản nháp vào hệ thống để tiếp tục chỉnh sửa bất kỳ lúc nào"
-          >
-            {isSaving ? 'Đang lưu...' : 'Lưu nháp báo giá'}
-          </Button>
-
-          <Button
-            type="button"
-            variant="primary"
-            size="md"
-            disabled={isSaving}
-            leftIcon={quote.requiresApproval ? <ShieldAlert size={16} /> : <Send size={16} />}
-            onClick={handleSubmit}
-            title={
-              quote.requiresApproval
-                ? 'Chiết khấu vượt ngưỡng: Bấm để gửi Giám đốc Kinh doanh phê duyệt'
-                : 'Báo giá hợp lệ: Bấm để phát hành và gửi cho khách hàng'
-            }
-          >
-            {quote.requiresApproval ? 'Gửi Giám Đốc Phê Duyệt' : 'Phát Hành Báo Giá'}
-          </Button>
-        </div>
-      </div>
 
       {/* ====================================================================
           7. Modal Chọn Sản Phẩm Từ Danh Mục (Product Catalog Modal)
