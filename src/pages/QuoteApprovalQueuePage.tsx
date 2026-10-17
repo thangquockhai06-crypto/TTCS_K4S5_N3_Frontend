@@ -4,7 +4,11 @@ import {
   Check,
   CheckCircle2,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ChevronUp,
+  ChevronsLeft,
+  ChevronsRight,
   Clock3,
   FileCheck2,
   History,
@@ -69,6 +73,8 @@ export const QuoteApprovalQueuePage: React.FC = () => {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<QueueTabType>('pending');
   const [searchText, setSearchText] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
   const [expandedQuoteId, setExpandedQuoteId] = useState<string | null>(null);
   const [selectedQuote, setSelectedQuote] = useState<IQuote | null>(null);
   const [decision, setDecision] = useState<DecisionActionType | null>(null);
@@ -119,6 +125,25 @@ export const QuoteApprovalQueuePage: React.FC = () => {
       })
       .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
   }, [activeTab, isDirector, quotes, searchText]);
+  const totalPages = Math.max(1, Math.ceil(visibleQuotes.length / pageSize));
+  const paginatedQuotes = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return visibleQuotes.slice(startIndex, startIndex + pageSize);
+  }, [currentPage, pageSize, visibleQuotes]);
+  const startItem = visibleQuotes.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, visibleQuotes.length);
+
+  useEffect(() => {
+    setCurrentPage(1);
+    setExpandedQuoteId(null);
+  }, [activeTab, searchText]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+      setExpandedQuoteId(null);
+    }
+  }, [currentPage, totalPages]);
 
   const openDecision = (quote: IQuote, action: DecisionActionType): void => {
     setSelectedQuote(quote);
@@ -281,7 +306,7 @@ export const QuoteApprovalQueuePage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {visibleQuotes.map((quote) => {
+                {paginatedQuotes.map((quote) => {
                   const isExpanded = expandedQuoteId === quote.id;
                   return (
                     <React.Fragment key={quote.id}>
@@ -407,6 +432,72 @@ export const QuoteApprovalQueuePage: React.FC = () => {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+        {!loadError && !isLoading && visibleQuotes.length > 0 && (
+          <div className={styles.pagination} aria-label="Phân trang báo giá">
+            <div className={styles.paginationInfo}>
+              <label htmlFor="quote-page-size">Hiển thị</label>
+              <select
+                id="quote-page-size"
+                value={pageSize}
+                onChange={(event) => {
+                  setPageSize(Number(event.target.value));
+                  setCurrentPage(1);
+                  setExpandedQuoteId(null);
+                }}
+                aria-label="Số báo giá mỗi trang"
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+              <span>
+                Hiển thị <strong>{startItem}-{endItem}</strong> trên tổng số{' '}
+                <strong>{visibleQuotes.length}</strong> báo giá
+              </span>
+            </div>
+            <nav className={styles.paginationControls} aria-label="Các trang báo giá">
+              <button
+                type="button"
+                onClick={() => { setCurrentPage(1); setExpandedQuoteId(null); }}
+                disabled={currentPage === 1}
+                aria-label="Trang đầu"
+                title="Trang đầu"
+              >
+                <ChevronsLeft size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={() => { setCurrentPage((page) => Math.max(1, page - 1)); setExpandedQuoteId(null); }}
+                disabled={currentPage === 1}
+                aria-label="Trang trước"
+                title="Trang trước"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <span aria-current="page" className={styles.currentPage}>
+                Trang {currentPage} / {totalPages}
+              </span>
+              <button
+                type="button"
+                onClick={() => { setCurrentPage((page) => Math.min(totalPages, page + 1)); setExpandedQuoteId(null); }}
+                disabled={currentPage >= totalPages}
+                aria-label="Trang sau"
+                title="Trang sau"
+              >
+                <ChevronRight size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={() => { setCurrentPage(totalPages); setExpandedQuoteId(null); }}
+                disabled={currentPage >= totalPages}
+                aria-label="Trang cuối"
+                title="Trang cuối"
+              >
+                <ChevronsRight size={16} />
+              </button>
+            </nav>
           </div>
         )}
         <div className={styles.policyNote}>
