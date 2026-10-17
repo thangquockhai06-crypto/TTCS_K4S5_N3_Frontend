@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   Building2,
+  ClipboardCheck,
   Clock,
   FileText,
   FolderTree,
@@ -54,6 +55,13 @@ const ALL_MENU_ITEMS: ReadonlyArray<IMenuItem> = [
     path: '/deals',
     icon: <TrendingUp size={19} />,
     requiredPermission: 'manage_deals',
+  },
+  {
+    id: 'quote-approvals',
+    label: 'Duyệt Báo giá',
+    path: '/quotes/approvals',
+    icon: <ClipboardCheck size={19} />,
+    requiredPermission: 'approve_quotes',
   },
   {
     id: 'customers',

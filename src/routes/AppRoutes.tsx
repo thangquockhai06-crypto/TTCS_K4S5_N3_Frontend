@@ -39,6 +39,7 @@ import { CampaignEditPage } from '../pages/CampaignEditPage';
 import { ProductCreatePage } from '../pages/ProductCreatePage';
 import { ProductEditPage } from '../pages/ProductEditPage';
 import { QuoteBuilderPage } from '../pages/QuoteBuilderPage';
+import { QuoteApprovalQueuePage } from '../pages/QuoteApprovalQueuePage';
 
 interface IProtectedRouteProps {
   children: React.ReactElement;
@@ -106,6 +107,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="deals/:id/quotes/new" element={<QuoteBuilderPage />} />
         <Route path="quotes/new" element={<QuoteBuilderPage />} />
         <Route path="quotes/builder" element={<QuoteBuilderPage />} />
+        <Route path="quotes/approvals" element={<QuoteApprovalQueuePage />} />
 
         {/* S4-03: Marketing Campaigns & Dedicated Create/Edit */}
         <Route path="campaigns" element={<CampaignsPage />} />

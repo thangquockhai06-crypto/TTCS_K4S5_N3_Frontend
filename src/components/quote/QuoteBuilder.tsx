@@ -56,6 +56,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
     updateQuoteMeta,
     saveDraft,
     submitQuote,
+    sendQuote,
     resetToInitial,
   } = useQuoteBuilder({ dealId, initialDeal });
 
@@ -104,6 +105,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
     String(now.getMonth() + 1).padStart(2, '0'),
     String(now.getDate()).padStart(2, '0'),
   ].join('-');
+  const isReadOnly = quote.status !== 'draft';
 
   const handleSaveDraft = async () => {
     const saved = await saveDraft();
@@ -113,7 +115,8 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
   };
 
   const handleSubmit = async () => {
-    const submitted = await submitQuote();
+    const submitted =
+      quote.status === 'approved' ? await sendQuote() : await submitQuote();
     if (submitted && onSuccess) {
       onSuccess(submitted);
     }
@@ -194,7 +197,9 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
                   {quote.status === 'draft'
                     ? 'Bản nháp'
                     : quote.status === 'pending_approval'
-                    ? 'Chờ duyệt'
+                    ? quote.approvalLevel === 'director'
+                      ? 'Chờ Giám đốc duyệt'
+                      : 'Chờ Trưởng nhóm duyệt'
                     : quote.status === 'approved'
                     ? 'Đã duyệt'
                     : quote.status === 'sent'
@@ -263,7 +268,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
             <div className={styles.contextRow}>
               <span className={styles.contextLabel}>Ngưỡng chiết khấu cần duyệt:</span>
               <span className={styles.contextValue} style={{ color: '#DC2626' }}>
-                {quote.discountThresholdPercent}%
+                {quote.discountThresholdPercent}% / 20%
               </span>
             </div>
           </div>
@@ -271,28 +276,63 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
       </header>
 
       {/* ====================================================================
-          2. CẢNH BÁO ĐỎ KHI CHẠM NGƯỠNG CẦN DUYỆT (Red Alert Banner)
+          2. Trạng thái phê duyệt và cảnh báo ngưỡng
           ==================================================================== */}
       {quote.requiresApproval && quote.approvalAlert ? (
         <section
           className={styles.redAlertBanner}
           role="alert"
           aria-live="assertive"
-          aria-label="Cảnh báo mức chiết khấu cần duyệt"
+          aria-label="Trạng thái phê duyệt báo giá"
         >
           <div className={styles.redAlertIcon}>
             <ShieldAlert size={26} />
           </div>
           <div className={styles.redAlertContent}>
             <h3 className={styles.redAlertHeading}>
-              CẢNH BÁO ĐỎ: MỨC CHIẾT KHẤU VƯỢT NGƯỠNG CẦN PHÊ DUYỆT
-              <span className={styles.redAlertBadge}>Yêu Cầu Duyệt Cấp Trên</span>
+              {quote.status === 'pending_approval'
+                ? 'BÁO GIÁ ĐANG CHỜ PHÊ DUYỆT'
+                : quote.status === 'approved'
+                  ? 'BÁO GIÁ ĐÃ ĐƯỢC DUYỆT'
+                  : quote.status === 'sent' || quote.status === 'accepted'
+                    ? 'BÁO GIÁ ĐÃ ĐƯỢC PHÁT HÀNH'
+                    : quote.status === 'rejected'
+                      ? 'BÁO GIÁ ĐÃ BỊ TỪ CHỐI'
+                      : 'CẢNH BÁO: BÁO GIÁ CẦN PHÊ DUYỆT'}
+              <span className={styles.redAlertBadge}>
+                {quote.status === 'pending_approval'
+                  ? quote.approvalLevel === 'director'
+                    ? 'Chờ Giám đốc duyệt'
+                    : 'Chờ Trưởng nhóm duyệt'
+                  : quote.status === 'approved' || quote.status === 'sent' || quote.status === 'accepted'
+                    ? 'Đã đủ điều kiện phát hành'
+                    : quote.status === 'rejected'
+                      ? 'Không thể phát hành'
+                      : 'Yêu cầu duyệt cấp trên'}
+              </span>
             </h3>
             <p className={styles.redAlertDesc}>
-              {quote.approvalAlert.reason} Tổng chiết khấu hiện tại là{' '}
-              <strong>{quote.totalDiscountPercent}%</strong>, ngưỡng tổng là{' '}
-              <strong>{quote.discountThresholdPercent}%</strong>. Báo giá cần được{' '}
-              <strong>Giám đốc Kinh doanh</strong> phê duyệt trước khi phát hành.
+              {quote.status === 'pending_approval' ? (
+                <>
+                  {quote.approvalAlert.reason} Tổng chiết khấu hiện tại là{' '}
+                  <strong>{quote.totalDiscountPercent}%</strong>. Báo giá chưa thể gửi cho khách hàng.
+                </>
+              ) : quote.status === 'approved' ||
+                quote.status === 'sent' ||
+                quote.status === 'accepted' ? (
+                <>
+                  Báo giá đã được phê duyệt với mức chiết khấu{' '}
+                  <strong>{quote.totalDiscountPercent}%</strong>.
+                  {quote.status === 'approved' && ' Có thể phát hành cho khách hàng.'}
+                </>
+              ) : quote.status === 'rejected' ? (
+                <>Báo giá không được duyệt và không thể phát hành cho khách hàng.</>
+              ) : (
+                <>
+                  {quote.approvalAlert.reason} Mức chiết khấu hiện tại là{' '}
+                  <strong>{quote.totalDiscountPercent}%</strong>; báo giá cần được duyệt trước khi phát hành.
+                </>
+              )}
             </p>
             {quote.approvalAlert.ruleViolations.length > 0 && (
               <ul className={styles.redAlertList}>
@@ -307,8 +347,17 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
         <div className={styles.greenApprovalNotice}>
           <CheckCircle2 size={18} color="#16A34A" />
           <span>
-            Mức chiết khấu hiện tại là <strong>{quote.totalDiscountPercent}%</strong> (chưa chạm ngưỡng cần duyệt{' '}
-            {quote.discountThresholdPercent}%). Báo giá đủ điều kiện phát hành trực tiếp.
+            {quote.status === 'approved' ? (
+              <>Báo giá đã được tự động thông qua và chỉ còn chờ phát hành cho khách hàng.</>
+            ) : quote.status === 'sent' || quote.status === 'accepted' ? (
+              <>Báo giá đã được phát hành sau khi được duyệt.</>
+            ) : (
+              <>
+                Mức chiết khấu hiện tại là <strong>{quote.totalDiscountPercent}%</strong>. Dưới{' '}
+                {quote.discountThresholdPercent}% được tự động thông qua; từ {quote.discountThresholdPercent}% cần
+                Trưởng nhóm duyệt, trên 20% hoặc thấp hơn giá sàn cần Giám đốc duyệt.
+              </>
+            )}
           </span>
         </div>
       )}
@@ -330,6 +379,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
               size="sm"
               leftIcon={<RotateCcw size={14} />}
               onClick={resetToInitial}
+              disabled={isReadOnly}
               title="Khôi phục lại các dòng sản phẩm ban đầu được kế thừa từ Cơ hội (Deal)"
             >
               Khôi phục từ Deal
@@ -341,6 +391,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
               size="sm"
               leftIcon={<Layers size={14} />}
               onClick={() => setIsCatalogModalOpen(true)}
+              disabled={isReadOnly}
               title="Chọn sản phẩm hoặc gói giải pháp có sẵn từ danh mục phần mềm & dịch vụ"
             >
               + Chọn từ Danh mục
@@ -352,6 +403,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
               size="sm"
               leftIcon={<Plus size={15} />}
               onClick={() => addLineItem()}
+              disabled={isReadOnly}
               title="Thêm một dòng sản phẩm hoặc dịch vụ tùy chỉnh mới"
             >
               + Thêm dòng sản phẩm
@@ -387,6 +439,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
                         type="text"
                         className={styles.tableInput}
                         value={item.productName}
+                        disabled={isReadOnly}
                         onChange={(e) => updateLineItem(item.id, { productName: e.target.value })}
                         placeholder="Tên sản phẩm / giải pháp..."
                         title="Chỉnh sửa tên sản phẩm hoặc dịch vụ"
@@ -396,6 +449,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
                         className={styles.tableInput}
                         style={{ height: 32, fontSize: '0.8125rem', fontWeight: 400, color: '#64748B' }}
                         value={item.description || ''}
+                        disabled={isReadOnly}
                         onChange={(e) => updateLineItem(item.id, { description: e.target.value })}
                         placeholder="Mô tả phạm vi hoặc cam kết SLA..."
                         title="Mô tả chi tiết giải pháp"
@@ -409,6 +463,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
                       className={styles.tableInput}
                       style={{ width: '100%' }}
                       value={item.unit}
+                      disabled={isReadOnly}
                       onChange={(e) => updateLineItem(item.id, { unit: e.target.value })}
                       title="Đơn vị tính (Gói, User/Năm, License, Tháng...)"
                     />
@@ -421,6 +476,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
                       className={styles.tableInput}
                       style={{ width: '100%', textAlign: 'center' }}
                       value={item.quantity}
+                      disabled={isReadOnly}
                       onChange={(e) => updateLineItem(item.id, { quantity: Number(e.target.value) })}
                       title="Số lượng sản phẩm hoặc người dùng"
                     />
@@ -433,6 +489,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
                       className={styles.tableInput}
                       style={{ width: '100%', textAlign: 'right' }}
                       value={item.unitPrice}
+                      disabled={isReadOnly}
                       onChange={(e) => updateLineItem(item.id, { unitPrice: Number(e.target.value) })}
                       title="Đơn giá niêm yết chưa trừ chiết khấu"
                     />
@@ -443,6 +500,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
                       <button
                         type="button"
                         className={styles.discountTypeToggle}
+                        disabled={isReadOnly}
                         onClick={() =>
                           updateLineItem(item.id, {
                             discountType: item.discountType === 'percent' ? 'amount' : 'percent',
@@ -461,6 +519,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
                         max={item.discountType === 'percent' ? 100 : item.unitPrice * item.quantity}
                         className={styles.discountInputField}
                         value={item.discountValue}
+                        disabled={isReadOnly}
                         onChange={(e) => updateLineItem(item.id, { discountValue: Number(e.target.value) })}
                         title="Nhập mức chiết khấu áp dụng cho dòng sản phẩm này"
                       />
@@ -477,6 +536,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
                       className={styles.tableInput}
                       style={{ width: '100%', textAlign: 'center' }}
                       value={item.vatRate}
+                      disabled={isReadOnly}
                       onChange={(e) => updateLineItem(item.id, { vatRate: Number(e.target.value) })}
                       title="Chọn thuế suất giá trị gia tăng VAT"
                     >
@@ -496,6 +556,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
                     <button
                       type="button"
                       className={styles.deleteItemBtn}
+                      disabled={isReadOnly}
                       onClick={() => removeLineItem(item.id)}
                       title="Xóa dòng sản phẩm này khỏi báo giá"
                       aria-label="Xóa dòng"
@@ -527,6 +588,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
               type="date"
               className={styles.termsInput}
               value={quote.validUntil}
+              disabled={isReadOnly}
               min={minValidUntil}
               onChange={(e) => updateQuoteMeta({ validUntil: e.target.value })}
               title="Chọn ngày hết hạn hiệu lực của bản báo giá này"
@@ -541,6 +603,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
               type="text"
               className={styles.termsInput}
               value={quote.paymentTerms}
+              disabled={isReadOnly}
               onChange={(e) => updateQuoteMeta({ paymentTerms: e.target.value })}
               placeholder="Ví dụ: Tạm ứng 50% khi ký hợp đồng, 50% sau khi nghiệm thu..."
               title="Nhập quy định các đợt thanh toán và tiến độ thanh toán"
@@ -555,6 +618,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
               type="text"
               className={styles.termsInput}
               value={quote.deliveryTerms}
+              disabled={isReadOnly}
               onChange={(e) => updateQuoteMeta({ deliveryTerms: e.target.value })}
               placeholder="Ví dụ: Bàn giao tài khoản Cloud trong vòng 24 giờ sau khi ký kết..."
               title="Nhập cam kết thời gian bàn giao và triển khai phần mềm"
@@ -569,6 +633,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
           <textarea
             className={styles.termsTextarea}
             value={quote.notes || ''}
+            disabled={isReadOnly}
             onChange={(e) => updateQuoteMeta({ notes: e.target.value })}
             placeholder="Ghi chú chi tiết về hạ tầng máy chủ, cam kết SLA 99.9%, hỗ trợ kỹ thuật 24/7..."
             title="Nhập các điều khoản ghi chú bổ sung gửi cho khách hàng"
@@ -632,6 +697,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
               size="md"
               leftIcon={<RotateCcw size={15} />}
               onClick={resetToInitial}
+              disabled={isReadOnly}
               title="Khôi phục lại danh sách dòng sản phẩm ban đầu từ cơ hội"
             >
               Đặt lại từ Deal
@@ -654,9 +720,9 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
               type="button"
               variant="secondary"
               size="md"
-              disabled={isSaving}
               leftIcon={<Save size={16} />}
               onClick={handleSaveDraft}
+              disabled={isSaving || isReadOnly}
               title="Lưu bản nháp vào hệ thống để tiếp tục chỉnh sửa bất kỳ lúc nào"
             >
               {isSaving ? 'Đang lưu...' : 'Lưu nháp báo giá'}
@@ -666,16 +732,42 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
               type="button"
               variant="primary"
               size="md"
-              disabled={isSaving}
-              leftIcon={quote.requiresApproval ? <ShieldAlert size={16} /> : <Send size={16} />}
+              disabled={
+                isSaving ||
+                quote.status === 'pending_approval' ||
+                quote.status === 'rejected' ||
+                quote.status === 'sent' ||
+                quote.status === 'accepted'
+              }
+              leftIcon={
+                quote.status === 'approved' || (!quote.requiresApproval && quote.status === 'draft')
+                  ? <Send size={16} />
+                  : <ShieldAlert size={16} />
+              }
               onClick={handleSubmit}
               title={
-                quote.requiresApproval
-                  ? 'Chiết khấu vượt ngưỡng: Bấm để gửi Giám đốc Kinh doanh phê duyệt'
-                  : 'Báo giá hợp lệ: Bấm để phát hành và gửi cho khách hàng'
+                quote.status === 'approved'
+                  ? 'Phát hành báo giá đã được duyệt cho khách hàng'
+                  : quote.approvalLevel === 'director'
+                    ? 'Gửi báo giá đến Giám đốc Kinh doanh để phê duyệt'
+                    : quote.approvalLevel === 'team_leader'
+                      ? 'Gửi báo giá đến Trưởng nhóm để phê duyệt'
+                      : 'Kiểm tra và tự động duyệt báo giá theo ngưỡng'
               }
             >
-              {quote.requiresApproval ? 'Gửi Giám Đốc Phê Duyệt' : 'Phát Hành Báo Giá'}
+              {quote.status === 'sent'
+                ? 'Đã gửi khách hàng'
+                : quote.status === 'pending_approval'
+                  ? 'Đang chờ duyệt'
+                  : quote.status === 'rejected'
+                    ? 'Báo giá đã bị từ chối'
+                    : quote.status === 'approved'
+                      ? 'Gửi báo giá cho khách'
+                      : quote.approvalLevel === 'director'
+                        ? 'Gửi Giám đốc duyệt'
+                        : quote.approvalLevel === 'team_leader'
+                          ? 'Gửi Trưởng nhóm duyệt'
+                          : 'Kiểm tra & duyệt báo giá'}
             </Button>
           </div>
         </div>

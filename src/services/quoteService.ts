@@ -2,12 +2,16 @@ import {
   IQuote,
   IQuoteLineItem,
   IProductCatalogItem,
+  IQuoteApprovalHistoryEntry,
+  QuoteApprovalActionType,
+  QuoteApprovalLevelType,
   QuoteStatusType,
 } from '../interfaces/quote.interface';
 import { IDeal } from '../interfaces/deal.interface';
 
 const QUOTES_STORAGE_KEY = 'nexus_quotes_master_list';
-const DEFAULT_DISCOUNT_THRESHOLD_PERCENT = 15; // Ngưỡng chiết khấu 15% cần Giám đốc duyệt
+const DEFAULT_DISCOUNT_THRESHOLD_PERCENT = 15;
+const DIRECTOR_DISCOUNT_THRESHOLD_PERCENT = 20;
 
 const PRODUCT_CATALOG: IProductCatalogItem[] = [
   {
@@ -116,6 +120,16 @@ function isStoredQuote(value: unknown): value is IQuote {
     Array.isArray(candidate.items);
 
   if (!hasRequiredFields || !Array.isArray(candidate.items)) return false;
+  if (
+    candidate.approvalLevel !== undefined &&
+    candidate.approvalLevel !== 'team_leader' &&
+    candidate.approvalLevel !== 'director'
+  ) return false;
+  if (
+    candidate.approvalHistory !== undefined &&
+    (!Array.isArray(candidate.approvalHistory) ||
+      !candidate.approvalHistory.every(isApprovalHistoryEntry))
+  ) return false;
 
   return candidate.items.every((item: unknown) => {
     if (typeof item !== 'object' || item === null) return false;
@@ -132,12 +146,36 @@ function isStoredQuote(value: unknown): value is IQuote {
       typeof lineItem.discountValue === 'number' &&
       Number.isFinite(lineItem.discountValue) &&
       typeof lineItem.discountAmount === 'number' &&
+      (lineItem.floorPrice === undefined ||
+        (typeof lineItem.floorPrice === 'number' &&
+          Number.isFinite(lineItem.floorPrice) &&
+          lineItem.floorPrice >= 0)) &&
       typeof lineItem.vatRate === 'number' &&
       Number.isFinite(lineItem.vatRate) &&
       typeof lineItem.vatAmount === 'number' &&
       typeof lineItem.lineTotal === 'number'
     );
   });
+}
+
+function isApprovalHistoryEntry(value: unknown): value is IQuoteApprovalHistoryEntry {
+  if (typeof value !== 'object' || value === null) return false;
+  const entry = value as Partial<IQuoteApprovalHistoryEntry>;
+  return (
+    typeof entry.id === 'string' &&
+    (entry.action === 'auto_approved' ||
+      entry.action === 'approved' ||
+      entry.action === 'rejected' ||
+      entry.action === 'returned_for_edit' ||
+      entry.action === 'sent') &&
+    (entry.approvalLevel === undefined ||
+      entry.approvalLevel === 'team_leader' ||
+      entry.approvalLevel === 'director') &&
+    typeof entry.performedBy === 'string' &&
+    typeof entry.performedByRole === 'string' &&
+    typeof entry.comment === 'string' &&
+    typeof entry.createdAt === 'string'
+  );
 }
 
 class QuoteService {
@@ -194,7 +232,7 @@ class QuoteService {
 
   /**
    * Tính toán lại toàn bộ báo giá: tổng tiền, tổng chiết khấu, VAT, tổng thanh toán
-   * và kiểm tra ngưỡng cảnh báo đỏ cần Giám đốc duyệt (S7-01)
+   * và xác định cấp phê duyệt cần thiết.
    */
   public recalculateQuote(quote: IQuote): IQuote {
     const updatedItems = quote.items.map((item) => this.calculateLineItem(item));
@@ -211,14 +249,32 @@ class QuoteService {
         ? requestedThreshold
         : DEFAULT_DISCOUNT_THRESHOLD_PERCENT;
 
-    // Kiểm tra ngưỡng cảnh báo đỏ:
-    // 1. Tổng mức chiết khấu đạt hoặc vượt ngưỡng (mặc định 15%)
-    // 2. Hoặc có dòng sản phẩm giảm quá 20%
     const ruleViolations: string[] = [];
+    const belowFloorItems = updatedItems.filter((item) => {
+      if (item.floorPrice === undefined) return false;
+      const netUnitPrice = item.quantity > 0 ? item.lineTotal / item.quantity : item.unitPrice;
+      return netUnitPrice < item.floorPrice;
+    });
+    if (belowFloorItems.length > 0) {
+      ruleViolations.push(
+        `Giá bán sau chiết khấu thấp hơn giá sàn của ${belowFloorItems
+          .map((item) => `"${item.productName}"`)
+          .join(', ')}.`
+      );
+    }
+
+    let approvalLevel: QuoteApprovalLevelType | undefined;
     if (totalDiscountPercent >= thresholdPercent) {
       ruleViolations.push(
-        `Mức chiết khấu tổng thể đạt ${totalDiscountPercent.toFixed(1)}%, chạm ngưỡng cần duyệt (${thresholdPercent}%).`
+        `Mức chiết khấu tổng thể đạt ${totalDiscountPercent.toFixed(1)}%, chạm ngưỡng Trưởng nhóm (${thresholdPercent}%).`
       );
+      approvalLevel = 'team_leader';
+    }
+    if (totalDiscountPercent > DIRECTOR_DISCOUNT_THRESHOLD_PERCENT) {
+      ruleViolations.push(
+        `Mức chiết khấu tổng thể vượt ngưỡng Giám đốc (${DIRECTOR_DISCOUNT_THRESHOLD_PERCENT}%).`
+      );
+      approvalLevel = 'director';
     }
 
     const highDiscountLine = updatedItems.find((i) => {
@@ -231,8 +287,10 @@ class QuoteService {
       ruleViolations.push(
         `Dòng "${highDiscountLine.productName}" có mức chiết khấu cao bất thường (>20%).`
       );
+      approvalLevel = 'director';
     }
 
+    if (belowFloorItems.length > 0) approvalLevel = 'director';
     const requiresApproval = ruleViolations.length > 0;
     const exceededByPercent = Math.max(0, totalDiscountPercent - thresholdPercent);
 
@@ -246,13 +304,17 @@ class QuoteService {
       grandTotal,
       discountThresholdPercent: thresholdPercent,
       requiresApproval,
+      approvalLevel,
       approvalAlert: requiresApproval
         ? {
             requiresApproval: true,
             thresholdPercent,
             currentDiscountPercent: Number(totalDiscountPercent.toFixed(1)),
             exceededByPercent: Number(exceededByPercent.toFixed(1)),
-            reason: 'Báo giá có mức chiết khấu cần Giám đốc Kinh doanh phê duyệt trước khi phát hành.',
+            reason:
+              approvalLevel === 'director'
+                ? 'Báo giá cần Giám đốc Kinh doanh phê duyệt trước khi phát hành.'
+                : 'Báo giá cần Trưởng nhóm kinh doanh phê duyệt trước khi phát hành.',
             ruleViolations,
           }
         : undefined,
@@ -474,7 +536,7 @@ class QuoteService {
       if (!Array.isArray(quotes) || !quotes.every(isStoredQuote)) {
         throw new Error('Danh sách báo giá đã lưu không hợp lệ.');
       }
-      return quotes;
+      return quotes.map((quote) => this.recalculateQuote(quote));
     } catch (error: unknown) {
       console.error('Lỗi khi đọc danh sách báo giá:', error);
       throw new Error('Không thể đọc danh sách báo giá đã lưu.');
@@ -487,14 +549,103 @@ class QuoteService {
   public submitQuote(quote: IQuote): IQuote {
     const recalculated = this.recalculateQuote(quote);
     const nextStatus: QuoteStatusType = recalculated.requiresApproval ? 'pending_approval' : 'approved';
+    const now = new Date().toISOString();
+    const approvalHistory = [...(recalculated.approvalHistory ?? [])];
+    if (!recalculated.requiresApproval) {
+      approvalHistory.push({
+        id: `approval-${Date.now()}`,
+        action: 'auto_approved',
+        performedBy: 'Hệ thống',
+        performedByRole: 'Hệ thống',
+        comment: 'Tự động thông qua: báo giá nằm trong ngưỡng phê duyệt.',
+        createdAt: now,
+      });
+    }
 
     const finalizedQuote: IQuote = {
       ...recalculated,
       status: nextStatus,
-      updatedAt: new Date().toISOString(),
+      approvalHistory,
+      updatedAt: now,
     };
 
     return this.saveDraft(finalizedQuote);
+  }
+
+  public decideApproval(
+    quoteId: string,
+    action: Extract<QuoteApprovalActionType, 'approved' | 'rejected' | 'returned_for_edit'>,
+    comment: string,
+    actorName: string,
+    actorRole: string
+  ): IQuote {
+    const normalizedComment = comment.trim();
+    if (!normalizedComment) throw new Error('Vui lòng nhập ý kiến xử lý.');
+
+    const quote = this.getAllQuotes().find((candidate) => candidate.id === quoteId);
+    if (!quote || quote.status !== 'pending_approval' || !quote.approvalLevel) {
+      throw new Error('Báo giá không còn ở trạng thái chờ duyệt.');
+    }
+
+    const normalizedRole = actorRole.trim().toLowerCase();
+    const isDirector =
+      normalizedRole.includes('director') ||
+      normalizedRole.includes('vp') ||
+      normalizedRole.includes('giám đốc') ||
+      normalizedRole.includes('admin');
+    const isTeamLeader =
+      isDirector ||
+      normalizedRole.includes('manager') ||
+      normalizedRole.includes('leader') ||
+      normalizedRole.includes('trưởng nhóm');
+    if (!isTeamLeader || (quote.approvalLevel === 'director' && !isDirector)) {
+      throw new Error('Bạn không có quyền xử lý cấp duyệt của báo giá này.');
+    }
+
+    const now = new Date().toISOString();
+    const nextStatus: QuoteStatusType =
+      action === 'approved' ? 'approved' : action === 'rejected' ? 'rejected' : 'draft';
+    const actionHistory: IQuoteApprovalHistoryEntry = {
+      id: `approval-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      action,
+      approvalLevel: quote.approvalLevel,
+      performedBy: actorName,
+      performedByRole: actorRole,
+      comment: normalizedComment,
+      createdAt: now,
+    };
+    return this.saveDraft({
+      ...quote,
+      status: nextStatus,
+      approvalHistory: [...(quote.approvalHistory ?? []), actionHistory],
+      updatedAt: now,
+    });
+  }
+
+  public sendApprovedQuote(
+    quoteId: string,
+    actorName: string,
+    actorRole: string
+  ): IQuote {
+    const quote = this.getAllQuotes().find((candidate) => candidate.id === quoteId);
+    if (!quote || quote.status !== 'approved') {
+      throw new Error('Chỉ báo giá đã được duyệt mới có thể gửi cho khách hàng.');
+    }
+    const now = new Date().toISOString();
+    const sentEntry: IQuoteApprovalHistoryEntry = {
+      id: `approval-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      action: 'sent',
+      performedBy: actorName,
+      performedByRole: actorRole,
+      comment: 'Đã phát hành báo giá cho khách hàng.',
+      createdAt: now,
+    };
+    return this.saveDraft({
+      ...quote,
+      status: 'sent',
+      approvalHistory: [...(quote.approvalHistory ?? []), sentEntry],
+      updatedAt: now,
+    });
   }
 }
 

@@ -97,6 +97,10 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
   const addLineItem = useCallback(
     (product?: IProductCatalogItem) => {
       if (!quote) return;
+      if (quote.status !== 'draft') {
+        showGlobalToast('Chỉ có thể chỉnh sửa báo giá đang ở trạng thái bản nháp.', 'warning');
+        return;
+      }
 
       const newItem: IQuoteLineItem = {
         id: `item-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
@@ -107,6 +111,7 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
         quantity: 1,
         unit: product?.unit || 'Gói',
         unitPrice: product?.unitPrice ?? 0,
+        floorPrice: product?.floorPrice,
         discountType: 'percent',
         discountValue: 0,
         discountAmount: 0,
@@ -133,6 +138,10 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
   const updateLineItem = useCallback(
     (itemId: string, updates: Partial<IQuoteLineItem>) => {
       if (!quote) return;
+      if (quote.status !== 'draft') {
+        showGlobalToast('Chỉ có thể chỉnh sửa báo giá đang ở trạng thái bản nháp.', 'warning');
+        return;
+      }
 
       const updatedItems = quote.items.map((item) => {
         if (item.id === itemId) {
@@ -158,6 +167,10 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
   const removeLineItem = useCallback(
     (itemId: string) => {
       if (!quote) return;
+      if (quote.status !== 'draft') {
+        showGlobalToast('Chỉ có thể chỉnh sửa báo giá đang ở trạng thái bản nháp.', 'warning');
+        return;
+      }
       if (quote.items.length <= 1) {
         showGlobalToast('Báo giá phải có ít nhất 01 dòng sản phẩm.', 'warning');
         return;
@@ -181,6 +194,10 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
   const updateQuoteMeta = useCallback(
     (updates: Partial<IQuote>) => {
       if (!quote) return;
+      if (quote.status !== 'draft') {
+        showGlobalToast('Chỉ có thể chỉnh sửa báo giá đang ở trạng thái bản nháp.', 'warning');
+        return;
+      }
       const updatedQuote: IQuote = {
         ...quote,
         ...updates,
@@ -195,6 +212,10 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
   // Lưu bản nháp (Lưu nháp và sửa tiếp được)
   const saveDraft = useCallback(async (): Promise<IQuote | null> => {
     if (!quote) return null;
+    if (quote.status !== 'draft') {
+      showGlobalToast('Chỉ có thể lưu báo giá đang ở trạng thái bản nháp.', 'warning');
+      return null;
+    }
     setIsSaving(true);
     try {
       const saved = quoteService.saveDraft(quote);
@@ -222,6 +243,10 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
   // Gửi duyệt hoặc hoàn tất báo giá
   const submitQuote = useCallback(async (): Promise<IQuote | null> => {
     if (!quote) return null;
+    if (quote.status !== 'draft') {
+      showGlobalToast('Chỉ có thể gửi duyệt báo giá đang ở trạng thái bản nháp.', 'warning');
+      return null;
+    }
     const validationErrors = quoteService.validateForSubmission(quote);
     if (validationErrors.length > 0) {
       showGlobalToast(validationErrors.join(' '), 'warning', undefined, 5000);
@@ -235,15 +260,17 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
       setHasUnsavedChanges(false);
 
       if (submitted.requiresApproval) {
+        const nextApprover =
+          submitted.approvalLevel === 'director' ? 'Giám đốc Kinh doanh' : 'Trưởng nhóm kinh doanh';
         showGlobalToast(
-          `CẢNH BÁO: Mức chiết khấu (${submitted.totalDiscountPercent}%) đã đạt hoặc vượt ngưỡng ${submitted.discountThresholdPercent}%. Báo giá đã được chuyển sang trạng thái "Chờ Giám đốc Kinh doanh phê duyệt"!`,
+          `Báo giá đã được chuyển sang trạng thái "Chờ ${nextApprover} phê duyệt".`,
           'warning',
           undefined,
           4500
         );
       } else {
         showGlobalToast(
-          `Báo giá "${submitted.quoteNumber}" hợp lệ và đã sẵn sàng gửi cho khách hàng!`,
+          `Báo giá "${submitted.quoteNumber}" nằm trong ngưỡng và đã được hệ thống tự động duyệt.`,
           'success',
           undefined,
           3500
@@ -262,9 +289,38 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
     }
   }, [quote]);
 
+  const sendQuote = useCallback(async (): Promise<IQuote | null> => {
+    if (!quote) return null;
+    setIsSaving(true);
+    try {
+      const sent = quoteService.sendApprovedQuote(
+        quote.id,
+        quote.createdBy,
+        quote.creatorRole
+      );
+      setQuote(sent);
+      setHasUnsavedChanges(false);
+      showGlobalToast(`Báo giá "${sent.quoteNumber}" đã được phát hành cho khách hàng.`, 'success');
+      return sent;
+    } catch (err: unknown) {
+      console.error('Lỗi khi phát hành báo giá:', err);
+      showGlobalToast(
+        err instanceof Error ? err.message : 'Không thể phát hành báo giá.',
+        'error'
+      );
+      return null;
+    } finally {
+      setIsSaving(false);
+    }
+  }, [quote]);
+
   // Đặt lại báo giá về trạng thái ban đầu kế thừa từ Deal
   const resetToInitial = useCallback(() => {
     if (!deal) return;
+    if (quote && quote.status !== 'draft') {
+      showGlobalToast('Chỉ có thể đặt lại báo giá đang ở trạng thái bản nháp.', 'warning');
+      return;
+    }
     const initial = quoteService.createInitialQuoteFromDeal(deal);
     setQuote({
       ...initial,
@@ -292,6 +348,7 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
     updateQuoteMeta,
     saveDraft,
     submitQuote,
+    sendQuote,
     resetToInitial,
     reload: loadDealAndQuote,
   };

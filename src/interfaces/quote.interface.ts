@@ -14,6 +14,25 @@ export type QuoteStatusType =
   | 'accepted'
   | 'rejected';
 
+export type QuoteApprovalLevelType = 'team_leader' | 'director';
+
+export type QuoteApprovalActionType =
+  | 'auto_approved'
+  | 'approved'
+  | 'rejected'
+  | 'returned_for_edit'
+  | 'sent';
+
+export interface IQuoteApprovalHistoryEntry {
+  id: string;
+  action: QuoteApprovalActionType;
+  approvalLevel?: QuoteApprovalLevelType;
+  performedBy: string;
+  performedByRole: string;
+  comment: string;
+  createdAt: string;
+}
+
 export interface IQuoteLineItem {
   id: string;
   productId?: string;
@@ -26,6 +45,7 @@ export interface IQuoteLineItem {
   discountType: DiscountType;
   discountValue: number;
   discountAmount: number;
+  floorPrice?: number;
   vatRate: number; // Phần trăm thuế VAT, vd: 0, 8, 10
   vatAmount: number;
   lineTotal: number;
@@ -59,7 +79,7 @@ export interface IQuote {
   totalDiscountPercent: number;
   totalVatAmount: number;
   grandTotal: number;
-  discountThresholdPercent: number; // Mặc định 15%
+  discountThresholdPercent: number; // Ngưỡng đầu tiên (Trưởng nhóm), mặc định 15%
   requiresApproval: boolean;
   approvalAlert?: IQuoteApprovalAlert;
   validUntil: string; // ISO 8601 string hoặc YYYY-MM-DD
@@ -67,6 +87,8 @@ export interface IQuote {
   deliveryTerms: string;
   notes?: string;
   status: QuoteStatusType;
+  approvalLevel?: QuoteApprovalLevelType;
+  approvalHistory?: IQuoteApprovalHistoryEntry[];
   createdAt: string;
   updatedAt: string;
   createdBy: string;
@@ -107,6 +129,7 @@ export interface IProductCatalogItem {
   category: string;
   unit: string;
   unitPrice: number;
+  floorPrice?: number;
   description?: string;
   defaultVatRate: number;
 }

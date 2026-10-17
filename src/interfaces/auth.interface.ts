@@ -29,7 +29,12 @@ export interface IUser {
   id: string;
   fullName: string;
   email: string;
-  role: 'Super Admin' | 'VP of Sales' | 'Account Executive' | 'RevOps Lead';
+  role:
+    | 'Super Admin'
+    | 'VP of Sales'
+    | 'Sales Manager'
+    | 'Account Executive'
+    | 'RevOps Lead';
   title: string;
   department: string;
   avatarUrl: string;

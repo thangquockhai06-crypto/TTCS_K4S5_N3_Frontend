@@ -12,7 +12,8 @@ export type PermissionKey =
   | 'view_audit_logs'
   | 'view_cost_price'
   | 'manage_products'
-  | 'manage_pipeline';
+  | 'manage_pipeline'
+  | 'approve_quotes';
 
 export type DataScopeType = 'OWN' | 'TEAM' | 'ALL';
 
@@ -29,6 +30,7 @@ const ROLE_PERMISSIONS_MAP: Record<string, PermissionKey[]> = {
     'view_cost_price',
     'manage_products',
     'manage_pipeline',
+    'approve_quotes',
   ],
   'admin': [
     'view_dashboard',
@@ -42,6 +44,7 @@ const ROLE_PERMISSIONS_MAP: Record<string, PermissionKey[]> = {
     'view_cost_price',
     'manage_products',
     'manage_pipeline',
+    'approve_quotes',
   ],
   'vp of sales': [
     'view_dashboard',
@@ -52,6 +55,7 @@ const ROLE_PERMISSIONS_MAP: Record<string, PermissionKey[]> = {
     'view_cost_price',
     'manage_products',
     'manage_pipeline',
+    'approve_quotes',
   ],
   'director': [
     'view_dashboard',
@@ -62,6 +66,7 @@ const ROLE_PERMISSIONS_MAP: Record<string, PermissionKey[]> = {
     'view_cost_price',
     'manage_products',
     'manage_pipeline',
+    'approve_quotes',
   ],
   'sales director': [
     'view_dashboard',
@@ -72,6 +77,7 @@ const ROLE_PERMISSIONS_MAP: Record<string, PermissionKey[]> = {
     'view_cost_price',
     'manage_products',
     'manage_pipeline',
+    'approve_quotes',
   ],
   'sales manager': [
     'view_dashboard',
@@ -79,6 +85,7 @@ const ROLE_PERMISSIONS_MAP: Record<string, PermissionKey[]> = {
     'manage_deals',
     'view_team_reports',
     'manage_team_targets',
+    'approve_quotes',
   ],
   'team leader': [
     'view_dashboard',
@@ -86,6 +93,7 @@ const ROLE_PERMISSIONS_MAP: Record<string, PermissionKey[]> = {
     'manage_deals',
     'view_team_reports',
     'manage_team_targets',
+    'approve_quotes',
   ],
   'revops lead': [
     'view_dashboard',
@@ -191,6 +199,9 @@ export const useAuthorization = (): IAuthorizationResult => {
   };
 
   const canAccessRoute = (path: string): boolean => {
+    if (path.startsWith('/quotes/approvals')) {
+      return hasPermission('approve_quotes');
+    }
     if (path.startsWith('/users') || path.startsWith('/staff-management')) {
       return hasPermission('manage_sales_staff');
     }
