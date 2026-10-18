@@ -1,21 +1,27 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
+  BarChart3,
+  Calendar,
   ChevronRight,
   Clock,
   Edit2,
+  FileSpreadsheet,
   FileText,
+  Filter,
   Kanban,
   List,
   Loader2,
   Package,
   Plus,
   RefreshCw,
+  RotateCcw,
   ShieldAlert,
   Trash2,
   TrendingUp,
   UserCheck,
+  Users,
 } from 'lucide-react';
 import {
   IDeal,
@@ -24,7 +30,10 @@ import {
 } from '../interfaces';
 import { dealService } from '../services/dealService';
 import { sprint2Service } from '../services/sprint2Service';
-import { formatCurrency, formatCompactCurrency } from '../utils/formatters';
+import { userService } from '../services/userService';
+import { IUserItem } from '../interfaces/user-management.interface';
+import { useAuthorization } from '../hooks/useAuthorization';
+import { formatCurrency, formatCompactCurrency, formatNumberWithCommas, parseNumberFromCommas, formatDealStage } from '../utils/formatters';
 import { showGlobalToast, ToastType } from '../context/ToastContext';
 import { Badge, Button, Modal, SearchBar } from '../components/common';
 import styles from './DealManagementPage.module.css';
@@ -38,8 +47,8 @@ const STAGES = [
   { id: 'contacted', name: 'Đã tiếp xúc', prob: 40, color: '#3b82f6' },
   { id: 'proposal', name: 'Đề xuất giải pháp', prob: 60, color: '#8b5cf6' },
   { id: 'negotiation', name: 'Đàm phán hợp đồng', prob: 80, color: '#f59e0b' },
-  { id: 'won', name: 'Chốt thành công (Won)', prob: 100, color: '#16a34a' },
-  { id: 'lost', name: 'Thất bại (Lost)', prob: 0, color: '#ef4444' },
+  { id: 'won', name: 'Chốt thành công', prob: 100, color: '#16a34a' },
+  { id: 'lost', name: 'Đã thất bại', prob: 0, color: '#ef4444' },
 ];
 
 export const normalizeStage = (st?: string): string => {
@@ -50,16 +59,43 @@ export const normalizeStage = (st?: string): string => {
 
 export const DealManagementPage: React.FC = () => {
   const navigate = useNavigate();
+  const { isLeader } = useAuthorization();
+
   // Main state
   const [deals, setDeals] = useState<IDeal[]>([]);
   const [forecast, setForecast] = useState<ISalesForecast | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
+  const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<'kanban' | 'table' | 'visualize'>('kanban');
 
-  // Filters
+  // Filters (S6-01 & S6-02)
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [stalledOnly, setStalledOnly] = useState<boolean>(false);
+  const [stageFilter, setStageFilter] = useState<string>('');
+  const [minValueFilter, setMinValueFilter] = useState<string>('');
+  const [maxValueFilter, setMaxValueFilter] = useState<string>('');
+  const [closeDateFromFilter, setCloseDateFromFilter] = useState<string>('');
+  const [closeDateToFilter, setCloseDateToFilter] = useState<string>('');
+  const [ownerFilter, setOwnerFilter] = useState<string>('');
+  const [productFilter, setProductFilter] = useState<string>('');
+  const [quickValuePreset, setQuickValuePreset] = useState<'all' | 'under50' | '50to200' | '200to500' | 'above500'>('all');
+  const [quickDatePreset, setQuickDatePreset] = useState<'all' | 'today' | 'this_month' | 'this_quarter' | 'overdue'>('all');
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false);
   const [selectedDeals, setSelectedDeals] = useState<string[]>([]);
+
+  // Per-column pagination for Kanban (10 deals per page)
+  const [columnPages, setColumnPages] = useState<Record<string, number>>({
+    lead: 1,
+    contacted: 1,
+    proposal: 1,
+    negotiation: 1,
+    won: 1,
+    lost: 1,
+  });
+
+  // Table pagination
+  const [tablePage, setTablePage] = useState<number>(1);
+  const [tableLimit, setTableLimit] = useState<number>(10);
 
   // Drag and drop state
   const [draggedDealId, setDraggedDealId] = useState<string | null>(null);
@@ -67,6 +103,7 @@ export const DealManagementPage: React.FC = () => {
 
   // Catalogs
   const [products, setProducts] = useState<any[]>([]);
+  const [usersList, setUsersList] = useState<IUserItem[]>([]);
 
   // Modals
   const [isCloseModalOpen, setIsCloseModalOpen] = useState<boolean>(false);
@@ -105,9 +142,15 @@ export const DealManagementPage: React.FC = () => {
   // Load Catalogs
   useEffect(() => {
     sprint2Service.getProducts().then(setProducts).catch(() => {});
+    userService
+      .getUsers({ search: '', role: 'all', status: 'all', group: 'all', page: 1, limit: 100 })
+      .then((res) => {
+        if (res && res.data) setUsersList(res.data);
+      })
+      .catch(() => {});
   }, []);
 
-  // Fetch Deals & Forecast
+  // Fetch Deals & Forecast (S6-01 & S6-02 Filters)
   const fetchDealsAndForecast = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -115,6 +158,13 @@ export const DealManagementPage: React.FC = () => {
         dealService.getDeals({
           search: searchQuery.trim() || undefined,
           stalled_only: stalledOnly || undefined,
+          stage: stageFilter || undefined,
+          min_value: minValueFilter ? Number(minValueFilter) : undefined,
+          max_value: maxValueFilter ? Number(maxValueFilter) : undefined,
+          close_date_from: closeDateFromFilter || undefined,
+          close_date_to: closeDateToFilter || undefined,
+          owner_id: ownerFilter || undefined,
+          product_id: productFilter || undefined,
         }),
         dealService.getSalesForecast(),
       ]);
@@ -129,7 +179,17 @@ export const DealManagementPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [searchQuery, stalledOnly]);
+  }, [
+    searchQuery,
+    stalledOnly,
+    stageFilter,
+    minValueFilter,
+    maxValueFilter,
+    closeDateFromFilter,
+    closeDateToFilter,
+    ownerFilter,
+    productFilter,
+  ]);
 
   useEffect(() => {
     fetchDealsAndForecast();
@@ -340,6 +400,188 @@ export const DealManagementPage: React.FC = () => {
     }
   };
 
+  // Quick Filter handlers (S6-02)
+  const handleSelectQuickStage = (stageId: string) => {
+    setStageFilter((prev) => (prev === stageId ? '' : stageId));
+  };
+
+  const handleSelectQuickValue = (preset: 'all' | 'under50' | '50to200' | '200to500' | 'above500') => {
+    setQuickValuePreset(preset);
+    if (preset === 'all') {
+      setMinValueFilter('');
+      setMaxValueFilter('');
+    } else if (preset === 'under50') {
+      setMinValueFilter('');
+      setMaxValueFilter('50000000');
+    } else if (preset === '50to200') {
+      setMinValueFilter('50000000');
+      setMaxValueFilter('200000000');
+    } else if (preset === '200to500') {
+      setMinValueFilter('200000000');
+      setMaxValueFilter('500000000');
+    } else if (preset === 'above500') {
+      setMinValueFilter('500000000');
+      setMaxValueFilter('');
+    }
+  };
+
+  const handleSelectQuickDate = (preset: 'all' | 'today' | 'this_month' | 'this_quarter' | 'overdue') => {
+    setQuickDatePreset(preset);
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+
+    if (preset === 'all') {
+      setCloseDateFromFilter('');
+      setCloseDateToFilter('');
+    } else if (preset === 'today') {
+      setCloseDateFromFilter(todayStr);
+      setCloseDateToFilter(todayStr);
+    } else if (preset === 'this_month') {
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+      setCloseDateFromFilter(startOfMonth);
+      setCloseDateToFilter(endOfMonth);
+    } else if (preset === 'this_quarter') {
+      const qMonth = Math.floor(now.getMonth() / 3) * 3;
+      const startOfQ = new Date(now.getFullYear(), qMonth, 1).toISOString().split('T')[0];
+      const endOfQ = new Date(now.getFullYear(), qMonth + 3, 0).toISOString().split('T')[0];
+      setCloseDateFromFilter(startOfQ);
+      setCloseDateToFilter(endOfQ);
+    } else if (preset === 'overdue') {
+      setCloseDateFromFilter('');
+      setCloseDateToFilter(todayStr);
+    }
+  };
+
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setStalledOnly(false);
+    setStageFilter('');
+    setMinValueFilter('');
+    setMaxValueFilter('');
+    setCloseDateFromFilter('');
+    setCloseDateToFilter('');
+    setOwnerFilter('');
+    setProductFilter('');
+    setQuickValuePreset('all');
+    setQuickDatePreset('all');
+  };
+
+  // S6-04: Excel Export (All records or selected records)
+  const handleExportExcel = async () => {
+    setIsExporting(true);
+    try {
+      if (selectedDeals.length > 0) {
+        await dealService.exportDeals({
+          deal_ids: selectedDeals.join(','),
+        });
+        notifyToast({
+          title: 'Xuất Excel thành công',
+          description: `Đã xuất ${selectedDeals.length} cơ hội bán hàng đã chọn ra file Excel.`,
+          type: 'success',
+        });
+      } else {
+        await dealService.exportDeals({
+          search: searchQuery.trim() || undefined,
+          stage: stageFilter || undefined,
+          min_value: minValueFilter ? Number(minValueFilter) : undefined,
+          max_value: maxValueFilter ? Number(maxValueFilter) : undefined,
+          close_date_from: closeDateFromFilter || undefined,
+          close_date_to: closeDateToFilter || undefined,
+          owner_id: ownerFilter || undefined,
+          product_id: productFilter || undefined,
+          stalled_only: stalledOnly || undefined,
+        });
+        notifyToast({
+          title: 'Xuất Excel thành công',
+          description: `Đã xuất toàn bộ ${deals.length} cơ hội bán hàng theo bộ lọc ra file Excel.`,
+          type: 'success',
+        });
+      }
+    } catch (err: any) {
+      notifyToast({
+        title: 'Lỗi xuất Excel',
+        description: err?.message || 'Không thể tạo file báo cáo Excel.',
+        type: 'error',
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // S6-10: Reactive Visualizations Metrics by Stage, Deal Value & Closing Date
+  const totalDealsCount = deals.length;
+  const totalPipelineSum = useMemo(() => deals.reduce((sum, d) => sum + (d.value || 0), 0), [deals]);
+
+  const stageStats = useMemo(() => {
+    return STAGES.map((st) => {
+      const list = deals.filter((d) => normalizeStage(d.stage) === st.id);
+      const count = list.length;
+      const value = list.reduce((acc, d) => acc + (d.value || 0), 0);
+      const countPct = totalDealsCount > 0 ? Math.round((count / totalDealsCount) * 100) : 0;
+      const valuePct = totalPipelineSum > 0 ? Math.round((value / totalPipelineSum) * 100) : 0;
+      const avgValue = count > 0 ? Math.round(value / count) : 0;
+      return {
+        ...st,
+        count,
+        value,
+        countPct,
+        valuePct,
+        avgValue,
+      };
+    });
+  }, [deals, totalDealsCount, totalPipelineSum]);
+
+  const closingDateStats = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    const endOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 0);
+
+    let overdueCount = 0;
+    let overdueVal = 0;
+    let thisMonthCount = 0;
+    let thisMonthVal = 0;
+    let nextMonthCount = 0;
+    let nextMonthVal = 0;
+    let laterCount = 0;
+    let laterVal = 0;
+    let noDateCount = 0;
+    let noDateVal = 0;
+
+    deals.forEach((d) => {
+      const val = d.value || 0;
+      if (!d.expectedCloseDate) {
+        noDateCount++;
+        noDateVal += val;
+        return;
+      }
+      const dDate = new Date(d.expectedCloseDate);
+      dDate.setHours(0, 0, 0, 0);
+      if (dDate < today) {
+        overdueCount++;
+        overdueVal += val;
+      } else if (dDate <= endOfMonth) {
+        thisMonthCount++;
+        thisMonthVal += val;
+      } else if (dDate <= endOfNextMonth) {
+        nextMonthCount++;
+        nextMonthVal += val;
+      } else {
+        laterCount++;
+        laterVal += val;
+      }
+    });
+
+    return [
+      { label: '⚠️ Quá hạn chốt', count: overdueCount, value: overdueVal, color: '#ef4444' },
+      { label: '📅 Trong tháng này', count: thisMonthCount, value: thisMonthVal, color: '#3b82f6' },
+      { label: '📆 Tháng kế tiếp', count: nextMonthCount, value: nextMonthVal, color: '#8b5cf6' },
+      { label: '🚀 Các tháng sau', count: laterCount, value: laterVal, color: '#10b981' },
+      { label: '⏳ Chưa gán hạn', count: noDateCount, value: noDateVal, color: '#94a3b8' },
+    ];
+  }, [deals]);
+
   return (
     <div className={styles.dealPage}>
       {/* Header */}
@@ -350,13 +592,23 @@ export const DealManagementPage: React.FC = () => {
               BẢNG KANBAN TƯƠNG TÁC · KÉO THẢ TRỰC TIẾP
             </Badge>
           </div>
-          <h1 className={styles.header__title}>Cơ hội Bán hàng (Deal Management)</h1>
+          <h1 className={styles.header__title}>Quản lý Cơ hội Bán hàng</h1>
           <p className={styles.header__subtitle}>
             Kéo thả thẻ cơ hội giữa các cột hoặc dùng nút điều hướng để cập nhật tiến độ và dự báo doanh số.
           </p>
         </div>
 
         <div className={styles.header__actions}>
+          {/* S6-04: Export to Excel */}
+          <Button
+            variant="secondary"
+            onClick={handleExportExcel}
+            disabled={isExporting}
+            title="Xuất dữ liệu phễu bán hàng ra file Excel (S6-04)"
+          >
+            <FileSpreadsheet size={16} />
+            {isExporting ? 'Đang xuất...' : selectedDeals.length > 0 ? `Xuất Excel (${selectedDeals.length})` : 'Xuất Excel'}
+          </Button>
           <Button variant="secondary" onClick={handleScanStalled}>
             <Clock size={16} /> Quét Deal Ứ đọng
           </Button>
@@ -370,6 +622,18 @@ export const DealManagementPage: React.FC = () => {
           </Button>
         </div>
       </header>
+
+      {/* S6-03: Team Leader Pipeline Info */}
+      {isLeader && (
+        <div className={styles.teamLeaderBanner}>
+          <div className={styles.teamLeaderBanner__badge}>
+            <Users size={16} /> Chế độ Trưởng nhóm (Team Leader View)
+          </div>
+          <span>
+            Bạn có quyền xem và giám sát toàn bộ phễu bán hàng, cơ hội và tiến độ của tất cả thành viên trong nhóm kinh doanh.
+          </span>
+        </div>
+      )}
 
       {/* Sales Forecast Banner */}
       {forecast && (
@@ -399,6 +663,246 @@ export const DealManagementPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* S6-01 & S6-02: Pipeline Filters & Quick Filters Card */}
+      <div className={styles.filtersCard}>
+        <div className={styles.quickFiltersRow}>
+          {/* Quick Stage */}
+          <div className={styles.quickFilterGroup}>
+            <span className={styles.quickFilterLabel}>Giai đoạn:</span>
+            <button
+              type="button"
+              className={`${styles.chipBtn} ${stageFilter === '' ? styles['chipBtn--active'] : ''}`}
+              onClick={() => setStageFilter('')}
+            >
+              Tất cả
+            </button>
+            {STAGES.map((st) => (
+              <button
+                key={st.id}
+                type="button"
+                className={`${styles.chipBtn} ${stageFilter === st.id ? styles['chipBtn--active'] : ''}`}
+                onClick={() => handleSelectQuickStage(st.id)}
+              >
+                {st.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Quick Value Range */}
+          <div className={styles.quickFilterGroup}>
+            <span className={styles.quickFilterLabel}>Giá trị:</span>
+            <button
+              type="button"
+              className={`${styles.chipBtn} ${quickValuePreset === 'all' ? styles['chipBtn--active'] : ''}`}
+              onClick={() => handleSelectQuickValue('all')}
+            >
+              Tất cả
+            </button>
+            <button
+              type="button"
+              className={`${styles.chipBtn} ${quickValuePreset === 'under50' ? styles['chipBtn--active'] : ''}`}
+              onClick={() => handleSelectQuickValue('under50')}
+            >
+              &lt; 50M
+            </button>
+            <button
+              type="button"
+              className={`${styles.chipBtn} ${quickValuePreset === '50to200' ? styles['chipBtn--active'] : ''}`}
+              onClick={() => handleSelectQuickValue('50to200')}
+            >
+              50M - 200M
+            </button>
+            <button
+              type="button"
+              className={`${styles.chipBtn} ${quickValuePreset === '200to500' ? styles['chipBtn--active'] : ''}`}
+              onClick={() => handleSelectQuickValue('200to500')}
+            >
+              200M - 500M
+            </button>
+            <button
+              type="button"
+              className={`${styles.chipBtn} ${quickValuePreset === 'above500' ? styles['chipBtn--active'] : ''}`}
+              onClick={() => handleSelectQuickValue('above500')}
+            >
+              &gt; 500M
+            </button>
+          </div>
+
+          {/* Quick Closing Date */}
+          <div className={styles.quickFilterGroup}>
+            <span className={styles.quickFilterLabel}>Hạn chốt:</span>
+            <button
+              type="button"
+              className={`${styles.chipBtn} ${quickDatePreset === 'all' ? styles['chipBtn--active'] : ''}`}
+              onClick={() => handleSelectQuickDate('all')}
+            >
+              Tất cả
+            </button>
+            <button
+              type="button"
+              className={`${styles.chipBtn} ${quickDatePreset === 'today' ? styles['chipBtn--active'] : ''}`}
+              onClick={() => handleSelectQuickDate('today')}
+            >
+              Hôm nay
+            </button>
+            <button
+              type="button"
+              className={`${styles.chipBtn} ${quickDatePreset === 'this_month' ? styles['chipBtn--active'] : ''}`}
+              onClick={() => handleSelectQuickDate('this_month')}
+            >
+              Tháng này
+            </button>
+            <button
+              type="button"
+              className={`${styles.chipBtn} ${quickDatePreset === 'this_quarter' ? styles['chipBtn--active'] : ''}`}
+              onClick={() => handleSelectQuickDate('this_quarter')}
+            >
+              Quý này
+            </button>
+            <button
+              type="button"
+              className={`${styles.chipBtn} ${quickDatePreset === 'overdue' ? styles['chipBtn--active'] : ''}`}
+              onClick={() => handleSelectQuickDate('overdue')}
+            >
+              Quá hạn
+            </button>
+          </div>
+
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+            <button
+              type="button"
+              className={styles.chipBtn}
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            >
+              <Filter size={12} style={{ marginRight: 4 }} />
+              {showAdvancedFilters ? 'Thu gọn' : 'Lọc chi tiết'}
+            </button>
+            {(stageFilter || minValueFilter || maxValueFilter || closeDateFromFilter || closeDateToFilter || ownerFilter || productFilter || stalledOnly || searchQuery) && (
+              <button
+                type="button"
+                className={styles.chipBtn}
+                style={{ color: '#ef4444', borderColor: '#fca5a5' }}
+                onClick={handleResetFilters}
+                title="Xóa tất cả bộ lọc"
+              >
+                <RotateCcw size={12} style={{ marginRight: 4 }} /> Xóa lọc
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Detailed Filters (S6-01: Filter by Stage, Deal Value, Closing Date, Deal Owner, Product) */}
+        {showAdvancedFilters && (
+          <div className={styles.detailedFiltersGrid}>
+            <div className={styles.filterField}>
+              <label className={styles.filterFieldLabel}>Giai đoạn phễu:</label>
+              <select
+                className={styles.filterFieldInput}
+                value={stageFilter}
+                onChange={(e) => setStageFilter(e.target.value)}
+              >
+                <option value="">-- Tất cả giai đoạn --</option>
+                {STAGES.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} ({s.prob}%)
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className={styles.filterField}>
+              <label className={styles.filterFieldLabel}>Giá trị từ (VNĐ):</label>
+              <input
+                type="text"
+                placeholder="VD: 50,000,000"
+                className={styles.filterFieldInput}
+                value={minValueFilter ? formatNumberWithCommas(minValueFilter) : ''}
+                onChange={(e) => {
+                  const raw = parseNumberFromCommas(e.target.value);
+                  setMinValueFilter(raw ? String(raw) : '');
+                  setQuickValuePreset('all');
+                }}
+              />
+            </div>
+
+            <div className={styles.filterField}>
+              <label className={styles.filterFieldLabel}>Giá trị đến (VNĐ):</label>
+              <input
+                type="text"
+                placeholder="VD: 500,000,000"
+                className={styles.filterFieldInput}
+                value={maxValueFilter ? formatNumberWithCommas(maxValueFilter) : ''}
+                onChange={(e) => {
+                  const raw = parseNumberFromCommas(e.target.value);
+                  setMaxValueFilter(raw ? String(raw) : '');
+                  setQuickValuePreset('all');
+                }}
+              />
+            </div>
+
+            <div className={styles.filterField}>
+              <label className={styles.filterFieldLabel}>Hạn chốt từ ngày:</label>
+              <input
+                type="date"
+                className={styles.filterFieldInput}
+                value={closeDateFromFilter}
+                onChange={(e) => {
+                  setCloseDateFromFilter(e.target.value);
+                  setQuickDatePreset('all');
+                }}
+              />
+            </div>
+
+            <div className={styles.filterField}>
+              <label className={styles.filterFieldLabel}>Hạn chốt đến ngày:</label>
+              <input
+                type="date"
+                className={styles.filterFieldInput}
+                value={closeDateToFilter}
+                onChange={(e) => {
+                  setCloseDateToFilter(e.target.value);
+                  setQuickDatePreset('all');
+                }}
+              />
+            </div>
+
+            {/* S6-01 & S6-02: Deal Owner Filter (Team Leader can view members - S6-03) */}
+            <div className={styles.filterField}>
+              <label className={styles.filterFieldLabel}>Người phụ trách (Owner):</label>
+              <select
+                className={styles.filterFieldInput}
+                value={ownerFilter}
+                onChange={(e) => setOwnerFilter(e.target.value)}
+              >
+                <option value="">-- {isLeader ? 'Toàn bộ Đội ngũ (Team Members)' : 'Tất cả người phụ trách'} --</option>
+                {usersList.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} ({u.roles?.join(', ') || 'Thành viên'})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* S6-02: Product Filter */}
+            <div className={styles.filterField}>
+              <label className={styles.filterFieldLabel}>Sản phẩm trong cơ hội:</label>
+              <select
+                className={styles.filterFieldInput}
+                value={productFilter}
+                onChange={(e) => setProductFilter(e.target.value)}
+              >
+                <option value="">-- Tất cả sản phẩm --</option>
+                {products.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Toolbar */}
       <div className={styles.toolbarCard}>
@@ -432,6 +936,12 @@ export const DealManagementPage: React.FC = () => {
             >
               <List size={15} /> Danh sách Bảng
             </button>
+            <button
+              className={`${styles.viewToggleBtn} ${viewMode === 'visualize' ? styles['viewToggleBtn--active'] : ''}`}
+              onClick={() => setViewMode('visualize')}
+            >
+              <BarChart3 size={15} /> Biểu đồ Phễu
+            </button>
           </div>
 
           <Button variant="ghost" onClick={fetchDealsAndForecast}>
@@ -440,12 +950,113 @@ export const DealManagementPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Content: Kanban Board vs Full-Width Table */}
-      {viewMode === 'kanban' ? (
+      {/* Main Content: S6-10 Visualizations vs Kanban Board vs Full-Width Table */}
+      {viewMode === 'visualize' ? (
+        <div className={styles.visualDashboard}>
+          {/* Chart 1: By Stage */}
+          <div className={styles.chartCard}>
+            <div className={styles.chartCardHeader}>
+              <span className={styles.chartCardTitle}>
+                <Kanban size={16} /> Phân bổ Cơ hội theo Giai đoạn (S6-10)
+              </span>
+              <span className={styles.chartCardSub}>Tổng: {totalDealsCount} cơ hội</span>
+            </div>
+            <div className={styles.barList}>
+              {stageStats.map((st) => (
+                <div key={st.id} className={styles.barRow}>
+                  <div className={styles.barMeta}>
+                    <span className={styles.barStageName}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: st.color }} />
+                      {st.name} ({st.prob}%)
+                    </span>
+                    <span className={styles.barStageValue}>
+                      {st.count} Deal ({st.countPct}%)
+                    </span>
+                  </div>
+                  <div className={styles.barTrack}>
+                    <div
+                      className={styles.barFill}
+                      style={{
+                        width: `${Math.max(st.countPct, st.count > 0 ? 4 : 0)}%`,
+                        backgroundColor: st.color,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Chart 2: By Deal Value */}
+          <div className={styles.chartCard}>
+            <div className={styles.chartCardHeader}>
+              <span className={styles.chartCardTitle}>
+                <TrendingUp size={16} /> Quy mô Giá trị theo Giai đoạn
+              </span>
+              <span className={styles.chartCardSub}>
+                Tổng: {formatCompactCurrency(totalPipelineSum)}
+              </span>
+            </div>
+            <div className={styles.barList}>
+              {stageStats.map((st) => (
+                <div key={st.id} className={styles.barRow}>
+                  <div className={styles.barMeta}>
+                    <span className={styles.barStageName}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: st.color }} />
+                      {st.name}
+                    </span>
+                    <span className={styles.barStageValue}>
+                      {formatCurrency(st.value)} ({st.valuePct}%)
+                    </span>
+                  </div>
+                  <div className={styles.barTrack}>
+                    <div
+                      className={styles.barFill}
+                      style={{
+                        width: `${Math.max(st.valuePct, st.value > 0 ? 4 : 0)}%`,
+                        backgroundColor: st.color,
+                      }}
+                    />
+                  </div>
+                  <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-secondary)', alignSelf: 'flex-end' }}>
+                    TB: {formatCompactCurrency(st.avgValue)} / deal
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Chart 3: By Closing Date */}
+          <div className={styles.chartCard}>
+            <div className={styles.chartCardHeader}>
+              <span className={styles.chartCardTitle}>
+                <Calendar size={16} /> Phân bổ Ngày dự kiến Chốt
+              </span>
+              <span className={styles.chartCardSub}>Dòng tiền theo thời gian</span>
+            </div>
+            <div className={styles.timelineGrid}>
+              {closingDateStats.map((item, idx) => (
+                <div key={idx} className={styles.timelineCard}>
+                  <span className={styles.timelineCardTitle}>{item.label}</span>
+                  <span className={styles.timelineCardCount}>{item.count}</span>
+                  <span className={styles.timelineCardValue}>{formatCompactCurrency(item.value)}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 'auto', padding: '10px', background: 'var(--color-bg-subtle)', borderRadius: 'var(--radius-sm)', fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
+              💡 <em>Các chỉ số và biểu đồ tự động cập nhật ngay lập tức khi thay đổi bất kỳ bộ lọc nào ở trên (S6-10).</em>
+            </div>
+          </div>
+        </div>
+      ) : viewMode === 'kanban' ? (
         <div className={styles.kanbanBoard}>
           {STAGES.map((stage) => {
             const stageDeals = (deals || []).filter((d) => normalizeStage(d.stage) === stage.id);
             const stageTotal = stageDeals.reduce((sum, d) => sum + (d.value || 0), 0);
+            const colPage = columnPages[stage.id] || 1;
+            const colPageSize = 10;
+            const totalColPages = Math.max(1, Math.ceil(stageDeals.length / colPageSize));
+            const paginatedStageDeals = stageDeals.slice((colPage - 1) * colPageSize, colPage * colPageSize);
 
             return (
               <div
@@ -502,7 +1113,7 @@ export const DealManagementPage: React.FC = () => {
                 </div>
 
                 <div className={styles.kanbanColumn__body}>
-                  {stageDeals.map((deal) => (
+                  {paginatedStageDeals.map((deal) => (
                     <div
                       key={deal.id}
                       draggable={true}
@@ -544,48 +1155,55 @@ export const DealManagementPage: React.FC = () => {
                       </div>
 
                       <div className={styles.dealCard__meta}>
-                        <span>👤 {deal.ownerName || 'Chưa gán'}</span>
+                        <span className={styles.dealCard__owner} title={deal.ownerName || 'Chưa gán'}>
+                          👤 {deal.ownerName || 'Chưa gán'}
+                        </span>
                         {deal.expectedCloseDate && (
-                          <span>📅 {new Date(deal.expectedCloseDate).toLocaleDateString('vi-VN')}</span>
+                          <span className={styles.dealCard__date}>
+                            📅 {new Date(deal.expectedCloseDate).toLocaleDateString('vi-VN')}
+                          </span>
                         )}
                       </div>
 
                       <div className={styles.dealCard__actions}>
-                        <button
-                          className={styles.cardActionBtn}
-                          title="Quản lý Sản phẩm trong Deal"
-                          onClick={() => handleOpenItems(deal)}
-                        >
-                          <Package size={13} /> {deal.items?.length || 0} SP
-                        </button>
+                        <div className={styles.dealCard__actionGroup}>
+                          <button
+                            className={styles.cardActionBtn}
+                            title="Quản lý Sản phẩm trong Deal"
+                            onClick={() => handleOpenItems(deal)}
+                          >
+                            <Package size={13} /> {deal.items?.length || 0} SP
+                          </button>
 
-                        <button
-                          className={styles.cardActionBtn}
-                          title="Chỉnh sửa Deal"
-                          onClick={() => navigate(`/deals/${deal.id}/edit`)}
-                        >
-                          <Edit2 size={13} /> Sửa
-                        </button>
+                          <button
+                            className={styles.cardActionBtn}
+                            title="Chỉnh sửa Deal"
+                            onClick={() => navigate(`/deals/${deal.id}/edit`)}
+                          >
+                            <Edit2 size={13} /> Sửa
+                          </button>
 
-                        <button
-                          className={styles.cardActionBtn}
-                          title="Soạn thảo báo giá thương mại từ cơ hội này (S7-01)"
-                          onClick={() => navigate(`/deals/${deal.id}/quote-builder`)}
-                          style={{ color: '#2563EB', fontWeight: 600 }}
-                        >
-                          <FileText size={13} /> Báo giá
-                        </button>
+                          <button
+                            className={styles.cardActionBtn}
+                            title="Soạn thảo báo giá thương mại từ cơ hội này (S7-01)"
+                            onClick={() => navigate(`/deals/${deal.id}/quote-builder`)}
+                            style={{ color: '#2563EB', fontWeight: 600 }}
+                          >
+                            <FileText size={13} /> Báo giá
+                          </button>
+                        </div>
 
                         {/* Stage progress buttons */}
                         {stage.id !== 'won' && stage.id !== 'lost' && (
-                          <>
+                          <div className={styles.dealCard__actionGroup}>
                             {stage.id === 'negotiation' ? (
                               <button
                                 className={styles.cardActionBtn}
-                                style={{ color: '#16a34a' }}
+                                style={{ color: '#16a34a', borderColor: '#86efac' }}
+                                title="Đóng cơ hội chốt thành công"
                                 onClick={() => handleOpenCloseDeal(deal, 'won')}
                               >
-                                Chốt Won
+                                Thành công
                               </button>
                             ) : (
                               <button
@@ -604,17 +1222,61 @@ export const DealManagementPage: React.FC = () => {
 
                             <button
                               className={styles.cardActionBtn}
-                              style={{ color: '#ef4444' }}
-                              title="Đóng Deal Lost"
+                              style={{ color: '#ef4444', borderColor: '#fca5a5' }}
+                              title="Đóng cơ hội thất bại"
                               onClick={() => handleOpenCloseDeal(deal, 'lost')}
                             >
-                              Lost
+                              Thất bại
                             </button>
-                          </>
+                          </div>
                         )}
                       </div>
                     </div>
                   ))}
+                </div>
+
+                {/* S6-04: Kanban Column Pagination (10 deals per page) */}
+                <div className={styles.columnPagination}>
+                  <span className={styles.columnPaginationText}>
+                    {stageDeals.length === 0
+                      ? '0 Deal'
+                      : `${(colPage - 1) * colPageSize + 1}-${Math.min(colPage * colPageSize, stageDeals.length)} / ${stageDeals.length}`}
+                  </span>
+                  {totalColPages > 1 && (
+                    <div className={styles.columnPaginationBtns}>
+                      <button
+                        type="button"
+                        disabled={colPage <= 1}
+                        onClick={() =>
+                          setColumnPages((prev) => ({
+                            ...prev,
+                            [stage.id]: Math.max(1, (prev[stage.id] || 1) - 1),
+                          }))
+                        }
+                        className={styles.colPageBtn}
+                        title="10 cái trước"
+                      >
+                        ◀
+                      </button>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-secondary)' }}>
+                        {colPage}/{totalColPages}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={colPage >= totalColPages}
+                        onClick={() =>
+                          setColumnPages((prev) => ({
+                            ...prev,
+                            [stage.id]: Math.min(totalColPages, (prev[stage.id] || 1) + 1),
+                          }))
+                        }
+                        className={styles.colPageBtn}
+                        title="10 cái tiếp theo"
+                      >
+                        ▶
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -666,7 +1328,7 @@ export const DealManagementPage: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  deals.map((deal) => (
+                  (deals || []).slice((tablePage - 1) * tableLimit, tablePage * tableLimit).map((deal) => (
                     <tr key={deal.id}>
                       <td>
                         <input
@@ -703,7 +1365,7 @@ export const DealManagementPage: React.FC = () => {
 
                       <td>
                         <Badge tone={deal.stage === 'won' ? 'success' : deal.stage === 'lost' ? 'danger' : 'primary'}>
-                          {deal.stage.toUpperCase()}
+                          {formatDealStage(deal.stage)}
                         </Badge>
                       </td>
 
@@ -744,9 +1406,10 @@ export const DealManagementPage: React.FC = () => {
                             <button
                               className={styles.cardActionBtn}
                               style={{ color: '#16a34a' }}
+                              title="Chốt thành công"
                               onClick={() => handleOpenCloseDeal(deal, 'won')}
                             >
-                              Won
+                              Thành công
                             </button>
                           )}
                         </div>
@@ -756,6 +1419,43 @@ export const DealManagementPage: React.FC = () => {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Table Pagination */}
+          <div className={styles.tablePagination}>
+            <span>
+              Hiển thị <strong>{Math.min(tableLimit, Math.max(0, deals.length - (tablePage - 1) * tableLimit))}</strong> / <strong>{deals.length}</strong> cơ hội (Trang {tablePage} / {Math.max(1, Math.ceil(deals.length / tableLimit))})
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <select
+                value={tableLimit}
+                onChange={(e) => {
+                  setTableLimit(Number(e.target.value));
+                  setTablePage(1);
+                }}
+                className={styles.pageSelect}
+              >
+                <option value={10}>10 / trang</option>
+                <option value={20}>20 / trang</option>
+                <option value={50}>50 / trang</option>
+              </select>
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={tablePage <= 1}
+                onClick={() => setTablePage((p) => Math.max(1, p - 1))}
+              >
+                Trước
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={tablePage >= Math.max(1, Math.ceil(deals.length / tableLimit))}
+                onClick={() => setTablePage((p) => Math.min(Math.max(1, Math.ceil(deals.length / tableLimit)), p + 1))}
+              >
+                Sau
+              </Button>
+            </div>
           </div>
         </div>
       )}
@@ -863,10 +1563,11 @@ export const DealManagementPage: React.FC = () => {
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Đơn giá (VNĐ)</label>
                 <input
-                  type="number"
+                  type="text"
                   className={styles.formInput}
-                  value={newItemForm.unitPrice}
-                  onChange={(e) => setNewItemForm({ ...newItemForm, unitPrice: Number(e.target.value) })}
+                  value={formatNumberWithCommas(newItemForm.unitPrice)}
+                  onChange={(e) => setNewItemForm({ ...newItemForm, unitPrice: parseNumberFromCommas(e.target.value) })}
+                  placeholder="VD: 10,000,000"
                 />
               </div>
 
@@ -909,20 +1610,21 @@ export const DealManagementPage: React.FC = () => {
       <Modal
         isOpen={isCloseModalOpen}
         onClose={() => setIsCloseModalOpen(false)}
-        title={closeForm.stage === 'won' ? 'Chốt Deal Thành Công (Close Won)' : 'Đóng Deal Thất Bại (Close Lost)'}
-        maxWidth="md"
+        title={closeForm.stage === 'won' ? '🎉 Chốt Deal Thành Công (Close Won)' : '⚠️ Đóng Deal Thất Bại (Close Lost)'}
+        maxWidth={closeForm.stage === 'lost' ? 'lg' : 'md'}
       >
-        <form onSubmit={handleCloseDeal}>
+        <form onSubmit={handleCloseDeal} className={closeForm.stage === 'lost' ? styles.lostModalForm : ''}>
           {closeForm.stage === 'won' ? (
             <div className={styles.formGrid}>
               <div className={styles['formGroup--full']}>
                 <label className={styles.formLabel}>Doanh thu ký hợp đồng thực tế (VNĐ) *</label>
                 <input
-                  type="number"
+                  type="text"
                   className={styles.formInput}
                   required
-                  value={closeForm.actualValue}
-                  onChange={(e) => setCloseForm({ ...closeForm, actualValue: Number(e.target.value) })}
+                  value={formatNumberWithCommas(closeForm.actualValue)}
+                  onChange={(e) => setCloseForm({ ...closeForm, actualValue: parseNumberFromCommas(e.target.value) })}
+                  placeholder="VD: 50,000,000"
                 />
               </div>
 
@@ -938,24 +1640,67 @@ export const DealManagementPage: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className={styles.formGrid}>
-              <div className={styles['formGroup--full']}>
-                <label className={styles.formLabel}>Lý do thất bại (Loss Reason) *</label>
+            <div className={styles.lostFormContainer}>
+              <div className={styles.lostHeaderAlert}>
+                <AlertCircle size={22} color="#ef4444" style={{ flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#991b1b' }}>
+                    Ghi nhận lý do đóng cơ hội thất bại
+                  </div>
+                  <div style={{ fontSize: '0.8125rem', color: '#b91c1c' }}>
+                    Phân tích nguyên nhân mất cơ hội để cải thiện chiến lược phễu bán hàng và theo dõi đối thủ cạnh tranh.
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.lostQuickReasons}>
+                <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-secondary)' }}>
+                  Gợi ý nhanh lý do:
+                </span>
+                {[
+                  'Giá quá cao so với ngân sách',
+                  'Khách chọn đối thủ cạnh tranh',
+                  'Khách hoãn / hủy bỏ dự án',
+                  'Thiếu tính năng đáp ứng yêu cầu',
+                  'Chưa kịp tiến độ triển khai',
+                ].map((reason) => (
+                  <button
+                    key={reason}
+                    type="button"
+                    className={styles.lostReasonChip}
+                    onClick={() =>
+                      setCloseForm((prev) => ({
+                        ...prev,
+                        lossReason: prev.lossReason ? `${prev.lossReason}, ${reason}` : reason,
+                      }))
+                    }
+                  >
+                    + {reason}
+                  </button>
+                ))}
+              </div>
+
+              <div className={styles['formGroup--full']} style={{ marginTop: 8 }}>
+                <label className={styles.lostFormLabel}>
+                  Chi tiết lý do thất bại (Loss Reason) <span style={{ color: '#ef4444' }}>*</span>
+                </label>
                 <textarea
-                  className={styles.formTextarea}
-                  rows={3}
+                  className={styles.lostFormTextarea}
+                  rows={5}
                   required
-                  placeholder="VD: Giá quá cao so với ngân sách, thiếu tính năng tùy biến..."
+                  placeholder="Nhập chi tiết phân tích lý do không chốt được hợp đồng..."
                   value={closeForm.lossReason}
                   onChange={(e) => setCloseForm({ ...closeForm, lossReason: e.target.value })}
                 />
               </div>
 
-              <div className={styles['formGroup--full']}>
-                <label className={styles.formLabel}>Đối thủ cạnh tranh thắng thầu</label>
+              <div className={styles['formGroup--full']} style={{ marginTop: 8 }}>
+                <label className={styles.lostFormLabel}>
+                  Đối thủ cạnh tranh thắng thầu (nếu có)
+                </label>
                 <input
-                  className={styles.formInput}
-                  placeholder="VD: Salesforce, Hubspot, Odoo..."
+                  className={styles.lostFormInput}
+                  placeholder="VD: Salesforce, HubSpot, MISA AMIS, Zoho CRM..."
                   value={closeForm.lossCompetitor}
                   onChange={(e) => setCloseForm({ ...closeForm, lossCompetitor: e.target.value })}
                 />

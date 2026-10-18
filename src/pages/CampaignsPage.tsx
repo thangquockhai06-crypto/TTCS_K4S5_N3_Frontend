@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { ICampaign } from '../interfaces';
 import { campaignService } from '../services/campaignService';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, formatCampaignType, formatCampaignStatus } from '../utils/formatters';
 import { showGlobalToast, ToastType } from '../context/ToastContext';
 import { Badge, Button, SearchBar } from '../components/common';
 import styles from './CampaignsPage.module.css';
@@ -23,6 +23,8 @@ export const CampaignsPage: React.FC = () => {
   const [campaigns, setCampaigns] = useState<ICampaign[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [page, setPage] = useState<number>(1);
+  const limit = 10;
 
   const fetchCampaigns = useCallback(async () => {
     setIsLoading(true);
@@ -115,7 +117,7 @@ export const CampaignsPage: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                campaigns.map((c) => (
+                campaigns.slice((page - 1) * limit, page * limit).map((c) => (
                   <tr key={c.id}>
                     <td>
                       <strong style={{ color: 'var(--color-text-primary)' }}>{c.name}</strong>
@@ -124,17 +126,17 @@ export const CampaignsPage: React.FC = () => {
                       <code>{c.code}</code>
                     </td>
                     <td>
-                      <Badge tone="neutral">{c.type}</Badge>
+                      <Badge tone="neutral">{formatCampaignType(c.type)}</Badge>
                     </td>
                     <td>
-                      <Badge tone={c.status === 'ACTIVE' ? 'success' : 'neutral'}>{c.status}</Badge>
+                      <Badge tone={c.status === 'ACTIVE' ? 'success' : 'neutral'}>{formatCampaignStatus(c.status)}</Badge>
                     </td>
                     <td>{formatCurrency(c.budget)}</td>
                     <td>
-                      <strong style={{ color: 'var(--color-primary)' }}>{c.leads_count}</strong> Lead
+                      <strong style={{ color: 'var(--color-primary)' }}>{c.leads_count}</strong> Đầu mối
                     </td>
                     <td>
-                      <strong>{c.deals_count}</strong> Deal
+                      <strong>{c.deals_count}</strong> Cơ hội
                     </td>
                     <td>
                       <strong style={{ color: '#16a34a' }}>{formatCurrency(c.actual_revenue)}</strong>
@@ -165,6 +167,31 @@ export const CampaignsPage: React.FC = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination Bar */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 18px', borderTop: '1px solid var(--color-border)', fontSize: '0.8125rem', color: 'var(--color-text-secondary)', background: 'var(--color-bg-surface)' }}>
+          <span>
+            Hiển thị <strong>{Math.min(limit, Math.max(0, campaigns.length - (page - 1) * limit))}</strong> / <strong>{campaigns.length}</strong> chiến dịch (Trang {page} / {Math.max(1, Math.ceil(campaigns.length / limit))})
+          </span>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              Trước
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={page >= Math.max(1, Math.ceil(campaigns.length / limit))}
+              onClick={() => setPage((p) => Math.min(Math.max(1, Math.ceil(campaigns.length / limit)), p + 1))}
+            >
+              Sau
+            </Button>
+          </div>
         </div>
       </div>
 

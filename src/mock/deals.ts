@@ -4,28 +4,28 @@ import { createAvatarSvgDataUri } from '../utils/formatters';
 export const DEAL_STAGE_COLUMNS: ReadonlyArray<IDealStageColumn> = [
   {
     id: 'New',
-    title: 'Mới tiếp nhận (New)',
+    title: 'Mới tiếp nhận',
     subtitle: 'Khách tiềm năng vừa đăng ký',
     accentColor: '#2563EB',
     badgeBg: 'rgba(37, 99, 235, 0.12)',
   },
   {
     id: 'Contacted',
-    title: 'Đã liên hệ (Contacted)',
+    title: 'Đã liên hệ',
     subtitle: 'Đã trao đổi & trình bày Demo',
     accentColor: '#8B5CF6',
     badgeBg: 'rgba(139, 92, 246, 0.12)',
   },
   {
     id: 'Negotiation',
-    title: 'Đang đàm phán (Negotiation)',
+    title: 'Đang đàm phán',
     subtitle: 'Thẩm định báo giá & pháp lý',
     accentColor: '#F59E0B',
     badgeBg: 'rgba(245, 158, 11, 0.14)',
   },
   {
     id: 'Won',
-    title: 'Thành công (Won)',
+    title: 'Chốt thành công',
     subtitle: 'Đã ký hợp đồng chính thức',
     accentColor: '#10B981',
     badgeBg: 'rgba(16, 185, 129, 0.14)',

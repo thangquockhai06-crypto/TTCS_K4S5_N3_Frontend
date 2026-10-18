@@ -95,7 +95,7 @@ export const DealPipelinePage: React.FC = () => {
               BẢNG KANBAN TƯƠNG TÁC · KÉO THẢ TRỰC TIẾP
             </Badge>
           </div>
-          <h1 className={styles.header__title}>Phễu cơ hội bán hàng (Deal Pipeline)</h1>
+          <h1 className={styles.header__title}>Phễu cơ hội bán hàng</h1>
           <p className={styles.header__subtitle}>
             Kéo thả thẻ cơ hội giữa các cột hoặc dùng nút mũi tên để cập nhật dự báo doanh thu theo
             thời gian thực.
@@ -204,10 +204,10 @@ export const DealPipelinePage: React.FC = () => {
                 }))
               }
             >
-              <option value="New">Cơ hội mới (New)</option>
-              <option value="Contacted">Đã liên hệ (Contacted)</option>
-              <option value="Negotiation">Đang đàm phán (Negotiation)</option>
-              <option value="Won">Chốt thành công (Won)</option>
+              <option value="New">Cơ hội mới</option>
+              <option value="Contacted">Đã liên hệ</option>
+              <option value="Negotiation">Đang đàm phán</option>
+              <option value="Won">Chốt thành công</option>
             </select>
           </div>
           <div className={styles.modalForm__footer}>

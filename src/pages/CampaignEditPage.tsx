@@ -14,6 +14,7 @@ import {
 import { campaignService } from '../services/campaignService';
 import { ICampaign } from '../interfaces';
 import { showGlobalToast } from '../context/ToastContext';
+import { formatNumberWithCommas, parseNumberFromCommas } from '../utils/formatters';
 import styles from './CampaignCreatePage.module.css';
 
 export const CampaignEditPage: React.FC = () => {
@@ -250,11 +251,11 @@ export const CampaignEditPage: React.FC = () => {
                     onChange={(e) => handleInputChange('type', e.target.value)}
                     disabled={isSubmitting}
                   >
-                    <option value="Email">Email Marketing</option>
-                    <option value="Social">Mạng xã hội (Facebook/LinkedIn)</option>
-                    <option value="Search Ads">Quảng cáo Google Search</option>
-                    <option value="Event">Hội thảo / Sự kiện</option>
-                    <option value="Webinar">Webinar Trực tuyến</option>
+                    <option value="Email">Tiếp thị Email</option>
+                    <option value="Social">Mạng xã hội</option>
+                    <option value="Search Ads">Quảng cáo Google</option>
+                    <option value="Event">Hội thảo & Sự kiện</option>
+                    <option value="Webinar">Hội thảo trực tuyến</option>
                   </select>
                 </div>
               </div>
@@ -272,10 +273,10 @@ export const CampaignEditPage: React.FC = () => {
                   onChange={(e) => handleInputChange('status', e.target.value)}
                   disabled={isSubmitting}
                 >
-                  <option value="ACTIVE">Đang kích hoạt (ACTIVE)</option>
-                  <option value="PLANNING">Đang lập kế hoạch (PLANNING)</option>
-                  <option value="COMPLETED">Đã kết thúc (COMPLETED)</option>
-                  <option value="PAUSED">Tạm dừng (PAUSED)</option>
+                  <option value="ACTIVE">Đang chạy</option>
+                  <option value="PLANNING">Đang lập kế hoạch</option>
+                  <option value="COMPLETED">Đã kết thúc</option>
+                  <option value="PAUSED">Tạm dừng</option>
                 </select>
               </div>
             </div>
@@ -297,12 +298,11 @@ export const CampaignEditPage: React.FC = () => {
                 <div className={styles.inputWrapper}>
                   <DollarSign size={16} className={styles.inputIcon} />
                   <input
-                    type="number"
-                    min="0"
-                    step="1000000"
+                    type="text"
                     className={`${styles.input} ${errors.budget ? styles.inputError : ''}`}
-                    value={formData.budget}
-                    onChange={(e) => handleInputChange('budget', Number(e.target.value))}
+                    value={formatNumberWithCommas(formData.budget)}
+                    onChange={(e) => handleInputChange('budget', parseNumberFromCommas(e.target.value))}
+                    placeholder="VD: 50,000,000"
                     disabled={isSubmitting}
                   />
                 </div>
@@ -317,12 +317,11 @@ export const CampaignEditPage: React.FC = () => {
                 <div className={styles.inputWrapper}>
                   <DollarSign size={16} className={styles.inputIcon} />
                   <input
-                    type="number"
-                    min="0"
-                    step="5000000"
+                    type="text"
                     className={`${styles.input} ${errors.expected_revenue ? styles.inputError : ''}`}
-                    value={formData.expected_revenue}
-                    onChange={(e) => handleInputChange('expected_revenue', Number(e.target.value))}
+                    value={formatNumberWithCommas(formData.expected_revenue)}
+                    onChange={(e) => handleInputChange('expected_revenue', parseNumberFromCommas(e.target.value))}
+                    placeholder="VD: 300,000,000"
                     disabled={isSubmitting}
                   />
                 </div>

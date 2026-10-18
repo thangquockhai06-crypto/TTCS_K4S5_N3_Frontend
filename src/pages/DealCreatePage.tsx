@@ -18,15 +18,16 @@ import { customerService } from '../services/customerService';
 import { campaignService } from '../services/campaignService';
 import { ICampaign, ICustomer } from '../interfaces';
 import { showGlobalToast } from '../context/ToastContext';
+import { formatNumberWithCommas, parseNumberFromCommas } from '../utils/formatters';
 import styles from './DealCreatePage.module.css';
 
 const STAGES = [
-  { id: 'lead', name: 'Đầu mối mới (Lead In)', prob: 20 },
-  { id: 'contacted', name: 'Đã liên hệ & Khảo sát (Contacted)', prob: 40 },
-  { id: 'proposal', name: 'Gửi Đề xuất / Báo giá (Proposal)', prob: 60 },
-  { id: 'negotiation', name: 'Đàm phán Hợp đồng (Negotiation)', prob: 80 },
-  { id: 'won', name: 'Thành công (Won)', prob: 100 },
-  { id: 'lost', name: 'Thất bại (Lost)', prob: 0 },
+  { id: 'lead', name: 'Đầu mối mới', prob: 20 },
+  { id: 'contacted', name: 'Đã liên hệ & Khảo sát', prob: 40 },
+  { id: 'proposal', name: 'Gửi Đề xuất & Báo giá', prob: 60 },
+  { id: 'negotiation', name: 'Đàm phán Hợp đồng', prob: 80 },
+  { id: 'won', name: 'Chốt thành công', prob: 100 },
+  { id: 'lost', name: 'Đã thất bại', prob: 0 },
 ];
 
 export const DealCreatePage: React.FC = () => {
@@ -170,7 +171,7 @@ export const DealCreatePage: React.FC = () => {
       <header className={styles.header}>
         <h1 className={styles.title}>Tạo Cơ hội Bán hàng mới</h1>
         <p className={styles.subtitle}>
-          Khởi tạo thỏa thuận thương mại trong phễu bán hàng (Deal Pipeline), liên kết khách hàng doanh nghiệp và dự báo doanh số.
+          Khởi tạo thỏa thuận thương mại trong phễu bán hàng, liên kết khách hàng doanh nghiệp và dự báo doanh số.
         </p>
       </header>
 
@@ -221,13 +222,12 @@ export const DealCreatePage: React.FC = () => {
                 <div className={styles.inputWrapper}>
                   <DollarSign size={16} className={styles.inputIcon} />
                   <input
-                    type="number"
-                    min="0"
-                    step="1000000"
+                    type="text"
                     required
                     className={`${styles.input} ${errors.value ? styles.inputError : ''}`}
-                    value={formData.value}
-                    onChange={(e) => handleInputChange('value', Number(e.target.value))}
+                    value={formatNumberWithCommas(formData.value)}
+                    onChange={(e) => handleInputChange('value', parseNumberFromCommas(e.target.value))}
+                    placeholder="VD: 50,000,000"
                     disabled={isSubmitting}
                   />
                 </div>

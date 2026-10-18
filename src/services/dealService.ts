@@ -13,12 +13,26 @@ export interface IGetDealsParams {
   stage?: string;
   customer_id?: string;
   owner_id?: string;
+  min_value?: number;
+  max_value?: number;
+  close_date_from?: string;
+  close_date_to?: string;
+  product_id?: string;
+  is_stalled?: boolean;
   stalled_only?: boolean;
 }
 
 class DealService {
   async getDeals(params?: IGetDealsParams): Promise<IDeal[]> {
     const response = await axiosInstance.get<IDeal[]>('/deals', { params });
+    return response.data;
+  }
+
+  async exportDeals(params?: IGetDealsParams & { deal_ids?: string }): Promise<Blob> {
+    const response = await axiosInstance.get('/deals/export', {
+      params,
+      responseType: 'blob',
+    });
     return response.data;
   }
 
