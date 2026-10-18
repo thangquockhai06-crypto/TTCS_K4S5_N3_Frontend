@@ -2,11 +2,13 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   Building2,
+  CheckSquare,
   ClipboardCheck,
   Clock,
   FileText,
   FolderTree,
   GitCommit,
+  History,
   LayoutDashboard,
   Package,
   PanelLeftClose,
@@ -62,6 +64,20 @@ const ALL_MENU_ITEMS: ReadonlyArray<IMenuItem> = [
     path: '/quotes/approvals',
     icon: <ClipboardCheck size={19} />,
     requiredPermission: 'approve_quotes',
+  },
+  {
+    id: 'tasks',
+    label: 'Công việc & Nhiệm vụ',
+    path: '/tasks',
+    icon: <CheckSquare size={19} />,
+    requiredPermission: 'manage_deals',
+  },
+  {
+    id: 'activities',
+    label: 'Nhật ký Hoạt động',
+    path: '/activities',
+    icon: <History size={19} />,
+    requiredPermission: 'manage_deals',
   },
   {
     id: 'customers',
