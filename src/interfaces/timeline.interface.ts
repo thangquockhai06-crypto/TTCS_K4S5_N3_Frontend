@@ -64,10 +64,15 @@ export interface ITimelineItem {
   isPinned?: boolean;
 }
 
+export type TimelineTimeFilterType = 'all' | 'today' | '7days' | '30days' | 'this_month';
+
 export interface ITimelineFilterState {
   type: TimelineItemType | 'all';
   performerId: string; // 'all' hoặc tên/id nhân viên
   searchQuery: string;
+  timeRange: TimelineTimeFilterType;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 export interface ITimelineHandoverBrief {

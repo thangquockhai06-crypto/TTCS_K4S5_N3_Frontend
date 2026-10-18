@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { ICustomer360, ISupportTicket } from '../interfaces/customer.interface';
 import { customerService } from '../services/customerService';
-import { formatCurrency, formatDate } from '../utils/formatters';
+import { formatCurrency, formatDate, formatDealStage, formatTicketPriority, formatTicketStatus } from '../utils/formatters';
 import { Avatar, Badge, Button, Card, LoadingSkeleton } from '../components/common';
 import { RiskBadge } from '../components/customer/RiskBadge';
 import { ContactListTab } from '../components/customer/ContactListTab';
@@ -26,7 +26,6 @@ import { CustomerForm } from '../components/customer/CustomerForm';
 import { SupportTicketModal } from '../components/customer/SupportTicketModal';
 import { MergeCustomerModal } from '../components/customer/MergeCustomerModal';
 import { TimelineActivity } from '../components/customer/TimelineActivity';
-import { showGlobalToast } from '../context/ToastContext';
 
 type TabKey = 'info' | 'deals' | 'activities' | 'docs';
 
@@ -84,7 +83,7 @@ export const Customer360Dashboard: React.FC = () => {
     );
   }
 
-  const { customer, contacts, deals, activities, tickets } = data360;
+  const { customer, contacts, deals, tickets } = data360;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -401,7 +400,7 @@ export const Customer360Dashboard: React.FC = () => {
                       {deal.title}
                     </td>
                     <td style={{ padding: '10px 14px' }}>
-                      <Badge tone="primary" size="sm">{deal.stage}</Badge>
+                      <Badge tone="primary" size="sm">{formatDealStage(deal.stage)}</Badge>
                     </td>
                     <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: '#059669' }}>
                       {formatCurrency(deal.value)}
@@ -479,12 +478,12 @@ export const Customer360Dashboard: React.FC = () => {
                           textTransform: 'uppercase',
                         }}
                       >
-                        {t.priority}
+                        {formatTicketPriority(t.priority)}
                       </span>
                     </td>
                     <td style={{ padding: '10px 14px', textAlign: 'center' }}>
                       <Badge tone={t.status === 'resolved' || t.status === 'closed' ? 'success' : 'neutral'} size="sm">
-                        {t.status}
+                        {formatTicketStatus(t.status)}
                       </Badge>
                     </td>
                     <td style={{ padding: '10px 14px', color: '#64748B' }}>

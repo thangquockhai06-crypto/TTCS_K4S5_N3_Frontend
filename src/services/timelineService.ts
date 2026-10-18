@@ -357,18 +357,18 @@ class TimelineService {
             customerId,
             type: 'support_ticket',
             typeLabel: 'Phiếu hỗ trợ',
-            title: `Yêu cầu hỗ trợ #${ticket.ticketNumber || ticket.id}: ${ticket.title}`,
+            title: `Yêu cầu hỗ trợ #${ticket.ticketCode || ticket.id}: ${ticket.title}`,
             description: ticket.description || 'Xử lý yêu cầu hỗ trợ kỹ thuật khách hàng.',
             timestamp: ticket.createdAt || new Date().toISOString(),
             relativeTime: this.calculateRelativeTime(ticket.createdAt),
             performer: {
               id: 'perf-ticket',
-              name: ticket.assignedToName || 'Kỹ thuật viên',
-              avatarUrl: createAvatarSvgDataUri(ticket.assignedToName || 'Tech', 3),
+              name: ticket.assignedUserName || 'Kỹ thuật viên',
+              avatarUrl: createAvatarSvgDataUri(ticket.assignedUserName || 'Tech', 3),
               role: 'Bộ phận Hỗ trợ Kỹ thuật',
             },
             metadata: {
-              ticketId: ticket.ticketNumber || ticket.id,
+              ticketId: ticket.ticketCode || ticket.id,
               ticketPriority: (ticket.priority as 'low' | 'medium' | 'high' | 'urgent') || 'medium',
             },
           });
@@ -515,7 +515,7 @@ class TimelineService {
    * Tính toán Bảng tóm tắt bối cảnh bàn giao nhanh trong 5 phút (5-Minute Handover Executive Brief)
    */
   public getHandoverBrief(
-    customerId: string,
+    _customerId: string,
     items: ITimelineItem[],
     customer360?: ICustomer360 | null
   ): ITimelineHandoverBrief {
@@ -543,7 +543,7 @@ class TimelineService {
       latestQuoteAmount = totalDealValue;
     }
 
-    const openTicketsCount = customer360?.tickets?.filter((t) => t.status !== 'Closed').length || 0;
+    const openTicketsCount = customer360?.tickets?.filter((t) => t.status !== 'closed').length || 0;
 
     // Sinh bối cảnh thông minh giúp CSKH tiếp nhận khách trong 5 phút
     const keyContextSummary =

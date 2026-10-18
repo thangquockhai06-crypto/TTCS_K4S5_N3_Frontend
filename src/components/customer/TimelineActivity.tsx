@@ -55,7 +55,6 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
     allItems,
     filteredItems,
     paginatedItems,
-    totalCount,
     filters,
     pagination,
     currentPage,
@@ -72,6 +71,7 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
     setTypeFilter,
     setPerformerFilter,
     setSearchQuery,
+    setTimeFilter,
     resetFilters,
   } = useTimelineActivity({ customerId, customer360, initialPageSize: 5 });
 
@@ -388,6 +388,21 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
               ))}
             </select>
 
+            {/* Lọc theo thời gian (S6-08) */}
+            <select
+              className={styles.performerSelect}
+              value={filters.timeRange || 'all'}
+              onChange={(e) => setTimeFilter(e.target.value as any)}
+              title="Lọc tương tác theo thời gian"
+              aria-label="Lọc theo thời gian"
+            >
+              <option value="all">📅 Tất cả thời gian</option>
+              <option value="today">Hôm nay</option>
+              <option value="7days">7 ngày qua</option>
+              <option value="30days">30 ngày qua</option>
+              <option value="this_month">Tháng này</option>
+            </select>
+
             {/* Ô tìm kiếm từ khóa với icon xóa tức thì */}
             <div className={styles.searchBox}>
               <Search size={16} className={styles.searchIcon} />
@@ -413,7 +428,7 @@ export const TimelineActivity: React.FC<ITimelineActivityProps> = ({
             </div>
 
             {/* Nút đặt lại bộ lọc nếu đang có bộ lọc hoặc từ khóa */}
-            {(filters.type !== 'all' || filters.performerId !== 'all' || filters.searchQuery) && (
+            {(filters.type !== 'all' || filters.performerId !== 'all' || filters.searchQuery || filters.timeRange !== 'all') && (
               <Button
                 type="button"
                 variant="secondary"

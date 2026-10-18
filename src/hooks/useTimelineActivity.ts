@@ -7,6 +7,7 @@ import {
   ITimelinePerformer,
   ITimelinePaginationState,
   TimelineItemType,
+  TimelineTimeFilterType,
 } from '../interfaces/timeline.interface';
 import { ICustomer360 } from '../interfaces/customer.interface';
 import { timelineService } from '../services/timelineService';
@@ -28,11 +29,14 @@ export function useTimelineActivity({
     timelineService.getTimeline(customerId, customer360)
   );
 
-  // Bộ lọc tương tác (loại hoạt động, người thực hiện, tìm kiếm từ khóa)
+  // Bộ lọc tương tác (loại hoạt động, người thực hiện, tìm kiếm từ khóa, thời gian S6-08)
   const [filters, setFilters] = useState<ITimelineFilterState>({
     type: 'all',
     performerId: 'all',
     searchQuery: '',
+    timeRange: 'all',
+    dateFrom: undefined,
+    dateTo: undefined,
   });
 
   // Phân trang chuẩn (Pagination)
@@ -60,7 +64,7 @@ export function useTimelineActivity({
     setVisibleCount(pageSize);
   }, [filters, pageSize]);
 
-  // Lọc danh sách theo các tiêu chí (Loại hoạt động & Người thực hiện & Từ khóa)
+  // Lọc danh sách theo các tiêu chí (Loại hoạt động & Người thực hiện & Từ khóa & Thời gian S6-08)
   const filteredItems = useMemo(() => {
     return allItems.filter((item) => {
       // 1. Lọc theo loại hoạt động
@@ -78,7 +82,38 @@ export function useTimelineActivity({
         }
       }
 
-      // 3. Tìm kiếm theo từ khóa đa trường
+      // 3. Lọc theo thời gian (S6-08: Time filter)
+      if (filters.timeRange && filters.timeRange !== 'all') {
+        const itemDate = new Date(item.timestamp);
+        const now = new Date();
+        if (filters.timeRange === 'today') {
+          if (itemDate.toDateString() !== now.toDateString()) return false;
+        } else if (filters.timeRange === '7days') {
+          const diffDays = (now.getTime() - itemDate.getTime()) / (1000 * 3600 * 24);
+          if (diffDays > 7 || diffDays < 0) return false;
+        } else if (filters.timeRange === '30days') {
+          const diffDays = (now.getTime() - itemDate.getTime()) / (1000 * 3600 * 24);
+          if (diffDays > 30 || diffDays < 0) return false;
+        } else if (filters.timeRange === 'this_month') {
+          if (
+            itemDate.getFullYear() !== now.getFullYear() ||
+            itemDate.getMonth() !== now.getMonth()
+          ) {
+            return false;
+          }
+        }
+      }
+
+      if (filters.dateFrom) {
+        const fromTime = new Date(filters.dateFrom).getTime();
+        if (new Date(item.timestamp).getTime() < fromTime) return false;
+      }
+      if (filters.dateTo) {
+        const toTime = new Date(filters.dateTo).getTime() + 86400000;
+        if (new Date(item.timestamp).getTime() > toTime) return false;
+      }
+
+      // 4. Tìm kiếm theo từ khóa đa trường
       if (filters.searchQuery.trim()) {
         const query = filters.searchQuery.toLowerCase().trim();
         const searchTarget = [
@@ -250,11 +285,21 @@ export function useTimelineActivity({
     setFilters((prev) => ({ ...prev, searchQuery }));
   }, []);
 
+  const setTimeFilter = useCallback(
+    (timeRange: TimelineTimeFilterType, dateFrom?: string, dateTo?: string) => {
+      setFilters((prev) => ({ ...prev, timeRange, dateFrom, dateTo }));
+    },
+    []
+  );
+
   const resetFilters = useCallback(() => {
     setFilters({
       type: 'all',
       performerId: 'all',
       searchQuery: '',
+      timeRange: 'all',
+      dateFrom: undefined,
+      dateTo: undefined,
     });
     setCurrentPage(1);
   }, []);
@@ -285,6 +330,7 @@ export function useTimelineActivity({
     setTypeFilter,
     setPerformerFilter,
     setSearchQuery,
+    setTimeFilter,
     resetFilters,
     reload,
   };
