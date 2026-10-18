@@ -468,7 +468,7 @@ export const OrgTreeView: React.FC = () => {
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
-                  Trưởng bộ phận / Trưởng nhóm (Leader)
+                  Trưởng bộ phận / Trưởng nhóm
                 </label>
                 <input
                   type="text"
@@ -577,7 +577,7 @@ export const OrgTreeView: React.FC = () => {
             <form onSubmit={handleSaveNode} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
-                  Họ tên Trưởng bộ phận / Trưởng nhóm (Leader)
+                  Họ tên Trưởng bộ phận / Trưởng nhóm
                 </label>
                 <input
                   type="text"

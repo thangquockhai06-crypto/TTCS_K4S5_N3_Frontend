@@ -22,6 +22,7 @@ import { useAuth } from '../hooks/useAuth';
 import { userService } from '../services/userService';
 import { sprint2Service } from '../services/sprint2Service';
 import { IAuditLogItem } from '../interfaces/sprint2.interface';
+import { formatAuditAction, formatAuditTargetType, getAuditActionBadgeStyle } from '../utils/formatters';
 import styles from './DashboardPage.module.css';
 
 export const DashboardPage: React.FC = () => {
@@ -358,12 +359,15 @@ export const DashboardPage: React.FC = () => {
             ) : (
               (recentLogs || []).map((log) => {
                 const logTime = log.timestamp || log.created_at;
+                const badgeStyle = getAuditActionBadgeStyle(log.action);
                 return (
                   <div key={log.id} className={styles.auditItem}>
-                    <div className={styles.auditDot} />
+                    <div className={styles.auditDot} style={{ backgroundColor: badgeStyle.dot }} />
                     <div className={styles.auditContent}>
                       <div className={styles.auditTopRow}>
-                        <strong className={styles.auditAction}>{log.action}</strong>
+                        <strong className={styles.auditAction} style={{ color: badgeStyle.color, fontWeight: 700 }}>
+                          {formatAuditAction(log.action)}
+                        </strong>
                         <span className={styles.auditTime}>
                           {logTime
                             ? new Date(logTime).toLocaleTimeString('vi-VN', {
@@ -374,7 +378,7 @@ export const DashboardPage: React.FC = () => {
                         </span>
                       </div>
                       <p className={styles.auditTarget}>
-                        Đối tượng: <code>{log.target_type}</code> · Thực hiện bởi:{' '}
+                        Đối tượng: <code style={{ color: '#0f172a', fontWeight: 600 }}>{formatAuditTargetType(log.target_type)}</code> · Thực hiện bởi:{' '}
                         <span className={styles.auditUser}>{log.user_name || log.performed_by}</span>
                       </p>
                     </div>

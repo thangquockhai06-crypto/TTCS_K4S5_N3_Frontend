@@ -599,10 +599,10 @@ export const CustomerMergePage: React.FC = () => {
             <div>
               <strong style={{ display: 'block', marginBottom: 4 }}>Quy tắc bảo toàn dữ liệu khi hợp nhất:</strong>
               <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.6 }}>
-                <li>Tất cả Người liên hệ (Contacts) thuộc hồ sơ phụ sẽ được tự động chuyển giao sang hồ sơ chính.</li>
-                <li>Tất cả Cơ hội bán hàng (Deals), Phiếu hỗ trợ (Tickets), và Lịch sử tương tác (Activities) được di dời toàn vẹn.</li>
-                <li>Tổng doanh thu / ARR sẽ được tự động cộng dồn vào hồ sơ chính.</li>
-                <li>Hồ sơ phụ sẽ được <strong>xóa mềm (soft-deleted)</strong> để giữ toàn vẹn quan hệ cơ sở dữ liệu và giải phóng MST.</li>
+                <li>Tất cả Người liên hệ thuộc hồ sơ phụ sẽ được tự động chuyển giao sang hồ sơ chính.</li>
+                <li>Tất cả Cơ hội bán hàng, Phiếu hỗ trợ và Lịch sử tương tác được di dời toàn vẹn.</li>
+                <li>Tổng doanh thu sẽ được tự động cộng dồn vào hồ sơ chính.</li>
+                <li>Hồ sơ phụ sẽ được <strong>xóa mềm</strong> để giữ toàn vẹn quan hệ cơ sở dữ liệu và giải phóng MST.</li>
               </ul>
             </div>
           </div>

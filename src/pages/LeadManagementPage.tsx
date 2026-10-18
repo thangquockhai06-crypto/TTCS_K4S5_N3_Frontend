@@ -7,6 +7,7 @@ import {
   Clock,
   Code,
   Copy,
+  Download,
   Edit2,
   Flame,
   GitMerge,
@@ -16,6 +17,7 @@ import {
   RefreshCw,
   Sparkles,
   Target,
+  Trash2,
   Upload,
   UserCheck,
   Users,
@@ -31,6 +33,7 @@ import {
 import { leadService } from '../services/leadService';
 import { campaignService } from '../services/campaignService';
 import { showGlobalToast, ToastType } from '../context/ToastContext';
+import { formatNumberWithCommas, parseNumberFromCommas, formatLeadStatus, formatLeadSource } from '../utils/formatters';
 import { Badge, Button, Modal, SearchBar } from '../components/common';
 import styles from './LeadManagementPage.module.css';
 
@@ -52,7 +55,7 @@ export const LeadManagementPage: React.FC = () => {
   const [leads, setLeads] = useState<ILead[]>([]);
   const [total, setTotal] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
-  const [limit] = useState<number>(10);
+  const [limit, setLimit] = useState<number>(10);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -189,6 +192,27 @@ export const LeadManagementPage: React.FC = () => {
       notifyToast({
         title: 'Lỗi',
         description: err.response?.data?.detail || 'Không thể từ chối Lead',
+        type: 'error',
+      });
+    }
+  };
+
+  const handleDeleteLead = async (lead: ILead) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa đầu mối "${lead.full_name}" không?`)) {
+      return;
+    }
+    try {
+      await leadService.deleteLead(lead.id);
+      notifyToast({
+        title: 'Đã xóa Lead',
+        description: `Lead ${lead.full_name} đã được xóa thành công.`,
+        type: 'success',
+      });
+      fetchLeads();
+    } catch (err: any) {
+      notifyToast({
+        title: 'Lỗi xóa Lead',
+        description: err.response?.data?.detail || 'Không thể xóa Lead này',
         type: 'error',
       });
     }
@@ -490,9 +514,9 @@ export const LeadManagementPage: React.FC = () => {
               onChange={(e) => setScoreGradeFilter(e.target.value)}
             >
               <option value="">Phân loại điểm (Tất cả)</option>
-              <option value="Hot">🔥 Hot (≥ 70 điểm)</option>
-              <option value="Warm">⚡ Warm (40 - 69 điểm)</option>
-              <option value="Cold">❄️ Cold (&lt; 40 điểm)</option>
+              <option value="Hot">🔥 Tiềm năng cao (≥ 70 điểm)</option>
+              <option value="Warm">⚡ Tiềm năng vừa (40 - 69 điểm)</option>
+              <option value="Cold">❄️ Tiềm năng thấp (&lt; 40 điểm)</option>
             </select>
 
             <select
@@ -587,7 +611,7 @@ export const LeadManagementPage: React.FC = () => {
 
                     <td>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <span style={{ fontWeight: 500 }}>{lead.source}</span>
+                        <span style={{ fontWeight: 500 }}>{formatLeadSource(lead.source)}</span>
                         {lead.campaign_name && (
                           <span style={{ fontSize: '0.75rem', color: 'var(--color-primary)' }}>
                             📌 {lead.campaign_name}
@@ -606,7 +630,7 @@ export const LeadManagementPage: React.FC = () => {
                             : styles['scoreBadge--cold']
                         }`}
                       >
-                        {lead.score_grade === 'Hot' ? '🔥' : lead.score_grade === 'Warm' ? '⚡' : '❄️'} {lead.score} điểm ({lead.score_grade})
+                        {lead.score_grade === 'Hot' ? '🔥' : lead.score_grade === 'Warm' ? '⚡' : '❄️'} {lead.score} điểm ({lead.score_grade === 'Hot' ? 'Tiềm năng cao' : lead.score_grade === 'Warm' ? 'Tiềm năng vừa' : 'Tiềm năng thấp'})
                       </span>
                     </td>
 
@@ -622,7 +646,7 @@ export const LeadManagementPage: React.FC = () => {
                             : 'neutral'
                         }
                       >
-                        {lead.status}
+                        {formatLeadStatus(lead.status)}
                       </Badge>
                     </td>
 
@@ -652,7 +676,8 @@ export const LeadManagementPage: React.FC = () => {
                         {lead.status === 'UNASSIGNED' && (
                           <button
                             className={styles.iconBtn}
-                            title="Tiếp nhận Lead"
+                            title="Tiếp nhận đầu mối"
+                            data-tooltip="Tiếp nhận Lead"
                             onClick={() => handleAcceptLead(lead)}
                           >
                             <UserCheck size={15} color="#16a34a" />
@@ -661,7 +686,8 @@ export const LeadManagementPage: React.FC = () => {
 
                         <button
                           className={styles.iconBtn}
-                          title="Tính lại điểm số tự động"
+                          title="Tính lại điểm số tự động (Hot/Warm/Cold)"
+                          data-tooltip="Tính lại điểm số"
                           onClick={() => handleRecalculateScore(lead)}
                         >
                           <Sparkles size={15} color="#8b5cf6" />
@@ -669,7 +695,8 @@ export const LeadManagementPage: React.FC = () => {
 
                         <button
                           className={styles.iconBtn}
-                          title="Kiểm tra trùng lặp & Gộp"
+                          title="Kiểm tra trùng lặp & Gộp bản ghi"
+                          data-tooltip="Kiểm tra & Gộp trùng"
                           onClick={() => handleCheckDuplicates(lead)}
                         >
                           <GitMerge size={15} color="#0284c7" />
@@ -679,7 +706,8 @@ export const LeadManagementPage: React.FC = () => {
                           <>
                             <button
                               className={styles.iconBtn}
-                              title="Chuyển đổi thành Khách hàng & Deal"
+                              title="Chuyển đổi thành Khách hàng & Cơ hội bán hàng"
+                              data-tooltip="Chuyển đổi Lead"
                               onClick={() => handleOpenConvert(lead)}
                             >
                               <ArrowRight size={15} color="#2563eb" />
@@ -687,7 +715,8 @@ export const LeadManagementPage: React.FC = () => {
 
                             <button
                               className={styles.iconBtn}
-                              title="Chỉnh sửa Lead"
+                              title="Chỉnh sửa thông tin Lead"
+                              data-tooltip="Chỉnh sửa Lead"
                               onClick={() => navigate(`/leads/${lead.id}/edit`)}
                             >
                               <Edit2 size={15} color="#0284c7" />
@@ -696,15 +725,25 @@ export const LeadManagementPage: React.FC = () => {
                             <button
                               className={styles.iconBtn}
                               title="Từ chối Lead (Yêu cầu lý do)"
+                              data-tooltip="Từ chối Lead"
                               onClick={() => {
                                 setActiveLead(lead);
                                 setIsRejectModalOpen(true);
                               }}
                             >
-                              <XCircle size={15} color="#ef4444" />
+                              <XCircle size={15} color="#f59e0b" />
                             </button>
                           </>
                         )}
+
+                        <button
+                          className={styles.iconBtn}
+                          title="Xóa đầu mối này"
+                          data-tooltip="Xóa đầu mối"
+                          onClick={() => handleDeleteLead(lead)}
+                        >
+                          <Trash2 size={15} color="#ef4444" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -714,12 +753,24 @@ export const LeadManagementPage: React.FC = () => {
           </table>
         </div>
 
-        {/* Pagination */}
+        {/* Pagination Bar */}
         <div className={styles.pagination}>
           <span>
             Hiển thị <strong>{leads.length}</strong> / <strong>{total}</strong> Lead (Trang {page} / {totalPages})
           </span>
           <div className={styles.pagination__buttons}>
+            <select
+              value={limit}
+              onChange={(e) => {
+                setLimit(Number(e.target.value));
+                setPage(1);
+              }}
+              className={styles.pageSelect}
+            >
+              <option value={10}>10 / trang</option>
+              <option value={20}>20 / trang</option>
+              <option value={50}>50 / trang</option>
+            </select>
             <Button
               variant="secondary"
               size="sm"
@@ -728,6 +779,28 @@ export const LeadManagementPage: React.FC = () => {
             >
               Trước
             </Button>
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum: number;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (page <= 3) {
+                pageNum = i + 1;
+              } else if (page >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = page - 2 + i;
+              }
+              return (
+                <button
+                  key={pageNum}
+                  type="button"
+                  className={`${styles.pageBtn} ${page === pageNum ? styles['pageBtn--active'] : ''}`}
+                  onClick={() => setPage(pageNum)}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
             <Button
               variant="secondary"
               size="sm"
@@ -781,9 +854,29 @@ export const LeadManagementPage: React.FC = () => {
         maxWidth="md"
       >
         <form onSubmit={handleImportExcel}>
-          <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginBottom: 16 }}>
-            Hỗ trợ định dạng <code>.xlsx</code> hoặc <code>.csv</code>. Hệ thống sẽ tự động xác thực từng dòng, tính điểm, và tự động bỏ qua các lỗi định dạng hoặc trùng lặp.
-          </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
+            <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', margin: 0 }}>
+              Hỗ trợ định dạng <code>.xlsx</code> hoặc <code>.csv</code>.
+            </p>
+            <a
+              href="http://localhost:8000/api/v1/leads/import/template?format=xlsx"
+              download="leads_import_template.xlsx"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                color: 'var(--color-primary)',
+                textDecoration: 'none',
+                fontWeight: 600,
+                fontSize: '0.8125rem',
+                padding: '5px 10px',
+                borderRadius: 6,
+                background: 'var(--color-primary-subtle, rgba(59,130,246,0.1))',
+              }}
+            >
+              <Download size={14} /> Tải file mẫu Excel (.xlsx)
+            </a>
+          </div>
 
           <div
             style={{
@@ -811,20 +904,30 @@ export const LeadManagementPage: React.FC = () => {
           {importResult && (
             <div
               style={{
-                padding: 12,
+                padding: 14,
                 borderRadius: 'var(--radius-sm)',
-                background: 'var(--color-bg-subtle)',
+                background: importResult.error_count > 0 ? '#fef2f2' : '#f0fdf4',
+                border: importResult.error_count > 0 ? '1px solid #fecaca' : '1px solid #bbf7d0',
                 marginBottom: 16,
-                fontSize: '0.8125rem',
+                fontSize: '0.875rem',
               }}
             >
-              <p style={{ fontWeight: 600, color: '#16a34a' }}>
-                ✓ Nhập thành công: {importResult.success_count} / {importResult.total_rows}
+              <p style={{ fontWeight: 700, color: '#16a34a', margin: '0 0 6px 0' }}>
+                ✓ Đã nhập thành công: {importResult.success_count} / {importResult.total_rows} bản ghi
               </p>
               {importResult.error_count > 0 && (
-                <p style={{ color: '#dc2626', marginTop: 4 }}>
-                  ⚠️ Dòng lỗi ({importResult.error_count}): {JSON.stringify(importResult.errors)}
-                </p>
+                <div>
+                  <p style={{ color: '#dc2626', fontWeight: 600, margin: '6px 0' }}>
+                    ⚠️ Có {importResult.error_count} dòng lỗi không hợp lệ:
+                  </p>
+                  <div style={{ maxHeight: '120px', overflowY: 'auto', fontSize: '0.8125rem', color: '#991b1b', background: '#ffffff', padding: 8, borderRadius: 4, border: '1px solid #fecaca' }}>
+                    {Array.isArray(importResult.errors) && importResult.errors.map((err: any, idx: number) => (
+                      <div key={idx} style={{ marginBottom: 4 }}>
+                        • Dòng {err.row}: <strong>{err.reason || err.error || 'Dữ liệu không hợp lệ'}</strong> {err.email ? `(${err.email})` : ''}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           )}
@@ -936,7 +1039,7 @@ export const LeadManagementPage: React.FC = () => {
                   checked={convertForm.create_deal}
                   onChange={(e) => setConvertForm({ ...convertForm, create_deal: e.target.checked })}
                 />
-                Tạo mới Cơ hội bán hàng (Deal) trong Phễu bán hàng (EP-05)
+                Tạo mới Cơ hội bán hàng trong Phễu bán hàng
               </label>
             </div>
 
@@ -954,10 +1057,11 @@ export const LeadManagementPage: React.FC = () => {
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Giá trị dự kiến (VNĐ)</label>
                   <input
-                    type="number"
+                    type="text"
                     className={styles.formInput}
-                    value={convertForm.deal_value}
-                    onChange={(e) => setConvertForm({ ...convertForm, deal_value: Number(e.target.value) })}
+                    value={formatNumberWithCommas(convertForm.deal_value)}
+                    onChange={(e) => setConvertForm({ ...convertForm, deal_value: parseNumberFromCommas(e.target.value) })}
+                    placeholder="VD: 50,000,000"
                   />
                 </div>
 

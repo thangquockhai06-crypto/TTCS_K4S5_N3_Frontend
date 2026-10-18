@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, Building2, Globe, HeartPulse, Mail } from 'lucide-react';
 import { CustomerStatusType, ICustomer } from '../../interfaces';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, formatCustomerTier } from '../../utils/formatters';
 import { Avatar, Badge, BadgeToneType } from '../common';
 import styles from './CustomerCard.module.css';
 
@@ -85,7 +85,7 @@ export const CustomerCard: React.FC<ICustomerCardProps> = ({
           <Building2 size={14} className={styles.customerCard__mutedIcon} />
           <strong>{customer.company}</strong>
           <Badge tone="neutral" size="sm">
-            {customer.tier}
+            {formatCustomerTier(customer.tier)}
           </Badge>
         </div>
         <div className={styles.customerCard__domainRow}>

@@ -398,10 +398,8 @@ export const UserCreatePage: React.FC = () => {
               onChange={(e) => setStatus(e.target.value as UserStatusType)}
               disabled={isSubmitting}
             >
-              <option value="pending_activation">
-                Chờ kích hoạt (Gửi email kèm mật khẩu tạm)
-              </option>
-              <option value="active">Đang hoạt động (Kích hoạt ngay)</option>
+              <option value="pending_activation">Chờ kích hoạt</option>
+              <option value="active">Đang hoạt động</option>
               <option value="locked">Tạm khóa</option>
             </select>
           </div>

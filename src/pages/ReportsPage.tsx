@@ -6,10 +6,10 @@ import { formatCurrency } from '../utils/formatters';
 import styles from './ReportsPage.module.css';
 
 const TIER_LABELS: Record<string, string> = {
-  Enterprise: 'Phân khúc Enterprise (Tập đoàn)',
-  'Mid-Market': 'Phân khúc Mid-Market (Vừa & Lớn)',
-  Growth: 'Phân khúc Growth (Tăng trưởng)',
-  Startup: 'Phân khúc Startup (Khởi nghiệp)',
+  Enterprise: 'Phân khúc Tập đoàn lớn',
+  'Mid-Market': 'Phân khúc Vừa & Lớn',
+  Growth: 'Phân khúc Tăng trưởng',
+  Startup: 'Phân khúc Khởi nghiệp',
 };
 
 export const ReportsPage: React.FC = () => {

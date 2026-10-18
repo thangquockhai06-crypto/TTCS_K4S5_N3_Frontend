@@ -278,7 +278,7 @@ export const WinLossConfig: React.FC = () => {
           Lý do Thắng/Thua & Đối thủ cạnh tranh
         </h2>
         <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 0' }}>
-          Chuẩn hóa các nguyên nhân Thắng (WON) hoặc Thất bại (LOST) và theo dõi điểm mạnh yếu của đối thủ cạnh tranh trực tiếp trên thị trường
+          Chuẩn hóa các nguyên nhân Thành công hoặc Thất bại và theo dõi điểm mạnh yếu của đối thủ cạnh tranh trực tiếp trên thị trường
         </p>
       </div>
 
@@ -301,7 +301,7 @@ export const WinLossConfig: React.FC = () => {
             gap: '6px',
           }}
         >
-          <Trophy size={14} /> Lý do Thành công (Win Reasons)
+          <Trophy size={14} /> Lý do Thành công
         </button>
 
         <button
@@ -321,7 +321,7 @@ export const WinLossConfig: React.FC = () => {
             gap: '6px',
           }}
         >
-          <TrendingDown size={14} /> Lý do Thất bại (Loss Reasons)
+          <TrendingDown size={14} /> Lý do Thất bại
         </button>
 
         <button
@@ -341,7 +341,7 @@ export const WinLossConfig: React.FC = () => {
             gap: '6px',
           }}
         >
-          <Swords size={14} /> Đối thủ Cạnh tranh (Competitors)
+          <Swords size={14} /> Đối thủ Cạnh tranh
         </button>
       </div>
 
@@ -384,7 +384,7 @@ export const WinLossConfig: React.FC = () => {
             }}
           >
             <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
-              Danh sách {activeTab === 'WON' ? 'Lý do Thành công (Win Reasons)' : 'Lý do Thất bại (Loss Reasons)'} ({reasons.length})
+              Danh sách {activeTab === 'WON' ? 'Lý do Thành công' : 'Lý do Thất bại'} ({reasons.length})
             </span>
 
             <button
@@ -412,7 +412,7 @@ export const WinLossConfig: React.FC = () => {
             <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
               <tr>
                 <th style={{ padding: '10px 14px', width: '90px', color: '#64748b' }}>Phân loại</th>
-                <th style={{ padding: '10px 14px', color: '#64748b' }}>Mã lý do (Code)</th>
+                <th style={{ padding: '10px 14px', color: '#64748b' }}>Mã lý do</th>
                 <th style={{ padding: '10px 14px', color: '#64748b' }}>Nội dung lý do</th>
                 <th style={{ padding: '10px 14px', color: '#64748b' }}>Mô tả giải thích</th>
                 <th style={{ padding: '10px 14px', textAlign: 'right', color: '#64748b' }}>Thao tác</th>
@@ -656,7 +656,7 @@ export const WinLossConfig: React.FC = () => {
               {!editingReason && (
                 <div>
                   <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
-                    Mã định danh lý do (Code) *
+                    Mã định danh lý do *
                   </label>
                   <input
                     type="text"

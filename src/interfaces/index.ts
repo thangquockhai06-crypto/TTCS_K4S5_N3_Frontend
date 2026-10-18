@@ -11,3 +11,4 @@ export * from './sprint2.interface';
 export * from './lead.interface';
 export * from './timeline.interface';
 export * from './quote.interface';
+export * from './task.interface';

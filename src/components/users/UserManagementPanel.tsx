@@ -25,13 +25,14 @@ import type {
   UserAccountStatusType,
 } from '../../interfaces';
 import { ROLE_DATA_SCOPE_MAP } from '../../mock/userManagement.mock';
-import { formatCompactCurrency } from '../../utils/formatters';
+import { formatCompactCurrency, formatUserRole } from '../../utils/formatters';
 import { showGlobalToast } from '../../context/ToastContext';
 import { DeactivateUserModal } from './DeactivateUserModal';
 import styles from './UserManagementPanel.module.css';
 
 interface IRoleOptionMeta {
   role: SystemRoleType;
+  label: string;
   dotColor: string;
   summary: string;
 }
@@ -39,26 +40,31 @@ interface IRoleOptionMeta {
 const ROLE_OPTIONS: ReadonlyArray<IRoleOptionMeta> = [
   {
     role: 'Super Admin',
+    label: 'Quản trị viên (Super Admin)',
     dotColor: '#2563EB',
     summary: 'Toàn quyền quản trị hệ thống & xem 100% cây tổ chức',
   },
   {
     role: 'VP of Sales',
+    label: 'Giám đốc kinh doanh (VP of Sales)',
     dotColor: '#8B5CF6',
     summary: 'Giám sát toàn bộ Khối Kinh doanh & phê duyệt chiết khấu lớn',
   },
   {
     role: 'Sales Manager',
+    label: 'Trưởng nhóm kinh doanh (Sales Manager)',
     dotColor: '#10B981',
     summary: 'Quản lý dữ liệu nhánh Nhóm Kinh doanh phụ trách & cấp dưới',
   },
   {
     role: 'Account Executive',
+    label: 'Chuyên viên kinh doanh (Account Executive)',
     dotColor: '#F59E0B',
     summary: 'Truy cập Khách hàng & Cơ hội do cá nhân trực tiếp sở hữu',
   },
   {
     role: 'RevOps Lead',
+    label: 'Trưởng vận hành doanh thu (RevOps Lead)',
     dotColor: '#0EA5E9',
     summary: 'Quản trị Phễu doanh thu, Quota & Nhật ký kiểm toán hệ thống',
   },
@@ -776,7 +782,7 @@ export const UserManagementPanel: React.FC = () => {
                           className={styles.userManage__customSelectDot}
                           style={{ backgroundColor: getRoleDotColor(item.role) }}
                         />
-                        <span className={styles.userManage__customSelectText}>{item.role}</span>
+                        <span className={styles.userManage__customSelectText}>{formatUserRole(item.role)}</span>
                       </span>
                       <ChevronDown size={15} color="var(--color-text-muted)" />
                     </button>
@@ -802,7 +808,7 @@ export const UserManagementPanel: React.FC = () => {
                                     className={styles.userManage__customSelectDot}
                                     style={{ backgroundColor: opt.dotColor }}
                                   />
-                                  <span>{opt.role}</span>
+                                  <span>{opt.label || opt.role}</span>
                                 </div>
                                 <p className={styles.userManage__popoverOptionSub}>{opt.summary}</p>
                               </div>

@@ -19,7 +19,7 @@ import type {
   IDeactivateUserModalProps,
   IManagedUser,
 } from '../../interfaces';
-import { formatCompactCurrency } from '../../utils/formatters';
+import { formatCompactCurrency, formatUserRole } from '../../utils/formatters';
 import styles from './DeactivateUserModal.module.css';
 
 const QUICK_REASONS: ReadonlyArray<string> = [
@@ -198,7 +198,7 @@ export const DeactivateUserModal: React.FC<IDeactivateUserModalProps> = ({
                       <div className={styles.deactivateModal__targetName}>
                         <span>{targetUser.fullName}</span>
                         <Badge tone="primary" size="sm">
-                          {targetUser.role}
+                          {formatUserRole(targetUser.role)}
                         </Badge>
                       </div>
                       <p className={styles.deactivateModal__targetMeta}>
@@ -336,7 +336,7 @@ export const DeactivateUserModal: React.FC<IDeactivateUserModalProps> = ({
                             <div className={styles.deactivateModal__pickerSelectedName}>
                               <span>{selectedNewOwner.fullName}</span>
                               <Badge tone="primary" size="sm">
-                                {selectedNewOwner.role}
+                                {formatUserRole(selectedNewOwner.role)}
                               </Badge>
                             </div>
                             <p className={styles.deactivateModal__pickerSelectedSub}>
@@ -400,7 +400,7 @@ export const DeactivateUserModal: React.FC<IDeactivateUserModalProps> = ({
                                     <div className={styles.deactivateModal__optionName}>
                                       <span>{candidate.fullName}</span>
                                       <Badge tone="primary" size="sm">
-                                        {candidate.role}
+                                        {formatUserRole(candidate.role)}
                                       </Badge>
                                     </div>
                                     <p className={styles.deactivateModal__optionMeta}>
@@ -411,8 +411,7 @@ export const DeactivateUserModal: React.FC<IDeactivateUserModalProps> = ({
 
                                 <div className={styles.deactivateModal__optionRight}>
                                   <span className={styles.deactivateModal__optionCountPill}>
-                                    🏢 {candidate.customersCount} KH · 💼 {candidate.dealsCount}{' '}
-                                    Deals
+                                    🏢 {candidate.customersCount} KH · 💼 {candidate.dealsCount} Cơ hội
                                   </span>
                                   {isSelected && (
                                     <span className={styles.deactivateModal__optionCheck}>
@@ -452,7 +451,7 @@ export const DeactivateUserModal: React.FC<IDeactivateUserModalProps> = ({
                       />
                       <div>
                         <p className={styles.deactivateModal__handoverOwnerName}>
-                          Bàn giao sang: {selectedNewOwner.fullName} ({selectedNewOwner.role})
+                          Bàn giao sang: {selectedNewOwner.fullName} ({formatUserRole(selectedNewOwner.role)})
                         </p>
                         <p className={styles.deactivateModal__handoverOwnerSub}>
                           {selectedNewOwner.salesTeamName} · {selectedNewOwner.email}

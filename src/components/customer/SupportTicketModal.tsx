@@ -14,7 +14,7 @@ import {
   ISupportTicket,
 } from '../../interfaces/customer.interface';
 import { customerService } from '../../services/customerService';
-import { formatDate } from '../../utils/formatters';
+import { formatDate, formatTicketPriority } from '../../utils/formatters';
 import { Button, Modal } from '../common';
 import { RiskBadge } from './RiskBadge';
 import { showGlobalToast } from '../../context/ToastContext';
@@ -400,7 +400,7 @@ export const SupportTicketModal: React.FC<ISupportTicketModalProps> = ({
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: '0.75rem', color: '#64748B' }}>
-                      <span>Mức độ: <strong style={{ textTransform: 'uppercase' }}>{t.priority}</strong></span>
+                      <span>Mức độ: <strong style={{ color: t.priority === 'urgent' ? '#DC2626' : '#1E293B' }}>{formatTicketPriority(t.priority)}</strong></span>
                       {t.dueDate && (
                         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                           <Clock size={12} /> Hạn: {formatDate(t.dueDate)}

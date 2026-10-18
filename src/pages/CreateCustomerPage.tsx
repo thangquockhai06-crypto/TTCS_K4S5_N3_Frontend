@@ -375,10 +375,10 @@ export const CreateCustomerPage: React.FC = () => {
                     handleFieldChange('tier', e.target.value as CustomerTierType)
                   }
                 >
-                  <option value="Enterprise">Enterprise ($100K+ ARR)</option>
-                  <option value="Mid-Market">Mid-Market ($50K–$100K)</option>
-                  <option value="Growth">Growth ($15K–$50K)</option>
-                  <option value="Startup">Startup</option>
+                  <option value="Enterprise">Doanh nghiệp VIP &amp; Chiến lược</option>
+                  <option value="Mid-Market">Doanh nghiệp tầm trung</option>
+                  <option value="Growth">Doanh nghiệp tăng trưởng</option>
+                  <option value="Startup">Khởi nghiệp &amp; Doanh nghiệp vừa nhỏ</option>
                 </select>
               </div>
 
@@ -391,10 +391,10 @@ export const CreateCustomerPage: React.FC = () => {
                     handleFieldChange('status', e.target.value as CustomerStatusType)
                   }
                 >
-                  <option value="New Lead">Tiềm năng mới (New Lead)</option>
-                  <option value="Negotiation">Đang đàm phán (Negotiation)</option>
-                  <option value="Active">Đang hợp tác (Active)</option>
-                  <option value="At Risk">Cần chú ý (At Risk)</option>
+                  <option value="New Lead">Tiềm năng mới</option>
+                  <option value="Negotiation">Đang đàm phán</option>
+                  <option value="Active">Đang hợp tác</option>
+                  <option value="At Risk">Cần chú ý</option>
                 </select>
               </div>
             </div>

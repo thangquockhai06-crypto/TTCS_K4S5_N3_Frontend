@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, ShieldCheck } from 'lucide-react';
 import { IAuditLogItem } from '../../interfaces';
+import { formatAuditAction, formatAuditTargetType, formatAuditFieldName } from '../../utils/formatters';
 
 interface IDiffViewerModalProps {
   isOpen: boolean;
@@ -117,12 +118,12 @@ export const DiffViewerModal: React.FC<IDiffViewerModalProps> = ({
           >
             <div>
               <span style={{ color: '#64748b', display: 'block', fontSize: '0.72rem' }}>Hành động</span>
-              <strong style={{ color: '#1e293b' }}>{logItem.action}</strong>
+              <strong style={{ color: '#1e293b' }}>{formatAuditAction(logItem.action)}</strong>
             </div>
             <div>
               <span style={{ color: '#64748b', display: 'block', fontSize: '0.72rem' }}>Đối tượng</span>
-              <span style={{ textTransform: 'capitalize', color: '#1e293b', fontWeight: 600 }}>
-                {logItem.target_type} (#{logItem.target_id.slice(0, 8)})
+              <span style={{ color: '#1e293b', fontWeight: 600 }}>
+                {formatAuditTargetType(logItem.target_type)} (#{logItem.target_id.slice(0, 8)})
               </span>
             </div>
             <div>
@@ -138,7 +139,7 @@ export const DiffViewerModal: React.FC<IDiffViewerModalProps> = ({
           {/* Diff View Box */}
           <div>
             <span style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#1e293b', marginBottom: '8px' }}>
-              Trường dữ liệu thay đổi: <code style={{ backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', color: '#2563eb' }}>{logItem.field_name || 'Nội dung chung'}</code>
+              Trường dữ liệu thay đổi: <code style={{ backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', color: '#2563eb' }}>{formatAuditFieldName(logItem.field_name) || 'Nội dung chung'}</code>
             </span>
 
             <div

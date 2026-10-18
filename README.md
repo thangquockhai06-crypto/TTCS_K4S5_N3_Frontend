@@ -46,13 +46,17 @@ npm run dev
 ```
 *(Trên Windows, bạn có thể nhấp đúp vào `start-all.bat` để chạy đồng thời cả Backend và Frontend).*
 
-### 4. Tài khoản Quản trị viên (Admin)
-- **Tên hiển thị:** `Quản Trị Viên Hệ Thống`
-- **Email:** `admin@nexuscrm.com`
-- **Mật khẩu:** `password123`
-- **Đăng ký tài khoản mới:** Tạo tài khoản trực tiếp tại trang **Đăng ký (`/register`)**.
+### 4. Danh sách Tài khoản & Mật khẩu Mặc định
 
----
+| Vai trò | Email đăng nhập | Mật khẩu | Phạm vi dữ liệu (Data Scope) |
+|---|---|---|---|
+| **Quản trị viên (Super Admin)** | `admin@nexuscrm.vn` *(hoặc `admin@nexuscrm.com`)* | `Admin@2026` *(hoặc `password123`)* | Toàn quyền hệ thống (`ALL`) |
+| **Trưởng nhóm (Team Leader / Sales Manager)** | `leader@nexuscrm.vn` | `Password123!` | Toàn bộ nhóm miền Bắc (`TEAM`) |
+| **Chuyên viên Sales (Account Executive)** | `sales1@nexuscrm.vn` | `Password123!` | Dữ liệu cá nhân phụ trách (`OWN`) |
+| **Giám đốc Kinh doanh (VP of Sales)** | `director@nexuscrm.vn` | `Password123!` | Toàn quốc (`ALL`) |
+
+> **Lưu ý bảo mật (SCRUM-32):** Nếu nhập sai mật khẩu quá 5 lần liên tiếp, hệ thống sẽ tạm khóa 15 phút. Toàn bộ tài khoản hiện đã được reset số lần thử để bạn đăng nhập ngay.
+> Bạn cũng có thể đăng ký tài khoản mới trực tiếp tại trang **Đăng ký (`/register`)**.
 
 ## II. Tiến Độ Triển Khai & Phân Chia Công Việc
 

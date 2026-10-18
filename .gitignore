@@ -98,3 +98,8 @@ generate_word_doc*.py
 debug_*.py
 test_*.py
 screenshots/
+build_doc_helpers.py
+generate_s6_report.py
+take_screenshots.cjs
+screenshots_s6/
+

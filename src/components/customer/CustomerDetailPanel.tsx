@@ -14,7 +14,7 @@ import {
   UserCheck,
 } from 'lucide-react';
 import { ICustomer } from '../../interfaces';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, formatCustomerTier } from '../../utils/formatters';
 import { Avatar, Badge, Button, Card } from '../common';
 import { getCustomerStatusLabel, getCustomerStatusTone } from './CustomerCard';
 import styles from './CustomerDetailPanel.module.css';
@@ -144,7 +144,7 @@ export const CustomerDetailPanel: React.FC<ICustomerDetailPanelProps> = ({
         </div>
         <div className={styles.tagsWrap}>
           <Badge tone="accent" size="md">
-            {customer.tier}
+            {formatCustomerTier(customer.tier)}
           </Badge>
           {customer.tags.map((tag) => (
             <Badge key={tag} tone="primary" size="md">

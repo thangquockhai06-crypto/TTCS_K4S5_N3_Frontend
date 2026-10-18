@@ -21,7 +21,7 @@ import {
   ICustomer,
 } from '../interfaces/customer.interface';
 import { customerService } from '../services/customerService';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, formatCustomerTier, formatCustomerStatus } from '../utils/formatters';
 import {
   Avatar,
   Badge,
@@ -412,13 +412,13 @@ export const CustomerListPage: React.FC = () => {
 
               <div style={{ fontSize: '0.8125rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <div><strong>MST:</strong> <code>{c.taxCode || '—'}</code></div>
-                <div><strong>Phân hạng:</strong> {c.tier || 'Enterprise'} · {c.industry || 'Chưa phân ngành'}</div>
+                <div><strong>Phân hạng:</strong> {formatCustomerTier(c.tier)} · {c.industry || 'Chưa phân ngành'}</div>
                 <div><strong>ARR:</strong> <strong style={{ color: '#059669' }}>{formatCurrency(c.totalContractValue || c.dealValue || 0)}</strong></div>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #F1F5F9', paddingTop: 8, marginTop: 'auto' }}>
                 <Badge tone={c.status === 'Active' ? 'success' : 'neutral'} size="sm">
-                  {c.status || 'New Lead'}
+                  {formatCustomerStatus(c.status)}
                 </Badge>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <Button
@@ -499,7 +499,7 @@ export const CustomerListPage: React.FC = () => {
 
                     <td>
                       <div style={{ fontSize: '0.8125rem' }}>
-                        <span style={{ fontWeight: 600 }}>{c.tier || 'Enterprise'}</span>
+                        <span style={{ fontWeight: 600 }}>{formatCustomerTier(c.tier)}</span>
                         <div style={{ color: '#64748B' }}>{c.industry || '—'}</div>
                       </div>
                     </td>
@@ -509,7 +509,7 @@ export const CustomerListPage: React.FC = () => {
                         tone={c.status === 'Active' ? 'success' : c.status === 'At Risk' ? 'danger' : 'neutral'}
                         size="sm"
                       >
-                        {c.status || 'New Lead'}
+                        {formatCustomerStatus(c.status)}
                       </Badge>
                     </td>
 

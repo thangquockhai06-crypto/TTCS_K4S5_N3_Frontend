@@ -181,7 +181,7 @@ export const CategoryManager: React.FC = () => {
           Danh mục dùng chung hệ thống
         </h2>
         <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 0' }}>
-          Quản lý nguồn khách hàng (Lead Source) và Ngành nghề kinh doanh (Industry), hỗ trợ kéo thả/sắp xếp thứ tự và kiểm soát ràng buộc dữ liệu
+          Quản lý nguồn khách hàng và Ngành nghề kinh doanh, hỗ trợ kéo thả sắp xếp thứ tự và kiểm soát ràng buộc dữ liệu
         </p>
       </div>
 
@@ -201,7 +201,7 @@ export const CategoryManager: React.FC = () => {
             cursor: 'pointer',
           }}
         >
-          Nguồn khách hàng (Lead Sources)
+          Nguồn khách hàng
         </button>
         <button
           type="button"

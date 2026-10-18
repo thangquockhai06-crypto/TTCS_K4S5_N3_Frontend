@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Search, Eye, RefreshCw, AlertCircle } from 'lucide-react';
 import { IAuditLogItem } from '../../interfaces';
 import { sprint2Service } from '../../services/sprint2Service';
+import { formatAuditAction, formatAuditTargetType, formatAuditFieldName, getAuditActionBadgeStyle } from '../../utils/formatters';
 import { DiffViewerModal } from './DiffViewerModal';
 
 export const AuditLogViewer: React.FC = () => {
@@ -126,10 +127,12 @@ export const AuditLogViewer: React.FC = () => {
             }}
           >
             <option value="all">Tất cả đối tượng</option>
-            <option value="deal">Phễu Cơ hội (Deal)</option>
-            <option value="customer">Khách hàng (Customer)</option>
-            <option value="user">Người dùng / Phân quyền (User)</option>
-            <option value="quota">Chỉ tiêu / Doanh số (Quota)</option>
+            <option value="deal">Cơ hội bán hàng</option>
+            <option value="customer">Khách hàng</option>
+            <option value="lead">Đầu mối tiềm năng</option>
+            <option value="user">Người dùng & Phân quyền</option>
+            <option value="task">Công việc kinh doanh</option>
+            <option value="quota">Chỉ tiêu doanh số</option>
           </select>
         </div>
 
@@ -230,37 +233,33 @@ export const AuditLogViewer: React.FC = () => {
                     {log.user_email && <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>{log.user_email}</div>}
                   </td>
                   <td style={{ padding: '10px 14px' }}>
-                    <span
-                      style={{
-                        padding: '2px 8px',
-                        borderRadius: '4px',
-                        fontSize: '0.72rem',
-                        fontWeight: 600,
-                        backgroundColor:
-                          log.action === 'CREATE'
-                            ? '#dcfce7'
-                            : log.action === 'DELETE'
-                            ? '#fee2e2'
-                            : '#e0f2fe',
-                        color:
-                          log.action === 'CREATE'
-                            ? '#15803d'
-                            : log.action === 'DELETE'
-                            ? '#b91c1c'
-                            : '#0369a1',
-                      }}
-                    >
-                      {log.action}
-                    </span>
+                    {(() => {
+                      const badgeStyle = getAuditActionBadgeStyle(log.action);
+                      return (
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            padding: '3px 9px',
+                            borderRadius: '4px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            backgroundColor: badgeStyle.bg,
+                            color: badgeStyle.color,
+                          }}
+                        >
+                          {formatAuditAction(log.action)}
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td style={{ padding: '10px 14px', color: '#334155' }}>
-                    <span style={{ textTransform: 'capitalize', fontWeight: 500 }}>{log.target_type}</span>{' '}
+                    <span style={{ fontWeight: 600, color: '#1e293b' }}>{formatAuditTargetType(log.target_type)}</span>{' '}
                     <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>#{log.target_id.slice(0, 8)}</span>
                   </td>
                   <td style={{ padding: '10px 14px', color: '#475569' }}>
                     {log.field_name ? (
-                      <code style={{ backgroundColor: '#f1f5f9', padding: '1px 5px', borderRadius: '3px', fontSize: '0.75rem' }}>
-                        {log.field_name}
+                      <code style={{ backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', fontSize: '0.75rem', color: '#0f172a' }}>
+                        {formatAuditFieldName(log.field_name)}
                       </code>
                     ) : (
                       '-'

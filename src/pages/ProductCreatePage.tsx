@@ -315,8 +315,8 @@ export const ProductCreatePage: React.FC = () => {
                   onChange={(e) => handleInputChange('is_active', e.target.value === 'active')}
                   disabled={isSubmitting}
                 >
-                  <option value="active">Đang kinh doanh (Active)</option>
-                  <option value="inactive">Tạm ngừng bán (Inactive)</option>
+                  <option value="active">Đang kinh doanh</option>
+                  <option value="inactive">Tạm ngừng bán</option>
                 </select>
               </div>
             </div>

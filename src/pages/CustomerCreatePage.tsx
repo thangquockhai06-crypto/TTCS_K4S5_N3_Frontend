@@ -412,10 +412,10 @@ export const CustomerCreatePage: React.FC = () => {
                   onChange={(e) => handleInputChange('tier', e.target.value as CustomerTierType)}
                   disabled={isSubmitting}
                 >
-                  <option value="Enterprise">Enterprise (VIP / Chiến lược)</option>
-                  <option value="Mid-Market">Mid-Market (Tầm trung)</option>
-                  <option value="Growth">Growth (Tăng trưởng)</option>
-                  <option value="Startup">Startup (Khởi nghiệp / SME)</option>
+                  <option value="Enterprise">Doanh nghiệp VIP &amp; Chiến lược</option>
+                  <option value="Mid-Market">Doanh nghiệp tầm trung</option>
+                  <option value="Growth">Doanh nghiệp tăng trưởng</option>
+                  <option value="Startup">Khởi nghiệp &amp; Doanh nghiệp vừa nhỏ</option>
                 </select>
               </div>
 
@@ -430,11 +430,11 @@ export const CustomerCreatePage: React.FC = () => {
                   onChange={(e) => handleInputChange('status', e.target.value as CustomerStatusType)}
                   disabled={isSubmitting}
                 >
-                  <option value="New Lead">Tiềm năng mới (New Lead)</option>
-                  <option value="Negotiation">Đang đàm phán (Negotiation)</option>
-                  <option value="Active">Đang hợp tác (Active)</option>
-                  <option value="At Risk">Cần chú ý (At Risk)</option>
-                  <option value="Churned">Đã ngừng hợp tác (Churned)</option>
+                  <option value="New Lead">Tiềm năng mới</option>
+                  <option value="Negotiation">Đang đàm phán</option>
+                  <option value="Active">Đang hợp tác</option>
+                  <option value="At Risk">Cần chú ý</option>
+                  <option value="Churned">Đã ngừng hợp tác</option>
                 </select>
               </div>
 

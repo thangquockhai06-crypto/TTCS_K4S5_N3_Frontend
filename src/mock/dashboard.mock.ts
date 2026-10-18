@@ -67,7 +67,7 @@ export const MONTHLY_REVENUE_SERIES: ReadonlyArray<IRevenueDataPoint> = [
 
 export const PIPELINE_VELOCITY_METRICS: ReadonlyArray<IPipelineVelocityItem> = [
   {
-    stage: 'Tiếp nhận & Phân loại (New)',
+    stage: 'Tiếp nhận & Phân loại',
     count: 64,
     totalValue: 1420000,
     conversionRate: 78,

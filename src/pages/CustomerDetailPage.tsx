@@ -33,7 +33,7 @@ import {
 import { useCRMData } from '../context/CRMDataContext';
 import { useAuth } from '../hooks/useAuth';
 import { ActivityType, CustomerStatusType } from '../interfaces';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, formatCustomerTier } from '../utils/formatters';
 import styles from './CustomerDetailPage.module.css';
 
 type DetailTabType = 'overview' | 'activities' | 'notes' | 'files';
@@ -138,7 +138,7 @@ export const CustomerDetailPage: React.FC = () => {
               <Badge tone={getCustomerStatusTone(customer.status)} dot>
                 {getCustomerStatusLabel(customer.status)}
               </Badge>
-              <Badge tone="accent">{customer.tier}</Badge>
+              <Badge tone="accent">{formatCustomerTier(customer.tier)}</Badge>
             </div>
             <p className={styles.profileHero__companyLine}>
               <strong>{customer.role}</strong> tại <strong>{customer.company}</strong> ·{' '}

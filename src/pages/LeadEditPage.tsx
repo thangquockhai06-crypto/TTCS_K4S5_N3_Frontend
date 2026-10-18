@@ -416,12 +416,12 @@ export const LeadEditPage: React.FC = () => {
                     onChange={(e) => handleInputChange('source', e.target.value)}
                     disabled={isSubmitting}
                   >
-                    <option value="Website Form">Website Form</option>
-                    <option value="Facebook Ads">Facebook Ads</option>
-                    <option value="Google Ads">Google Ads</option>
-                    <option value="Giới thiệu">Giới thiệu (Referral)</option>
-                    <option value="Hội thảo">Hội thảo (Event)</option>
-                    <option value="Khác">Khác</option>
+                    <option value="Website Form">Biểu mẫu Website</option>
+                    <option value="Facebook Ads">Quảng cáo Facebook</option>
+                    <option value="Google Ads">Quảng cáo Google</option>
+                    <option value="Giới thiệu">Khách hàng giới thiệu</option>
+                    <option value="Hội thảo">Hội thảo &amp; Sự kiện</option>
+                    <option value="Khác">Nguồn khác</option>
                   </select>
                 </div>
               </div>
