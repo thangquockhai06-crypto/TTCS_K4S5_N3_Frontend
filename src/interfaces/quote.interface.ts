@@ -98,7 +98,11 @@ export interface IQuote {
   parentVersionId?: string; // ID phiên bản cha liền trước
   changeSummary?: string; // Lý do sửa đổi khi tạo phiên bản mới
   versionLabel?: string; // Tên nhãn phiên bản, vd: v1.0, v2.0
+  // S7-04: Chuyển Báo giá thành Hợp đồng
+  contractId?: string; // ID hợp đồng đã chuyển đổi
+  contractNumber?: string; // Số hợp đồng kinh tế liên kết
 }
+
 
 export interface ICreateQuoteDTO {
   dealId: string;

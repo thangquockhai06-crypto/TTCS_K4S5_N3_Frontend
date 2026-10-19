@@ -61,6 +61,16 @@ export interface IDeal {
   createdAt?: string;
 }
 
+export interface IContractDealUpdate {
+  dealId: string;
+  stage: 'Won';
+  value: number;
+  probability: 100;
+  closeDate: string;
+}
+
+export const CONTRACT_DEAL_UPDATED_EVENT = 'nexus:contract-deal-updated';
+
 export interface IDealStageColumn {
   id: DealStageType;
   title: string;

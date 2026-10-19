@@ -9,11 +9,66 @@ import {
   IDeal,
   INotificationItem,
 } from '../interfaces';
+import {
+  CONTRACT_DEAL_UPDATED_EVENT,
+  IContractDealUpdate,
+} from '../interfaces/deal.interface';
 import { MOCK_CUSTOMERS } from '../mock/customers';
 import { INITIAL_NOTIFICATIONS } from '../mock/dashboard.mock';
 import { INITIAL_DEALS } from '../mock/deals';
 import { createAvatarSvgDataUri } from '../utils/formatters';
 import { showGlobalToast } from './ToastContext';
+
+const DEALS_OVERRIDE_STORAGE_KEY = 'nexus_deals_override';
+
+function isContractDealUpdate(value: unknown): value is IContractDealUpdate {
+  if (typeof value !== 'object' || value === null) return false;
+  const update = value as Partial<IContractDealUpdate>;
+  return (
+    typeof update.dealId === 'string' &&
+    update.stage === 'Won' &&
+    typeof update.value === 'number' &&
+    Number.isFinite(update.value) &&
+    update.probability === 100 &&
+    typeof update.closeDate === 'string'
+  );
+}
+
+function readDealOverrides(): Record<string, Omit<IContractDealUpdate, 'dealId'>> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.localStorage.getItem(DEALS_OVERRIDE_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+      throw new Error('Định dạng dữ liệu đồng bộ cơ hội không hợp lệ.');
+    }
+
+    const overrides: Record<string, Omit<IContractDealUpdate, 'dealId'>> = {};
+    Object.entries(parsed).forEach(([dealId, value]) => {
+      if (typeof value !== 'object' || value === null) return;
+      const update = value as Partial<Omit<IContractDealUpdate, 'dealId'>>;
+      if (
+        update.stage === 'Won' &&
+        typeof update.value === 'number' &&
+        Number.isFinite(update.value) &&
+        update.probability === 100 &&
+        typeof update.closeDate === 'string'
+      ) {
+        overrides[dealId] = {
+          stage: update.stage,
+          value: update.value,
+          probability: update.probability,
+          closeDate: update.closeDate,
+        };
+      }
+    });
+    return overrides;
+  } catch (error: unknown) {
+    console.error('Không thể đọc dữ liệu đồng bộ cơ hội đã lưu:', error);
+    return {};
+  }
+}
 
 export interface ICRMDataContext {
   customers: ICustomer[];
@@ -44,7 +99,22 @@ interface ICRMDataProviderProps {
 
 export const CRMDataProvider: React.FC<ICRMDataProviderProps> = ({ children }) => {
   const [customers, setCustomers] = useState<ICustomer[]>(() => MOCK_CUSTOMERS);
-  const [deals, setDeals] = useState<IDeal[]>(() => INITIAL_DEALS);
+  const [deals, setDeals] = useState<IDeal[]>(() => {
+    const overrides = readDealOverrides();
+    return INITIAL_DEALS.map((deal) => {
+      const override = overrides[deal.id];
+      return override
+        ? {
+            ...deal,
+            stage: override.stage,
+            value: override.value,
+            actualValue: override.value,
+            probability: override.probability,
+            closeDate: override.closeDate,
+          }
+        : deal;
+    });
+  });
   const [notifications, setNotifications] = useState<INotificationItem[]>(
     () => [...INITIAL_NOTIFICATIONS]
   );
@@ -60,6 +130,32 @@ export const CRMDataProvider: React.FC<ICRMDataProviderProps> = ({ children }) =
     document.documentElement.setAttribute('data-density', appearance.density);
     document.documentElement.style.setProperty('--color-primary', appearance.accentColor);
   }, [appearance]);
+
+  useEffect(() => {
+    const handleContractDealUpdate = (event: Event): void => {
+      if (!(event instanceof CustomEvent)) return;
+      const detail: unknown = (event as CustomEvent<unknown>).detail;
+      if (!isContractDealUpdate(detail)) return;
+      const update = detail;
+      setDeals((previous) =>
+        previous.map((deal) =>
+          deal.id === update.dealId
+            ? {
+                ...deal,
+                stage: update.stage,
+                value: update.value,
+                actualValue: update.value,
+                probability: update.probability,
+                closeDate: update.closeDate,
+              }
+            : deal
+        )
+      );
+    };
+
+    window.addEventListener(CONTRACT_DEAL_UPDATED_EVENT, handleContractDealUpdate);
+    return () => window.removeEventListener(CONTRACT_DEAL_UPDATED_EVENT, handleContractDealUpdate);
+  }, []);
 
   const addCustomer = useCallback((dto: CreateCustomerDTO): ICustomer => {
     const newId = `cust-${String(Date.now()).slice(-4)}`;

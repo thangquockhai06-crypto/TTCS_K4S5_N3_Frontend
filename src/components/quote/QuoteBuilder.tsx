@@ -22,6 +22,7 @@ import {
   ArrowLeftRight,
   GitBranch,
   Check,
+  FileCheck2,
 } from 'lucide-react';
 import { IQuote } from '../../interfaces/quote.interface';
 import { IDeal } from '../../interfaces/deal.interface';
@@ -29,7 +30,9 @@ import { useQuoteBuilder } from '../../hooks/useQuoteBuilder';
 import { formatCurrency, formatVndCurrency } from '../../utils/formatters';
 import { Button, Modal, LoadingSkeleton, Badge } from '../common';
 import { QuoteDiffViewer } from './QuoteDiffViewer';
+import { ConvertToContractModal } from '../contract/ConvertToContractModal';
 import styles from './QuoteBuilder.module.css';
+
 
 export interface IQuoteBuilderProps {
   dealId?: string;
@@ -66,6 +69,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
     switchVersion,
     createNewVersion,
     setEffectiveVersion,
+    reload,
   } = useQuoteBuilder({ dealId, initialDeal });
 
   // Modals
@@ -75,6 +79,8 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
   const [isNewVersionModalOpen, setIsNewVersionModalOpen] = useState<boolean>(false);
   const [newVersionReason, setNewVersionReason] = useState<string>('');
   const [isCreatingNewVersion, setIsCreatingNewVersion] = useState<boolean>(false);
+  const [isContractModalOpen, setIsContractModalOpen] = useState<boolean>(false);
+
 
 
   if (isLoading) {
@@ -274,6 +280,11 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
                     ? 'Đã chấp nhận'
                     : 'Bị từ chối'}
                 </Badge>
+                {quote.contractNumber && (
+                  <Badge tone="success" size="sm">
+                    HĐ: {quote.contractNumber}
+                  </Badge>
+                )}
                 {hasUnsavedChanges && (
                   <span style={{ color: '#D97706', fontSize: '0.8125rem', fontWeight: 600 }}>
                     ● Có thay đổi chưa lưu
@@ -284,6 +295,23 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
           </div>
 
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+            {/* S7-04: Nút Chuyển Báo giá thành Hợp đồng (ConvertToContractModal) */}
+            {(quote.status === 'approved' || quote.status === 'sent' || quote.status === 'accepted') && (
+              <Button
+                type="button"
+                variant={quote.contractNumber ? 'secondary' : 'primary'}
+                size="sm"
+                leftIcon={<FileCheck2 size={15} />}
+                onClick={() => setIsContractModalOpen(true)}
+                disabled={Boolean(quote.contractId || quote.contractNumber)}
+                title={quote.contractId || quote.contractNumber
+                  ? 'Báo giá này đã được chuyển thành hợp đồng.'
+                  : 'Chuyển báo giá được duyệt/phát hành thành hợp đồng kinh tế và tự động đóng thắng Deal (S7-04)'}
+              >
+                {quote.contractNumber ? `Hợp đồng: ${quote.contractNumber}` : 'Chuyển thành Hợp đồng'}
+              </Button>
+            )}
+
             {/* Nút Đặt làm hiệu lực nếu phiên bản này chưa là hiệu lực và đã gửi/duyệt */}
             {!quote.isEffective && (quote.status === 'approved' || quote.status === 'sent') && (
               <Button
@@ -336,6 +364,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
               Xem trước / In báo giá
             </Button>
           </div>
+
         </div>
 
         {/* Thông tin khách hàng & bối cảnh cơ hội kế thừa */}
@@ -932,9 +961,27 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
                           ? 'Gửi Trưởng nhóm duyệt'
                           : 'Kiểm tra & duyệt báo giá'}
             </Button>
+
+            {/* S7-04: Nút Chuyển Báo giá thành Hợp đồng ở Sticky Action Bar */}
+            {(quote.status === 'approved' || quote.status === 'sent' || quote.status === 'accepted') && (
+              <Button
+                type="button"
+                variant={quote.contractNumber ? 'secondary' : 'primary'}
+                size="md"
+                leftIcon={<FileCheck2 size={16} />}
+                onClick={() => setIsContractModalOpen(true)}
+                disabled={Boolean(quote.contractId || quote.contractNumber)}
+                title={quote.contractId || quote.contractNumber
+                  ? 'Báo giá này đã được chuyển thành hợp đồng.'
+                  : 'Chuyển báo giá này thành hợp đồng kinh tế và tự động đóng thắng Deal (S7-04)'}
+              >
+                {quote.contractNumber ? `Hợp đồng: ${quote.contractNumber}` : 'Chuyển thành Hợp đồng'}
+              </Button>
+            )}
           </div>
         </div>
       </section>
+
 
       {/* ====================================================================
           7. Modal Chọn Sản Phẩm Từ Danh Mục (Product Catalog Modal)
@@ -1222,7 +1269,28 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
           </div>
         </div>
       </Modal>
+
+      {/* ====================================================================
+          11. S7-04: Modal Chuyển Báo Giá Thành Hợp Đồng (ConvertToContractModal)
+          ==================================================================== */}
+      <ConvertToContractModal
+        isOpen={isContractModalOpen}
+        onClose={() => setIsContractModalOpen(false)}
+        quote={quote}
+        onSuccess={(contract) => {
+          if (quote.dealId) {
+            reload(quote.dealId);
+          }
+          if (onSuccess) {
+            onSuccess({
+              ...quote,
+              status: 'accepted',
+              contractId: contract.id,
+              contractNumber: contract.contractNumber,
+            });
+          }
+        }}
+      />
     </div>
   );
 };
-

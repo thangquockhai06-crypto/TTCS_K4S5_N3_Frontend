@@ -44,11 +44,8 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
     setLoadError(null);
     setQuote(null);
     try {
-      // 1. Tải danh sách versions và bản nháp
-      const versionsList = quoteService.getQuoteVersions(targetDealId);
-      const existingDraft = quoteService.getDraftByDealId(targetDealId);
-
-      // 2. Tải thông tin Deal
+      // 1. Tải thông tin Deal trước khi kiểm tra bộ nhớ để tránh tạo trùng báo giá
+      // khi React StrictMode chạy đồng thời hai lượt khởi tạo.
       let resolvedDeal: IDeal | null = initialDeal?.id === targetDealId ? initialDeal : null;
       if (!resolvedDeal) {
         try {
@@ -71,6 +68,10 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
       }
 
       setDeal(resolvedDeal);
+
+      // Một lượt khởi tạo khác có thể đã lưu báo giá trong lúc chờ API Deal.
+      const versionsList = quoteService.getQuoteVersions(targetDealId);
+      const existingDraft = quoteService.getDraftByDealId(targetDealId);
 
       if (versionsList.length > 0) {
         // Đã có phiên bản: ưu tiên nạp phiên bản nháp đang sửa hoặc phiên bản hiệu lực
@@ -470,4 +471,3 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
     reload: loadDealAndQuote,
   };
 }
-

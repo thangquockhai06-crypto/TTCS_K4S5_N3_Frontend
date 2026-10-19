@@ -1,0 +1,362 @@
+/* S7-04: ConvertToContractModal.module.css
+ * BEM & CSS Modules chuẩn hệ thống Nexus CRM
+ * Form chuyển Báo giá thành Hợp đồng, kế thừa dòng hàng và tự động đóng thắng Deal
+ * Giao diện to rõ, đồng bộ Dashboard & QuoteBuilder, chống đè nút, responsive từ 360px
+ */
+
+.modalContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   1. Guideline & Persona Banner
+   ========================================================================== */
+.accountantBanner {
+  background: linear-gradient(135deg, #EFF6FF 0%, #F0FDF4 100%);
+  border: 1.5px solid #BFDBFE;
+  border-left: 6px solid #2563EB;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  color: #1E3A8A;
+  box-sizing: border-box;
+}
+
+.accountantBannerIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background-color: #DBEAFE;
+  color: #1D4ED8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.accountantBannerContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.accountantBannerTitle {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #1E40AF;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.accountantBannerDesc {
+  font-size: 0.875rem;
+  color: #334155;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ==========================================================================
+   2. Two-Column Form Layout
+   ========================================================================== */
+.formGrid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 22px;
+  align-items: start;
+}
+
+@media (max-width: 992px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+.formCol {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.sectionBox {
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-sizing: border-box;
+}
+
+.sectionTitle {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1.5px solid #F1F5F9;
+}
+
+/* Field Groups */
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.requiredStar {
+  color: #DC2626;
+  font-weight: 800;
+}
+
+.textInput {
+  width: 100%;
+  padding: 9px 12px;
+  font-size: 0.875rem;
+  color: #0F172A;
+  background-color: #FFFFFF;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 8px;
+  outline: none;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+.textInput:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.textInput--error {
+  border-color: #DC2626;
+  background-color: #FEF2F2;
+}
+
+.textInput--error:focus {
+  border-color: #DC2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}
+
+.textareaInput {
+  width: 100%;
+  padding: 9px 12px;
+  font-size: 0.875rem;
+  color: #0F172A;
+  background-color: #FFFFFF;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 8px;
+  outline: none;
+  font-family: inherit;
+  resize: vertical;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+.textareaInput:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.dateRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 500px) {
+  .dateRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.contractNumberRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.uniqueCheckSuccess {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #059669;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.uniqueCheckError {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #DC2626;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+/* ==========================================================================
+   3. Inherited Items & Financial Breakdown (Right Column)
+   ========================================================================== */
+.inheritedItemsBox {
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-sizing: border-box;
+}
+
+.customerInfoCard {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.8125rem;
+}
+
+.customerName {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.customerTaxRow {
+  color: #64748B;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.itemsTableScroll {
+  width: 100%;
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  background: #FFFFFF;
+}
+
+.itemsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.itemsTable th {
+  padding: 8px 10px;
+  background: #F1F5F9;
+  color: #475569;
+  font-weight: 700;
+  text-align: left;
+  border-bottom: 1px solid #CBD5E1;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.itemsTable td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #F1F5F9;
+  vertical-align: middle;
+}
+
+.financeSummaryBox {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.875rem;
+}
+
+.financeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #475569;
+}
+
+.grandTotalRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 2px solid #0F172A;
+  padding-top: 8px;
+  margin-top: 2px;
+  font-size: 1.0625rem;
+  font-weight: 800;
+  color: #1E40AF;
+}
+
+.wonNoticeBox {
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #065F46;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.wonNoticeBox strong {
+  color: #047857;
+}
+
+/* ==========================================================================
+   4. Modal Footer
+   ========================================================================== */
+.modalFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1.5px solid #E2E8F0;
+}
+
+.footerLeftHint {
+  font-size: 0.8125rem;
+  color: #64748B;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.footerRightActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

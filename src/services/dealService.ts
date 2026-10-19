@@ -22,6 +22,11 @@ export interface IGetDealsParams {
   stalled_only?: boolean;
 }
 
+export interface IMoveDealStageUpdates {
+  value?: number;
+  probability?: number;
+}
+
 class DealService {
   async getDeals(params?: IGetDealsParams): Promise<IDeal[]> {
     const response = await axiosInstance.get<IDeal[]>('/deals', { params });
@@ -76,8 +81,17 @@ class DealService {
     return response.data;
   }
 
-  async moveDealStage(id: string, stage: string, override: boolean = false): Promise<IDeal> {
-    const response = await axiosInstance.patch<IDeal>(`/deals/${id}/stage`, { stage, override });
+  async moveDealStage(
+    id: string,
+    stage: string,
+    override: boolean = false,
+    updates?: IMoveDealStageUpdates
+  ): Promise<IDeal> {
+    const response = await axiosInstance.patch<IDeal>(`/deals/${id}/stage`, {
+      stage,
+      override,
+      ...updates,
+    });
     return response.data;
   }
 
