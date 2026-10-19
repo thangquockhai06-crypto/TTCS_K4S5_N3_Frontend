@@ -93,6 +93,11 @@ export interface IQuote {
   updatedAt: string;
   createdBy: string;
   creatorRole: string;
+  // S7-03: Quản lý phiên bản Báo giá
+  isEffective?: boolean; // Chỉ một phiên bản ở trạng thái đang hiệu lực tại một thời điểm
+  parentVersionId?: string; // ID phiên bản cha liền trước
+  changeSummary?: string; // Lý do sửa đổi khi tạo phiên bản mới
+  versionLabel?: string; // Tên nhãn phiên bản, vd: v1.0, v2.0
 }
 
 export interface ICreateQuoteDTO {
@@ -133,3 +138,76 @@ export interface IProductCatalogItem {
   description?: string;
   defaultVatRate: number;
 }
+
+/**
+ * S7-03: Quản lý phiên bản Báo giá & So sánh Diff Interfaces
+ */
+export type DiffChangeType = 'unchanged' | 'added' | 'removed' | 'modified';
+
+export interface IQuoteVersionMeta {
+  id: string;
+  quoteNumber: string;
+  version: number;
+  dealId: string;
+  status: QuoteStatusType;
+  isEffective: boolean;
+  changeSummary?: string;
+  grandTotal: number;
+  totalDiscountPercent: number;
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface IQuoteLineItemDiff {
+  id: string;
+  productId?: string;
+  productName: string;
+  unit: string;
+  changeType: DiffChangeType;
+  oldItem?: IQuoteLineItem;
+  newItem?: IQuoteLineItem;
+  quantityDiff: number;
+  unitPriceDiff: number;
+  discountDiff: number;
+  lineTotalDiff: number;
+}
+
+export interface IQuoteTermsDiff {
+  validUntilChanged: boolean;
+  oldValidUntil: string;
+  newValidUntil: string;
+  paymentTermsChanged: boolean;
+  oldPaymentTerms: string;
+  newPaymentTerms: string;
+  deliveryTermsChanged: boolean;
+  oldDeliveryTerms: string;
+  newDeliveryTerms: string;
+  notesChanged: boolean;
+  oldNotes?: string;
+  newNotes?: string;
+}
+
+export interface IQuoteComparison {
+  baseQuote: IQuote;
+  targetQuote: IQuote;
+  subtotalDiff: number;
+  discountAmountDiff: number;
+  discountPercentDiff: number;
+  vatAmountDiff: number;
+  grandTotalDiff: number;
+  lineItemDiffs: IQuoteLineItemDiff[];
+  termsDiff: IQuoteTermsDiff;
+  totalAddedItems: number;
+  totalRemovedItems: number;
+  totalModifiedItems: number;
+  totalUnchangedItems: number;
+  hasAnyDifference: boolean;
+}
+
+export interface ICreateQuoteVersionDTO {
+  baseQuoteId: string;
+  changeSummary: string;
+  createdBy?: string;
+  creatorRole?: string;
+}
+

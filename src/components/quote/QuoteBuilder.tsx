@@ -19,12 +19,16 @@ import {
   Layers,
   CheckCircle2,
   AlertCircle,
+  ArrowLeftRight,
+  GitBranch,
+  Check,
 } from 'lucide-react';
 import { IQuote } from '../../interfaces/quote.interface';
 import { IDeal } from '../../interfaces/deal.interface';
 import { useQuoteBuilder } from '../../hooks/useQuoteBuilder';
 import { formatCurrency, formatVndCurrency } from '../../utils/formatters';
 import { Button, Modal, LoadingSkeleton, Badge } from '../common';
+import { QuoteDiffViewer } from './QuoteDiffViewer';
 import styles from './QuoteBuilder.module.css';
 
 export interface IQuoteBuilderProps {
@@ -45,6 +49,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
   const {
     deal,
     quote,
+    versions,
     isLoading,
     isSaving,
     hasUnsavedChanges,
@@ -58,11 +63,19 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
     submitQuote,
     sendQuote,
     resetToInitial,
+    switchVersion,
+    createNewVersion,
+    setEffectiveVersion,
   } = useQuoteBuilder({ dealId, initialDeal });
 
   // Modals
   const [isCatalogModalOpen, setIsCatalogModalOpen] = useState<boolean>(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState<boolean>(false);
+  const [isDiffModalOpen, setIsDiffModalOpen] = useState<boolean>(false);
+  const [isNewVersionModalOpen, setIsNewVersionModalOpen] = useState<boolean>(false);
+  const [newVersionReason, setNewVersionReason] = useState<string>('');
+  const [isCreatingNewVersion, setIsCreatingNewVersion] = useState<boolean>(false);
+
 
   if (isLoading) {
     return (
@@ -122,6 +135,20 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
     }
   };
 
+  const handleCreateNewVersionSubmit = async () => {
+    if (!newVersionReason.trim()) return;
+    setIsCreatingNewVersion(true);
+    try {
+      const created = await createNewVersion(newVersionReason.trim());
+      if (created) {
+        setIsNewVersionModalOpen(false);
+        setNewVersionReason('');
+      }
+    } finally {
+      setIsCreatingNewVersion(false);
+    }
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -178,6 +205,45 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
                 <span>Mã báo giá:</span>
                 <span className={styles.quoteNumberBadge}>{quote.quoteNumber}</span>
                 <span>·</span>
+
+                {/* S7-03: Dropdown chọn version báo giá */}
+                <div className={styles.versionDropdownWrap}>
+                  <span>Phiên bản:</span>
+                  <select
+                    className={styles.versionSelectHeader}
+                    value={quote.id}
+                    onChange={(e) => {
+                      const selected = versions.find((v) => v.id === e.target.value);
+                      if (selected) switchVersion(selected);
+                    }}
+                    title="Chọn phiên bản báo giá để xem hoặc soạn thảo"
+                    aria-label="Dropdown chọn version báo giá"
+                  >
+                    {versions.map((ver) => (
+                      <option key={ver.id} value={ver.id}>
+                        v{ver.version} ({ver.versionLabel || `Bản v${ver.version}`}) —{' '}
+                        {ver.status === 'draft'
+                          ? 'Bản nháp'
+                          : ver.status === 'sent'
+                          ? 'Đã gửi'
+                          : ver.status === 'approved'
+                          ? 'Đã duyệt'
+                          : 'Lưu trữ'}
+                        {ver.isEffective ? ' ★ Đang hiệu lực' : ''}
+                      </option>
+                    ))}
+                  </select>
+                  {quote.isEffective && (
+                    <span
+                      className={styles.versionEffectiveBadge}
+                      title="Chỉ một phiên bản ở trạng thái đang hiệu lực tại một thời điểm: Đây là phiên bản đang có hiệu lực pháp lý"
+                    >
+                      <Check size={12} /> Đang hiệu lực
+                    </span>
+                  )}
+                </div>
+
+                <span>·</span>
                 <span>Khởi tạo từ Cơ hội: <strong>{quote.dealTitle}</strong></span>
                 <span>·</span>
                 <Badge
@@ -217,7 +283,48 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+            {/* Nút Đặt làm hiệu lực nếu phiên bản này chưa là hiệu lực và đã gửi/duyệt */}
+            {!quote.isEffective && (quote.status === 'approved' || quote.status === 'sent') && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                leftIcon={<CheckCircle2 size={15} />}
+                onClick={() => setEffectiveVersion(quote.id)}
+                title="Chỉ một phiên bản ở trạng thái đang hiệu lực tại một thời điểm: Bấm để đặt phiên bản này làm hiệu lực duy nhất"
+              >
+                Đặt làm hiệu lực
+              </Button>
+            )}
+
+            {/* S7-03: Nút mở giao diện QuoteDiffViewer so sánh 2 phiên bản cạnh nhau */}
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              leftIcon={<ArrowLeftRight size={15} />}
+              onClick={() => setIsDiffModalOpen(true)}
+              title="Mở giao diện QuoteDiffViewer.tsx để so sánh 2 phiên bản cạnh nhau"
+            >
+              So sánh phiên bản ({versions.length})
+            </Button>
+
+            {/* S7-03: Nút Tạo phiên bản mới khi muốn sửa sau khi đã gửi */}
+            <Button
+              type="button"
+              variant={isReadOnly ? 'primary' : 'secondary'}
+              size="sm"
+              leftIcon={<GitBranch size={15} />}
+              onClick={() => {
+                setNewVersionReason('');
+                setIsNewVersionModalOpen(true);
+              }}
+              title="Mỗi lần sửa sau khi đã gửi sẽ tạo phiên bản mới, phiên bản cũ được giữ nguyên 100%"
+            >
+              + Tạo phiên bản mới (v{versions.length + 1})
+            </Button>
+
             <Button
               type="button"
               variant="secondary"
@@ -233,6 +340,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
 
         {/* Thông tin khách hàng & bối cảnh cơ hội kế thừa */}
         <div className={styles.contextGrid}>
+
           <div className={styles.contextCol}>
             <div className={styles.contextRow}>
               <span className={styles.contextLabel}>
@@ -274,6 +382,44 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
           </div>
         </div>
       </header>
+
+      {/* S7-03: Cảnh báo trạng thái khóa phiên bản cũ khi đã phát hành/gửi */}
+      {isReadOnly && (
+        <div className={styles.readOnlyNoticeBanner} role="status">
+          <div className={styles.readOnlyNoticeText}>
+            <ShieldAlert size={22} style={{ flexShrink: 0 }} />
+            <span>
+              Bạn đang xem lại <strong>Phiên bản v{quote.version}</strong> (Trạng thái:{' '}
+              <strong>
+                {quote.status === 'sent'
+                  ? 'Đã phát hành gửi khách hàng'
+                  : quote.status === 'approved'
+                  ? 'Đã được duyệt'
+                  : quote.status === 'accepted'
+                  ? 'Đã được khách chấp nhận'
+                  : 'Bản lưu trữ'}
+              </strong>
+              {quote.isEffective ? ' · Đang hiệu lực' : ''}). Phiên bản này được khóa để bảo toàn cam kết với khách hàng ở lần gửi trước.
+            </span>
+          </div>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              leftIcon={<GitBranch size={15} />}
+              onClick={() => {
+                setNewVersionReason('');
+                setIsNewVersionModalOpen(true);
+              }}
+              title="Mỗi lần sửa sau khi đã gửi sẽ tạo phiên bản mới, phiên bản cũ được giữ nguyên 100%"
+            >
+              Tạo phiên bản mới (v{versions.length + 1})
+            </Button>
+          </div>
+        </div>
+      )}
+
 
       {/* ====================================================================
           2. Trạng thái phê duyệt và cảnh báo ngưỡng
@@ -728,6 +874,23 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
               {isSaving ? 'Đang lưu...' : 'Lưu nháp báo giá'}
             </Button>
 
+            {isReadOnly && (
+              <Button
+                type="button"
+                variant="primary"
+                size="md"
+                leftIcon={<GitBranch size={16} />}
+                onClick={() => {
+                  setNewVersionReason('');
+                  setIsNewVersionModalOpen(true);
+                }}
+                title="Mỗi lần sửa sau khi đã gửi sẽ tạo phiên bản mới, phiên bản cũ được giữ nguyên 100%"
+              >
+                + Tạo phiên bản mới (v{versions.length + 1})
+              </Button>
+            )}
+
+
             <Button
               type="button"
               variant="primary"
@@ -969,6 +1132,97 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
           </Button>
         </div>
       </Modal>
+
+      {/* ====================================================================
+          9. S7-03: Modal Giao Diện QuoteDiffViewer So Sánh 2 Phiên Bản Cạnh Nhau
+          ==================================================================== */}
+      <Modal
+        isOpen={isDiffModalOpen}
+        onClose={() => setIsDiffModalOpen(false)}
+        title="Đối Chiếu &amp; So Sánh Phiên Bản Báo Giá (QuoteDiffViewer)"
+        subtitle={`Mã báo giá: ${quote.quoteNumber} · Khách hàng: ${quote.customerCompany || quote.customerName}`}
+        maxWidth="lg"
+      >
+        <QuoteDiffViewer
+          dealId={quote.dealId}
+          initialBaseVersionId={versions.length > 1 ? versions[versions.length - 2].id : versions[0]?.id}
+          initialTargetVersionId={quote.id}
+          onClose={() => setIsDiffModalOpen(false)}
+          onSelectVersion={(v) => {
+            switchVersion(v);
+            setIsDiffModalOpen(false);
+          }}
+        />
+      </Modal>
+
+      {/* ====================================================================
+          10. S7-03: Modal Tạo Phiên Bản Báo Giá Mới (Fork Revision)
+          ==================================================================== */}
+      <Modal
+        isOpen={isNewVersionModalOpen}
+        onClose={() => setIsNewVersionModalOpen(false)}
+        title="Tạo Phiên Bản Báo Giá Mới"
+        subtitle={`Kế thừa từ Phiên bản v${quote.version} (${quote.quoteNumber})`}
+        maxWidth="md"
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setIsNewVersionModalOpen(false)}
+              title="Hủy bỏ không tạo phiên bản mới"
+            >
+              Hủy
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              leftIcon={<GitBranch size={15} />}
+              disabled={!newVersionReason.trim() || isCreatingNewVersion}
+              isLoading={isCreatingNewVersion}
+              onClick={handleCreateNewVersionSubmit}
+              title="Xác nhận tạo phiên bản mới; phiên bản cũ giữ nguyên 100%"
+            >
+              Tạo phiên bản v{versions.length + 1}
+            </Button>
+          </div>
+        }
+      >
+        <div className={styles.newVersionModalForm}>
+          <div className={styles.newVersionModalNote}>
+            <strong>Quy tắc cam kết:</strong> Mỗi lần sửa sau khi đã gửi sẽ tạo phiên bản mới (v
+            {versions.length + 1}) dạng bản nháp để bạn chỉnh sửa. Phiên bản cũ (v{quote.version})
+            cùng toàn bộ dữ liệu giá và cam kết với khách hàng ở lần gửi trước sẽ được{' '}
+            <strong>giữ nguyên 100%</strong>.
+          </div>
+
+          <div>
+            <label
+              htmlFor="new-version-reason"
+              style={{
+                display: 'block',
+                fontSize: '0.875rem',
+                fontWeight: 700,
+                color: '#334155',
+                marginBottom: 8,
+              }}
+            >
+              Lý do sửa đổi / Tạo phiên bản mới <span style={{ color: '#DC2626' }}>*</span>
+            </label>
+            <textarea
+              id="new-version-reason"
+              className={styles.newVersionTextarea}
+              rows={4}
+              value={newVersionReason}
+              onChange={(e) => setNewVersionReason(e.target.value)}
+              placeholder="Ví dụ: Khách hàng yêu cầu tăng số lượng user, giảm giá thêm 3% và đổi điều khoản thanh toán sang 30 ngày..."
+              autoFocus
+              title="Nhập lý do tạo phiên bản mới"
+            />
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
+

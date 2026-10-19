@@ -6,7 +6,12 @@ import {
   QuoteApprovalActionType,
   QuoteApprovalLevelType,
   QuoteStatusType,
+  IQuoteComparison,
+  IQuoteLineItemDiff,
+  IQuoteTermsDiff,
+  DiffChangeType,
 } from '../interfaces/quote.interface';
+
 import { IDeal } from '../interfaces/deal.interface';
 
 const QUOTES_STORAGE_KEY = 'nexus_quotes_master_list';
@@ -647,6 +652,345 @@ class QuoteService {
       updatedAt: now,
     });
   }
+
+  // =========================================================================
+  // S7-03: Quản lý phiên bản Báo giá & So sánh Diff (Quote Version Management)
+  // =========================================================================
+
+  /**
+   * Lấy danh sách toàn bộ các phiên bản của một báo giá theo dealId
+   */
+  public getQuoteVersions(dealId: string): IQuote[] {
+    if (typeof window === 'undefined') return [];
+    try {
+      const storageKey = `nexus_quote_versions_${dealId}`;
+      const raw = window.localStorage.getItem(storageKey);
+      let list: IQuote[] = [];
+
+      if (raw) {
+        const parsed: unknown = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.every(isStoredQuote)) {
+          list = parsed.map((q) => this.recalculateQuote(q));
+        }
+      }
+
+      if (list.length === 0) {
+        // Fallback: Kiểm tra xem đã có bản nháp hoặc báo giá master chưa
+        const existingDraft = this.getDraftByDealId(dealId);
+        if (existingDraft) {
+          const v1: IQuote = {
+            ...existingDraft,
+            version: existingDraft.version || 1,
+            isEffective: true,
+            versionLabel: existingDraft.versionLabel || 'v1.0 (Ban đầu)',
+          };
+          list = [v1];
+          window.localStorage.setItem(storageKey, JSON.stringify(list));
+        }
+      }
+
+      // Đảm bảo nguyên tắc: "Chỉ một phiên bản ở trạng thái đang hiệu lực tại một thời điểm"
+      const effectiveCount = list.filter((q) => q.isEffective).length;
+      if (effectiveCount !== 1 && list.length > 0) {
+        let targetIndex = list.findIndex((q) => q.status === 'sent' || q.status === 'approved');
+        if (targetIndex === -1) targetIndex = list.length - 1;
+        list = list.map((q, idx) => ({ ...q, isEffective: idx === targetIndex }));
+        window.localStorage.setItem(storageKey, JSON.stringify(list));
+      }
+
+      return list.sort((a, b) => a.version - b.version);
+    } catch (err: unknown) {
+      console.error('Lỗi khi đọc danh sách phiên bản báo giá:', err);
+      return [];
+    }
+  }
+
+  /**
+   * Lưu hoặc cập nhật một phiên bản báo giá cụ thể
+   */
+  public saveVersion(quote: IQuote): IQuote {
+    const recalculated = this.recalculateQuote({
+      ...quote,
+      updatedAt: new Date().toISOString(),
+    });
+
+    if (typeof window === 'undefined') return recalculated;
+
+    try {
+      const storageKey = `nexus_quote_versions_${recalculated.dealId}`;
+      const versions = this.getQuoteVersions(recalculated.dealId);
+      const existingIdx = versions.findIndex((v) => v.id === recalculated.id);
+
+      let updatedList: IQuote[];
+      if (existingIdx >= 0) {
+        updatedList = versions.map((v) => (v.id === recalculated.id ? recalculated : v));
+      } else {
+        updatedList = [...versions, recalculated];
+      }
+
+      // Nếu phiên bản này được đánh dấu isEffective, cập nhật tất cả các phiên bản khác thành isEffective: false
+      if (recalculated.isEffective) {
+        updatedList = updatedList.map((v) => ({
+          ...v,
+          isEffective: v.id === recalculated.id,
+        }));
+      }
+
+      window.localStorage.setItem(storageKey, JSON.stringify(updatedList));
+
+      // Cập nhật cả storage draft nếu là phiên bản đang hiệu lực hoặc duy nhất
+      if (recalculated.isEffective || updatedList.length === 1) {
+        this.saveDraft(recalculated);
+      }
+    } catch (err: unknown) {
+      console.error('Lỗi khi lưu phiên bản báo giá:', err);
+    }
+
+    return recalculated;
+  }
+
+  /**
+   * Tạo phiên bản mới từ một báo giá đã có (Mỗi lần sửa sau khi đã gửi sẽ tạo phiên bản mới, phiên bản cũ được giữ nguyên)
+   */
+  public createNewVersion(
+    baseQuoteId: string,
+    changeSummary: string,
+    actorName?: string,
+    actorRole?: string
+  ): IQuote {
+    let baseQuote: IQuote | null = null;
+    const allQuotes = this.getAllQuotes();
+    baseQuote = allQuotes.find((q) => q.id === baseQuoteId) || null;
+
+    if (!baseQuote) {
+      for (const q of allQuotes) {
+        const vs = this.getQuoteVersions(q.dealId);
+        const match = vs.find((v) => v.id === baseQuoteId);
+        if (match) {
+          baseQuote = match;
+          break;
+        }
+      }
+    }
+
+    if (!baseQuote) {
+      throw new Error('Không tìm thấy báo giá gốc để tạo phiên bản mới.');
+    }
+
+    const currentVersions = this.getQuoteVersions(baseQuote.dealId);
+    const maxVersion = currentVersions.reduce((max, v) => Math.max(max, v.version), baseQuote.version);
+    const nextVersionNum = maxVersion + 1;
+
+    const now = new Date().toISOString();
+    const clonedItems: IQuoteLineItem[] = baseQuote.items.map((item, idx) => ({
+      ...item,
+      id: `item-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
+    }));
+
+    const newVersionQuote: IQuote = {
+      ...baseQuote,
+      id: `quote-${baseQuote.dealId}-v${nextVersionNum}-${Date.now()}`,
+      version: nextVersionNum,
+      versionLabel: `v${nextVersionNum}.0`,
+      status: 'draft',
+      // Phiên bản cũ vẫn đang hiệu lực cho đến khi phiên bản mới được gửi hoặc kích hoạt
+      isEffective: false,
+      parentVersionId: baseQuote.id,
+      changeSummary: changeSummary.trim() || `Phiên bản chỉnh sửa v${nextVersionNum}.0`,
+      items: clonedItems,
+      approvalHistory: [],
+      createdAt: now,
+      updatedAt: now,
+      createdBy: actorName || baseQuote.createdBy,
+      creatorRole: actorRole || baseQuote.creatorRole,
+    };
+
+    const recalculatedNewVersion = this.recalculateQuote(newVersionQuote);
+
+    const storageKey = `nexus_quote_versions_${baseQuote.dealId}`;
+    const updatedList = [...currentVersions, recalculatedNewVersion];
+    window.localStorage.setItem(storageKey, JSON.stringify(updatedList));
+
+    // Đặt bản nháp hiện tại thành phiên bản mới này
+    window.localStorage.setItem(`nexus_quote_draft_${baseQuote.dealId}`, JSON.stringify(recalculatedNewVersion));
+
+    return recalculatedNewVersion;
+  }
+
+  /**
+   * Đặt một phiên bản làm phiên bản đang hiệu lực duy nhất (Chỉ một phiên bản ở trạng thái đang hiệu lực tại một thời điểm)
+   */
+  public setEffectiveVersion(dealId: string, targetQuoteId: string): IQuote {
+    const versions = this.getQuoteVersions(dealId);
+    const target = versions.find((v) => v.id === targetQuoteId);
+    if (!target) {
+      throw new Error('Không tìm thấy phiên bản báo giá được chọn.');
+    }
+
+    const updatedList = versions.map((v) => ({
+      ...v,
+      isEffective: v.id === targetQuoteId,
+    }));
+
+    const storageKey = `nexus_quote_versions_${dealId}`;
+    window.localStorage.setItem(storageKey, JSON.stringify(updatedList));
+
+    const effectiveQuote = { ...target, isEffective: true };
+    this.saveDraft(effectiveQuote);
+
+    return effectiveQuote;
+  }
+
+  /**
+   * So sánh chi tiết cạnh nhau giữa hai phiên bản báo giá (S7-03 QuoteDiffViewer)
+   */
+  public compareQuotes(baseQuote: IQuote, targetQuote: IQuote): IQuoteComparison {
+    const baseItems = baseQuote.items || [];
+    const targetItems = targetQuote.items || [];
+
+    const lineItemDiffs: IQuoteLineItemDiff[] = [];
+    const matchedTargetIds = new Set<string>();
+
+    // 1. Duyệt qua baseItems để so khớp với targetItems
+    baseItems.forEach((oldItem, idx) => {
+      let match = targetItems.find(
+        (t) =>
+          !matchedTargetIds.has(t.id) &&
+          ((t.productId && t.productId === oldItem.productId) ||
+            t.productName.trim().toLowerCase() === oldItem.productName.trim().toLowerCase())
+      );
+
+      if (!match && targetItems[idx] && !matchedTargetIds.has(targetItems[idx].id)) {
+        if (targetItems[idx].productName.trim().toLowerCase() === oldItem.productName.trim().toLowerCase()) {
+          match = targetItems[idx];
+        }
+      }
+
+      if (match) {
+        matchedTargetIds.add(match.id);
+        const qtyDiff = match.quantity - oldItem.quantity;
+        const priceDiff = match.unitPrice - oldItem.unitPrice;
+        const discDiff = match.discountAmount - oldItem.discountAmount;
+        const totalDiff = match.lineTotal - oldItem.lineTotal;
+
+        const isModified =
+          qtyDiff !== 0 ||
+          priceDiff !== 0 ||
+          discDiff !== 0 ||
+          totalDiff !== 0 ||
+          match.vatRate !== oldItem.vatRate ||
+          match.unit !== oldItem.unit;
+
+        lineItemDiffs.push({
+          id: `diff-${oldItem.id}-${match.id}`,
+          productId: match.productId || oldItem.productId,
+          productName: match.productName || oldItem.productName,
+          unit: match.unit || oldItem.unit,
+          changeType: isModified ? 'modified' : 'unchanged',
+          oldItem,
+          newItem: match,
+          quantityDiff: qtyDiff,
+          unitPriceDiff: priceDiff,
+          discountDiff: discDiff,
+          lineTotalDiff: totalDiff,
+        });
+      } else {
+        // Dòng sản phẩm bị xóa khỏi phiên bản mới
+        lineItemDiffs.push({
+          id: `diff-removed-${oldItem.id}`,
+          productId: oldItem.productId,
+          productName: oldItem.productName,
+          unit: oldItem.unit,
+          changeType: 'removed',
+          oldItem,
+          newItem: undefined,
+          quantityDiff: -oldItem.quantity,
+          unitPriceDiff: -oldItem.unitPrice,
+          discountDiff: -oldItem.discountAmount,
+          lineTotalDiff: -oldItem.lineTotal,
+        });
+      }
+    });
+
+    // 2. Tìm các sản phẩm mới thêm vào ở targetQuote
+    targetItems.forEach((newItem) => {
+      if (!matchedTargetIds.has(newItem.id)) {
+        lineItemDiffs.push({
+          id: `diff-added-${newItem.id}`,
+          productId: newItem.productId,
+          productName: newItem.productName,
+          unit: newItem.unit,
+          changeType: 'added',
+          oldItem: undefined,
+          newItem,
+          quantityDiff: newItem.quantity,
+          unitPriceDiff: newItem.unitPrice,
+          discountDiff: newItem.discountAmount,
+          lineTotalDiff: newItem.lineTotal,
+        });
+      }
+    });
+
+    // 3. So sánh các điều khoản và ghi chú
+    const validUntilChanged = baseQuote.validUntil !== targetQuote.validUntil;
+    const paymentTermsChanged = (baseQuote.paymentTerms || '').trim() !== (targetQuote.paymentTerms || '').trim();
+    const deliveryTermsChanged = (baseQuote.deliveryTerms || '').trim() !== (targetQuote.deliveryTerms || '').trim();
+    const notesChanged = (baseQuote.notes || '').trim() !== (targetQuote.notes || '').trim();
+
+    const termsDiff: IQuoteTermsDiff = {
+      validUntilChanged,
+      oldValidUntil: baseQuote.validUntil,
+      newValidUntil: targetQuote.validUntil,
+      paymentTermsChanged,
+      oldPaymentTerms: baseQuote.paymentTerms || '—',
+      newPaymentTerms: targetQuote.paymentTerms || '—',
+      deliveryTermsChanged,
+      oldDeliveryTerms: baseQuote.deliveryTerms || '—',
+      newDeliveryTerms: targetQuote.deliveryTerms || '—',
+      notesChanged,
+      oldNotes: baseQuote.notes,
+      newNotes: targetQuote.notes,
+    };
+
+    const totalAddedItems = lineItemDiffs.filter((d) => d.changeType === 'added').length;
+    const totalRemovedItems = lineItemDiffs.filter((d) => d.changeType === 'removed').length;
+    const totalModifiedItems = lineItemDiffs.filter((d) => d.changeType === 'modified').length;
+    const totalUnchangedItems = lineItemDiffs.filter((d) => d.changeType === 'unchanged').length;
+
+    const subtotalDiff = targetQuote.subtotal - baseQuote.subtotal;
+    const discountAmountDiff = targetQuote.totalDiscountAmount - baseQuote.totalDiscountAmount;
+    const discountPercentDiff = targetQuote.totalDiscountPercent - baseQuote.totalDiscountPercent;
+    const vatAmountDiff = targetQuote.totalVatAmount - baseQuote.totalVatAmount;
+    const grandTotalDiff = targetQuote.grandTotal - baseQuote.grandTotal;
+
+    const hasAnyDifference =
+      totalAddedItems > 0 ||
+      totalRemovedItems > 0 ||
+      totalModifiedItems > 0 ||
+      validUntilChanged ||
+      paymentTermsChanged ||
+      deliveryTermsChanged ||
+      notesChanged ||
+      grandTotalDiff !== 0;
+
+    return {
+      baseQuote,
+      targetQuote,
+      subtotalDiff,
+      discountAmountDiff,
+      discountPercentDiff,
+      vatAmountDiff,
+      grandTotalDiff,
+      lineItemDiffs,
+      termsDiff,
+      totalAddedItems,
+      totalRemovedItems,
+      totalModifiedItems,
+      totalUnchangedItems,
+      hasAnyDifference,
+    };
+  }
 }
+
 
 export const quoteService = new QuoteService();

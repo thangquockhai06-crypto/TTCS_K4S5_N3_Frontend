@@ -40,7 +40,9 @@ import { ProductCreatePage } from '../pages/ProductCreatePage';
 import { ProductEditPage } from '../pages/ProductEditPage';
 import { QuoteBuilderPage } from '../pages/QuoteBuilderPage';
 import { QuoteApprovalQueuePage } from '../pages/QuoteApprovalQueuePage';
+import { QuoteComparePage } from '../pages/QuoteComparePage';
 import { TasksPage } from '../pages/TasksPage';
+
 import { ActivitiesPage } from '../pages/ActivitiesPage';
 
 interface IProtectedRouteProps {
@@ -110,6 +112,9 @@ export const AppRoutes: React.FC = () => {
         <Route path="quotes/new" element={<QuoteBuilderPage />} />
         <Route path="quotes/builder" element={<QuoteBuilderPage />} />
         <Route path="quotes/approvals" element={<QuoteApprovalQueuePage />} />
+        {/* S7-03: Quản lý phiên bản Báo giá & So sánh Diff */}
+        <Route path="deals/:id/quotes/compare" element={<QuoteComparePage />} />
+        <Route path="quotes/compare" element={<QuoteComparePage />} />
 
         {/* EP-06: Task Management & Activity History (S6-05, S6-06, S6-07, S6-09) */}
         <Route path="tasks" element={<TasksPage />} />

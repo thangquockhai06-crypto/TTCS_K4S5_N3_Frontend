@@ -18,6 +18,7 @@ interface IUseQuoteBuilderOptions {
 export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions) {
   const [deal, setDeal] = useState<IDeal | null>(initialDeal || null);
   const [quote, setQuote] = useState<IQuote | null>(null);
+  const [versions, setVersions] = useState<IQuote[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
@@ -27,13 +28,24 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
     return quoteService.getProductCatalog();
   }, []);
 
+  const refreshVersions = useCallback((targetDealId: string) => {
+    try {
+      const list = quoteService.getQuoteVersions(targetDealId);
+      setVersions(list);
+      return list;
+    } catch {
+      return [];
+    }
+  }, []);
+
   // Tải thông tin Deal và nạp Báo giá (kế thừa từ Deal hoặc nạp từ bản nháp đã lưu)
   const loadDealAndQuote = useCallback(async (targetDealId: string) => {
     setIsLoading(true);
     setLoadError(null);
     setQuote(null);
     try {
-      // 1. Kiểm tra xem đã có bản nháp lưu trong localStorage chưa
+      // 1. Tải danh sách versions và bản nháp
+      const versionsList = quoteService.getQuoteVersions(targetDealId);
       const existingDraft = quoteService.getDraftByDealId(targetDealId);
 
       // 2. Tải thông tin Deal
@@ -60,14 +72,35 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
 
       setDeal(resolvedDeal);
 
-      if (existingDraft) {
-        // Có bản nháp trước đó -> nạp lại để sửa tiếp
-        setQuote(quoteService.recalculateQuote(existingDraft));
+      if (versionsList.length > 0) {
+        // Đã có phiên bản: ưu tiên nạp phiên bản nháp đang sửa hoặc phiên bản hiệu lực
+        const draftVer = versionsList.find((v) => v.status === 'draft');
+        const effectiveVer = versionsList.find((v) => v.isEffective);
+        const selectedVer = draftVer || effectiveVer || versionsList[versionsList.length - 1];
+        setQuote(quoteService.recalculateQuote(selectedVer));
+        setVersions(versionsList);
+        setHasUnsavedChanges(false);
+      } else if (existingDraft) {
+        // Có bản nháp trước đó -> nạp lại để sửa tiếp và khởi tạo v1
+        const v1: IQuote = {
+          ...existingDraft,
+          version: existingDraft.version || 1,
+          isEffective: true,
+          versionLabel: existingDraft.versionLabel || 'v1.0 (Ban đầu)',
+        };
+        quoteService.saveVersion(v1);
+        setQuote(quoteService.recalculateQuote(v1));
+        setVersions([v1]);
         setHasUnsavedChanges(false);
       } else if (resolvedDeal) {
-        // Chưa có bản nháp -> Khởi tạo mới kế thừa dòng sản phẩm từ Deal
+        // Chưa có bản nháp -> Khởi tạo mới kế thừa dòng sản phẩm từ Deal (Phiên bản v1)
         const initialQuote = quoteService.createInitialQuoteFromDeal(resolvedDeal);
+        initialQuote.isEffective = true;
+        initialQuote.version = 1;
+        initialQuote.versionLabel = 'v1.0 (Ban đầu)';
+        quoteService.saveVersion(initialQuote);
         setQuote(initialQuote);
+        setVersions([initialQuote]);
         setHasUnsavedChanges(false);
       }
     } catch (err: unknown) {
@@ -92,6 +125,7 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
       setLoadError('Không có cơ hội bán hàng để tạo báo giá.');
     }
   }, [dealId, initialDeal, loadDealAndQuote]);
+
 
   // Thêm dòng sản phẩm mới vào báo giá (từ danh mục hoặc nhập mới)
   const addLineItem = useCallback(
@@ -219,10 +253,12 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
     setIsSaving(true);
     try {
       const saved = quoteService.saveDraft(quote);
+      quoteService.saveVersion(saved);
+      if (quote.dealId) refreshVersions(quote.dealId);
       setQuote(saved);
       setHasUnsavedChanges(false);
       showGlobalToast(
-        `Đã lưu bản nháp báo giá "${saved.quoteNumber}" thành công! Dữ liệu được bảo toàn và có thể sửa tiếp bất kỳ lúc nào.`,
+        `Đã lưu bản nháp báo giá "${saved.quoteNumber}" (v${saved.version}) thành công! Dữ liệu được bảo toàn và có thể sửa tiếp bất kỳ lúc nào.`,
         'success',
         undefined,
         3000
@@ -238,7 +274,7 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
     } finally {
       setIsSaving(false);
     }
-  }, [quote]);
+  }, [quote, refreshVersions]);
 
   // Gửi duyệt hoặc hoàn tất báo giá
   const submitQuote = useCallback(async (): Promise<IQuote | null> => {
@@ -256,6 +292,8 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
     setIsSaving(true);
     try {
       const submitted = quoteService.submitQuote(quote);
+      quoteService.saveVersion(submitted);
+      if (quote.dealId) refreshVersions(quote.dealId);
       setQuote(submitted);
       setHasUnsavedChanges(false);
 
@@ -287,7 +325,7 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
     } finally {
       setIsSaving(false);
     }
-  }, [quote]);
+  }, [quote, refreshVersions]);
 
   const sendQuote = useCallback(async (): Promise<IQuote | null> => {
     if (!quote) return null;
@@ -298,9 +336,11 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
         quote.createdBy,
         quote.creatorRole
       );
+      quoteService.saveVersion(sent);
+      if (quote.dealId) refreshVersions(quote.dealId);
       setQuote(sent);
       setHasUnsavedChanges(false);
-      showGlobalToast(`Báo giá "${sent.quoteNumber}" đã được phát hành cho khách hàng.`, 'success');
+      showGlobalToast(`Báo giá "${sent.quoteNumber}" (v${sent.version}) đã được phát hành cho khách hàng.`, 'success');
       return sent;
     } catch (err: unknown) {
       console.error('Lỗi khi phát hành báo giá:', err);
@@ -312,7 +352,7 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
     } finally {
       setIsSaving(false);
     }
-  }, [quote]);
+  }, [quote, refreshVersions]);
 
   // Đặt lại báo giá về trạng thái ban đầu kế thừa từ Deal
   const resetToInitial = useCallback(() => {
@@ -334,9 +374,82 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
     showGlobalToast('Đã khôi phục các dòng sản phẩm ban đầu từ Cơ hội', 'info', undefined, 2000);
   }, [deal, quote]);
 
+  // S7-03: Chuyển đổi xem phiên bản khác
+  const switchVersion = useCallback((targetVer: IQuote) => {
+    setQuote(quoteService.recalculateQuote(targetVer));
+    setHasUnsavedChanges(false);
+    showGlobalToast(`Đang hiển thị Phiên bản v${targetVer.version} (${targetVer.status === 'draft' ? 'Bản nháp' : targetVer.status === 'sent' ? 'Đã gửi' : 'Chỉ xem'})`, 'info', undefined, 2000);
+  }, []);
+
+  // S7-03: Tạo phiên bản mới (Mỗi lần sửa sau khi đã gửi sẽ tạo phiên bản mới, phiên bản cũ được giữ nguyên)
+  const createNewVersion = useCallback(async (changeSummary: string): Promise<IQuote | null> => {
+    if (!quote) return null;
+    const summary = changeSummary.trim();
+    if (!summary) {
+      showGlobalToast('Vui lòng nhập lý do điều chỉnh để tạo phiên bản mới.', 'warning');
+      return null;
+    }
+
+    setIsSaving(true);
+    try {
+      const newVersion = quoteService.createNewVersion(
+        quote.id,
+        summary,
+        quote.createdBy,
+        quote.creatorRole
+      );
+      if (quote.dealId) refreshVersions(quote.dealId);
+      setQuote(newVersion);
+      setHasUnsavedChanges(false);
+      showGlobalToast(
+        `Đã tạo thành công Phiên bản v${newVersion.version}! Phiên bản cũ v${quote.version} được giữ nguyên hoàn toàn.`,
+        'success',
+        undefined,
+        4000
+      );
+      return newVersion;
+    } catch (err: unknown) {
+      console.error('Lỗi tạo phiên bản mới:', err);
+      showGlobalToast(
+        err instanceof Error ? err.message : 'Không thể tạo phiên bản mới.',
+        'error'
+      );
+      return null;
+    } finally {
+      setIsSaving(false);
+    }
+  }, [quote, refreshVersions]);
+
+  // S7-03: Đặt một phiên bản làm phiên bản đang hiệu lực (Chỉ một phiên bản ở trạng thái đang hiệu lực tại một thời điểm)
+  const setEffectiveVersion = useCallback(async (versionId: string): Promise<IQuote | null> => {
+    if (!deal) return null;
+    try {
+      const effective = quoteService.setEffectiveVersion(deal.id, versionId);
+      refreshVersions(deal.id);
+      if (quote && quote.id === versionId) {
+        setQuote(effective);
+      }
+      showGlobalToast(
+        `Phiên bản v${effective.version} hiện là phiên bản duy nhất đang có hiệu lực của báo giá này.`,
+        'success',
+        undefined,
+        3500
+      );
+      return effective;
+    } catch (err: unknown) {
+      console.error('Lỗi gán phiên bản hiệu lực:', err);
+      showGlobalToast(
+        err instanceof Error ? err.message : 'Không thể cập nhật phiên bản hiệu lực.',
+        'error'
+      );
+      return null;
+    }
+  }, [deal, quote, refreshVersions]);
+
   return {
     deal,
     quote,
+    versions,
     loadError,
     isLoading,
     isSaving,
@@ -350,6 +463,11 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
     submitQuote,
     sendQuote,
     resetToInitial,
+    switchVersion,
+    createNewVersion,
+    setEffectiveVersion,
+    refreshVersions,
     reload: loadDealAndQuote,
   };
 }
+
