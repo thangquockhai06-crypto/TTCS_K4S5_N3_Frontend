@@ -11,6 +11,7 @@ import {
   FileText,
   GitMerge,
   Globe,
+  History,
   LifeBuoy,
   Loader2,
   MapPin,
@@ -27,6 +28,8 @@ import { CorporateTree } from '../components/customer/CorporateTree';
 import { CustomerForm } from '../components/customer/CustomerForm';
 import { SupportTicketModal } from '../components/customer/SupportTicketModal';
 import { MergeCustomerModal } from '../components/customer/MergeCustomerModal';
+import { OpportunityHistoryDrawer } from '../features/opportunity-history';
+import { OpportunityDocumentsDrawer } from '../features/opportunity-documents';
 
 type TabKey = 'info' | 'deals' | 'activities' | 'docs';
 
@@ -43,6 +46,14 @@ export const Customer360Dashboard: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [isMergeModalOpen, setIsMergeModalOpen] = useState(false);
+  const [selectedOpportunity, setSelectedOpportunity] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+  const [documentsOpportunity, setDocumentsOpportunity] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
 
   // Activity form
   const [newActivityType, setNewActivityType] = useState<'call' | 'meeting' | 'email' | 'note'>('call');
@@ -400,34 +411,63 @@ export const Customer360Dashboard: React.FC = () => {
               Chưa có cơ hội bán hàng nào được ghi nhận cho khách hàng này.
             </div>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
-                  <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600 }}>Tên cơ hội</th>
-                  <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600 }}>Giai đoạn</th>
-                  <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 600 }}>Giá trị hợp đồng</th>
-                  <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 600 }}>Xác suất</th>
-                </tr>
-              </thead>
-              <tbody>
-                {deals.map((deal: any) => (
-                  <tr key={deal.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                    <td style={{ padding: '10px 14px', fontWeight: 600, color: '#0F172A' }}>
-                      {deal.title}
-                    </td>
-                    <td style={{ padding: '10px 14px' }}>
-                      <Badge tone="primary" size="sm">{deal.stage}</Badge>
-                    </td>
-                    <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: '#059669' }}>
-                      {formatCurrency(deal.value)}
-                    </td>
-                    <td style={{ padding: '10px 14px', textAlign: 'right' }}>
-                      {deal.probability}%
-                    </td>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
+                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600 }}>Tên cơ hội</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600 }}>Giai đoạn</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 600 }}>Giá trị hợp đồng</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 600 }}>Xác suất</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 600 }}>Thao tác</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {deals.map((deal: ICustomer360['deals'][number]) => (
+                    <tr key={deal.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                      <td style={{ padding: '10px 14px', fontWeight: 600, color: '#0F172A' }}>
+                        {deal.title}
+                      </td>
+                      <td style={{ padding: '10px 14px' }}>
+                        <Badge tone="primary" size="sm">{deal.stage}</Badge>
+                      </td>
+                      <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: '#059669' }}>
+                        {formatCurrency(deal.value)}
+                      </td>
+                      <td style={{ padding: '10px 14px', textAlign: 'right' }}>
+                        {deal.probability}%
+                      </td>
+                      <td style={{ padding: '10px 14px', textAlign: 'right' }}>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 8 }}>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            leftIcon={<History size={15} />}
+                            aria-label={`Xem lịch sử thay đổi của ${deal.title}`}
+                            onClick={() =>
+                              setSelectedOpportunity({ id: deal.id, title: deal.title })
+                            }
+                          >
+                            Lịch sử
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            leftIcon={<FileText size={15} />}
+                            aria-label={`Xem tài liệu của ${deal.title}`}
+                            onClick={() =>
+                              setDocumentsOpportunity({ id: deal.id, title: deal.title })
+                            }
+                          >
+                            Tài liệu
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </Card>
       )}
@@ -657,6 +697,20 @@ export const Customer360Dashboard: React.FC = () => {
           }}
         />
       )}
+
+      <OpportunityHistoryDrawer
+        isOpen={selectedOpportunity !== null}
+        opportunityId={selectedOpportunity?.id ?? null}
+        opportunityTitle={selectedOpportunity?.title ?? ''}
+        onClose={() => setSelectedOpportunity(null)}
+      />
+
+      <OpportunityDocumentsDrawer
+        isOpen={documentsOpportunity !== null}
+        opportunityId={documentsOpportunity?.id ?? null}
+        opportunityTitle={documentsOpportunity?.title ?? ''}
+        onClose={() => setDocumentsOpportunity(null)}
+      />
     </div>
   );
 };
