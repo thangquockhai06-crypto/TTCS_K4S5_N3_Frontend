@@ -27,6 +27,8 @@ import { DealReassignmentPage } from '../pages/DealReassignmentPage';
 import { LeadManagementPage } from '../features/lead-management';
 import { LeadAssignmentResponseSlaPage } from '../features/lead-assignment-response-sla';
 import { LeadRoutingConfigurationPage } from '../features/lead-routing-configuration';
+import { DocumentExportsPage } from '../pages/DocumentExportsPage';
+import { TasksPage } from '../pages/TasksPage';
 
 interface IProtectedRouteProps {
   children: React.ReactElement;
@@ -66,6 +68,8 @@ export const AppRoutes: React.FC = () => {
         <Route path="leads" element={<LeadManagementPage />} />
         <Route path="lead-assignment-response-sla" element={<LeadAssignmentResponseSlaPage />} />
         <Route path="lead-routing-configuration" element={<LeadRoutingConfigurationPage />} />
+        <Route path="documents" element={<DocumentExportsPage />} />
+        <Route path="tasks" element={<TasksPage />} />
 
         {/* User Management & Dedicated Edit */}
         <Route path="users" element={<UserManagementPage />} />
