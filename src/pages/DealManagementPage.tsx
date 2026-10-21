@@ -17,9 +17,11 @@ import {
   Plus,
   RefreshCw,
   RotateCcw,
+  Search,
   ShieldAlert,
   Trash2,
   TrendingUp,
+  User,
   UserCheck,
   Users,
 } from 'lucide-react';
@@ -35,7 +37,7 @@ import { IUserItem } from '../interfaces/user-management.interface';
 import { useAuthorization } from '../hooks/useAuthorization';
 import { formatCurrency, formatCompactCurrency, formatNumberWithCommas, parseNumberFromCommas, formatDealStage } from '../utils/formatters';
 import { showGlobalToast, ToastType } from '../context/ToastContext';
-import { Badge, Button, Modal, SearchBar } from '../components/common';
+import { Badge, Button, Modal, SearchBar, SearchableSelect } from '../components/common';
 import styles from './DealManagementPage.module.css';
 
 const notifyToast = (opts: { title?: string; description?: string; type?: ToastType }) => {
@@ -83,7 +85,7 @@ export const DealManagementPage: React.FC = () => {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false);
   const [selectedDeals, setSelectedDeals] = useState<string[]>([]);
 
-  // Per-column pagination for Kanban (10 deals per page)
+  // Per-column pagination and search for Kanban
   const [columnPages, setColumnPages] = useState<Record<string, number>>({
     lead: 1,
     contacted: 1,
@@ -92,6 +94,8 @@ export const DealManagementPage: React.FC = () => {
     won: 1,
     lost: 1,
   });
+  const [columnSearches, setColumnSearches] = useState<Record<string, string>>({});
+  const [columnPageSize, setColumnPageSize] = useState<number>(5);
 
   // Table pagination
   const [tablePage, setTablePage] = useState<number>(1);
@@ -604,7 +608,7 @@ export const DealManagementPage: React.FC = () => {
             variant="secondary"
             onClick={handleExportExcel}
             disabled={isExporting}
-            title="Xuất dữ liệu phễu bán hàng ra file Excel (S6-04)"
+            title="Xuất dữ liệu phễu bán hàng ra file Excel"
           >
             <FileSpreadsheet size={16} />
             {isExporting ? 'Đang xuất...' : selectedDeals.length > 0 ? `Xuất Excel (${selectedDeals.length})` : 'Xuất Excel'}
@@ -870,18 +874,22 @@ export const DealManagementPage: React.FC = () => {
             {/* S6-01 & S6-02: Deal Owner Filter (Team Leader can view members - S6-03) */}
             <div className={styles.filterField}>
               <label className={styles.filterFieldLabel}>Người phụ trách (Owner):</label>
-              <select
-                className={styles.filterFieldInput}
+              <SearchableSelect
                 value={ownerFilter}
-                onChange={(e) => setOwnerFilter(e.target.value)}
-              >
-                <option value="">-- {isLeader ? 'Toàn bộ Đội ngũ (Team Members)' : 'Tất cả người phụ trách'} --</option>
-                {usersList.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({u.roles?.join(', ') || 'Thành viên'})
-                  </option>
-                ))}
-              </select>
+                onChange={setOwnerFilter}
+                options={usersList.map((u) => ({
+                  value: u.id,
+                  label: u.name,
+                  subLabel: u.roles?.join(', ') || 'Thành viên',
+                }))}
+                allowAll={true}
+                allLabel={isLeader ? 'Toàn bộ Đội ngũ (Team Members)' : 'Tất cả người phụ trách'}
+                allValue=""
+                placeholder={isLeader ? 'Toàn bộ Đội ngũ (Team Members)' : 'Tất cả người phụ trách'}
+                searchPlaceholder="Tìm kiếm người phụ trách..."
+                pageSize={6}
+                icon={<User size={14} style={{ color: '#64748b' }} />}
+              />
             </div>
 
             {/* S6-02: Product Filter */}
@@ -944,6 +952,26 @@ export const DealManagementPage: React.FC = () => {
             </button>
           </div>
 
+          {viewMode === 'kanban' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
+              <span style={{ whiteSpace: 'nowrap' }}>Mỗi cột:</span>
+              <select
+                value={columnPageSize}
+                onChange={(e) => {
+                  setColumnPageSize(Number(e.target.value));
+                  setColumnPages({ lead: 1, contacted: 1, proposal: 1, negotiation: 1, won: 1, lost: 1 });
+                }}
+                className={styles.colPageSizeSelect}
+                title="Số Deal hiển thị trên mỗi cột Kanban"
+              >
+                <option value={3}>3 Deal</option>
+                <option value={5}>5 Deal</option>
+                <option value={10}>10 Deal</option>
+                <option value={20}>20 Deal</option>
+              </select>
+            </div>
+          )}
+
           <Button variant="ghost" onClick={fetchDealsAndForecast}>
             <RefreshCw size={15} />
           </Button>
@@ -957,7 +985,7 @@ export const DealManagementPage: React.FC = () => {
           <div className={styles.chartCard}>
             <div className={styles.chartCardHeader}>
               <span className={styles.chartCardTitle}>
-                <Kanban size={16} /> Phân bổ Cơ hội theo Giai đoạn (S6-10)
+                <Kanban size={16} /> Phân bổ Cơ hội theo Giai đoạn
               </span>
               <span className={styles.chartCardSub}>Tổng: {totalDealsCount} cơ hội</span>
             </div>
@@ -1044,7 +1072,7 @@ export const DealManagementPage: React.FC = () => {
               ))}
             </div>
             <div style={{ marginTop: 'auto', padding: '10px', background: 'var(--color-bg-subtle)', borderRadius: 'var(--radius-sm)', fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
-              💡 <em>Các chỉ số và biểu đồ tự động cập nhật ngay lập tức khi thay đổi bất kỳ bộ lọc nào ở trên (S6-10).</em>
+              💡 <em>Các chỉ số và biểu đồ tự động cập nhật ngay lập tức khi thay đổi bất kỳ bộ lọc nào ở trên.</em>
             </div>
           </div>
         </div>
@@ -1053,10 +1081,25 @@ export const DealManagementPage: React.FC = () => {
           {STAGES.map((stage) => {
             const stageDeals = (deals || []).filter((d) => normalizeStage(d.stage) === stage.id);
             const stageTotal = stageDeals.reduce((sum, d) => sum + (d.value || 0), 0);
+            const colSearch = (columnSearches[stage.id] || '').trim().toLowerCase();
+
+            const filteredStageDeals = stageDeals.filter((d) => {
+              if (!colSearch) return true;
+              const matchTitle = (d.title || '').toLowerCase().includes(colSearch);
+              const matchCustomer = (d.customerName || '').toLowerCase().includes(colSearch);
+              const matchOwner = (d.ownerName || '').toLowerCase().includes(colSearch);
+              const matchCampaign = (d.campaignName || '').toLowerCase().includes(colSearch);
+              const matchValue = (d.value || 0).toString().includes(colSearch);
+              return matchTitle || matchCustomer || matchOwner || matchCampaign || matchValue;
+            });
+
             const colPage = columnPages[stage.id] || 1;
-            const colPageSize = 10;
-            const totalColPages = Math.max(1, Math.ceil(stageDeals.length / colPageSize));
-            const paginatedStageDeals = stageDeals.slice((colPage - 1) * colPageSize, colPage * colPageSize);
+            const totalColPages = Math.max(1, Math.ceil(filteredStageDeals.length / columnPageSize));
+            const safeColPage = Math.min(colPage, totalColPages);
+            const paginatedStageDeals = filteredStageDeals.slice(
+              (safeColPage - 1) * columnPageSize,
+              safeColPage * columnPageSize
+            );
 
             return (
               <div
@@ -1104,7 +1147,9 @@ export const DealManagementPage: React.FC = () => {
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: stage.color }} />
                     {stage.name}
                   </div>
-                  <Badge tone="neutral">{stageDeals.length}</Badge>
+                  <Badge tone="neutral">
+                    {colSearch ? `${filteredStageDeals.length}/${stageDeals.length}` : stageDeals.length}
+                  </Badge>
                 </div>
 
                 <div className={styles.kanbanColumn__summary}>
@@ -1112,7 +1157,41 @@ export const DealManagementPage: React.FC = () => {
                   <strong>{formatCompactCurrency(stageTotal)}</strong>
                 </div>
 
+                {/* S7: In-column Search */}
+                <div className={styles.kanbanColumnSearch}>
+                  <Search size={13} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
+                  <input
+                    type="text"
+                    value={columnSearches[stage.id] || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setColumnSearches((prev) => ({ ...prev, [stage.id]: val }));
+                      setColumnPages((prev) => ({ ...prev, [stage.id]: 1 }));
+                    }}
+                    placeholder={`Tìm trong ${stage.name}...`}
+                    className={styles.kanbanColumnSearchInput}
+                  />
+                  {columnSearches[stage.id] && (
+                    <button
+                      type="button"
+                      className={styles.kanbanColumnSearchClear}
+                      onClick={() => {
+                        setColumnSearches((prev) => ({ ...prev, [stage.id]: '' }));
+                        setColumnPages((prev) => ({ ...prev, [stage.id]: 1 }));
+                      }}
+                      title="Xóa tìm kiếm"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
                 <div className={styles.kanbanColumn__body}>
+                  {paginatedStageDeals.length === 0 && colSearch ? (
+                    <div style={{ textAlign: 'center', padding: '24px 10px', color: 'var(--color-text-muted)', fontSize: '0.8125rem' }}>
+                      Không có deal nào khớp &quot;{colSearch}&quot;
+                    </div>
+                  ) : null}
                   {paginatedStageDeals.map((deal) => (
                     <div
                       key={deal.id}
@@ -1185,7 +1264,7 @@ export const DealManagementPage: React.FC = () => {
 
                           <button
                             className={styles.cardActionBtn}
-                            title="Soạn thảo báo giá thương mại từ cơ hội này (S7-01)"
+                            title="Soạn thảo báo giá thương mại từ cơ hội này"
                             onClick={() => navigate(`/deals/${deal.id}/quote-builder`)}
                             style={{ color: '#2563EB', fontWeight: 600 }}
                           >
@@ -1235,48 +1314,65 @@ export const DealManagementPage: React.FC = () => {
                   ))}
                 </div>
 
-                {/* S6-04: Kanban Column Pagination (10 deals per page) */}
+                {/* S7: Kanban Column Pagination with selectable page size & controls */}
                 <div className={styles.columnPagination}>
                   <span className={styles.columnPaginationText}>
-                    {stageDeals.length === 0
+                    {filteredStageDeals.length === 0
                       ? '0 Deal'
-                      : `${(colPage - 1) * colPageSize + 1}-${Math.min(colPage * colPageSize, stageDeals.length)} / ${stageDeals.length}`}
+                      : `${(safeColPage - 1) * columnPageSize + 1}-${Math.min(safeColPage * columnPageSize, filteredStageDeals.length)} / ${stageDeals.length}`}
                   </span>
-                  {totalColPages > 1 && (
-                    <div className={styles.columnPaginationBtns}>
-                      <button
-                        type="button"
-                        disabled={colPage <= 1}
-                        onClick={() =>
-                          setColumnPages((prev) => ({
-                            ...prev,
-                            [stage.id]: Math.max(1, (prev[stage.id] || 1) - 1),
-                          }))
-                        }
-                        className={styles.colPageBtn}
-                        title="10 cái trước"
-                      >
-                        ◀
-                      </button>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-secondary)' }}>
-                        {colPage}/{totalColPages}
-                      </span>
-                      <button
-                        type="button"
-                        disabled={colPage >= totalColPages}
-                        onClick={() =>
-                          setColumnPages((prev) => ({
-                            ...prev,
-                            [stage.id]: Math.min(totalColPages, (prev[stage.id] || 1) + 1),
-                          }))
-                        }
-                        className={styles.colPageBtn}
-                        title="10 cái tiếp theo"
-                      >
-                        ▶
-                      </button>
-                    </div>
-                  )}
+
+                  <div className={styles.columnPaginationBtns}>
+                    <select
+                      value={columnPageSize}
+                      onChange={(e) => {
+                        const newSize = Number(e.target.value);
+                        setColumnPageSize(newSize);
+                        setColumnPages((prev) => ({ ...prev, [stage.id]: 1 }));
+                      }}
+                      className={styles.colPageSizeSelect}
+                      title="Số Deal hiển thị trên mỗi cột"
+                    >
+                      <option value={3}>3</option>
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                    </select>
+
+                    <button
+                      type="button"
+                      disabled={safeColPage <= 1}
+                      onClick={() =>
+                        setColumnPages((prev) => ({
+                          ...prev,
+                          [stage.id]: Math.max(1, (prev[stage.id] || 1) - 1),
+                        }))
+                      }
+                      className={styles.colPageBtn}
+                      title="Trang trước"
+                    >
+                      ◀
+                    </button>
+
+                    <span className={styles.colPageIndicator}>
+                      {safeColPage}/{totalColPages}
+                    </span>
+
+                    <button
+                      type="button"
+                      disabled={safeColPage >= totalColPages}
+                      onClick={() =>
+                        setColumnPages((prev) => ({
+                          ...prev,
+                          [stage.id]: Math.min(totalColPages, (prev[stage.id] || 1) + 1),
+                        }))
+                      }
+                      className={styles.colPageBtn}
+                      title="Trang tiếp theo"
+                    >
+                      ▶
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -1396,7 +1492,7 @@ export const DealManagementPage: React.FC = () => {
                           </button>
                           <button
                             className={styles.cardActionBtn}
-                            title="Soạn thảo báo giá thương mại từ cơ hội này (S7-01)"
+                            title="Soạn thảo báo giá thương mại từ cơ hội này"
                             onClick={() => navigate(`/deals/${deal.id}/quote-builder`)}
                             style={{ color: '#2563EB', fontWeight: 600 }}
                           >

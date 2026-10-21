@@ -19,20 +19,21 @@ import {
   Layers,
   CheckCircle2,
   AlertCircle,
-  ArrowLeftRight,
-  GitBranch,
-  Check,
+  GitCompare,
   FileCheck2,
+  Share2,
+  Copy,
+  Check,
+  ExternalLink,
 } from 'lucide-react';
-import { IQuote } from '../../interfaces/quote.interface';
+import { IQuote, IQuoteCompareResult } from '../../interfaces/quote.interface';
 import { IDeal } from '../../interfaces/deal.interface';
 import { useQuoteBuilder } from '../../hooks/useQuoteBuilder';
+import { quoteService } from '../../services/quoteService';
 import { formatCurrency, formatVndCurrency } from '../../utils/formatters';
 import { Button, Modal, LoadingSkeleton, Badge } from '../common';
-import { QuoteDiffViewer } from './QuoteDiffViewer';
-import { ConvertToContractModal } from '../contract/ConvertToContractModal';
+import { showGlobalToast } from '../../context/ToastContext';
 import styles from './QuoteBuilder.module.css';
-
 
 export interface IQuoteBuilderProps {
   dealId?: string;
@@ -52,7 +53,6 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
   const {
     deal,
     quote,
-    versions,
     isLoading,
     isSaving,
     hasUnsavedChanges,
@@ -66,22 +66,31 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
     submitQuote,
     sendQuote,
     resetToInitial,
-    switchVersion,
-    createNewVersion,
-    setEffectiveVersion,
-    reload,
   } = useQuoteBuilder({ dealId, initialDeal });
 
   // Modals
   const [isCatalogModalOpen, setIsCatalogModalOpen] = useState<boolean>(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState<boolean>(false);
-  const [isDiffModalOpen, setIsDiffModalOpen] = useState<boolean>(false);
-  const [isNewVersionModalOpen, setIsNewVersionModalOpen] = useState<boolean>(false);
-  const [newVersionReason, setNewVersionReason] = useState<string>('');
-  const [isCreatingNewVersion, setIsCreatingNewVersion] = useState<boolean>(false);
+
+  // S7-03: Version Comparison State
+  const [isCompareModalOpen, setIsCompareModalOpen] = useState<boolean>(false);
+  const [compareData, setCompareData] = useState<IQuoteCompareResult | null>(null);
+  const [dealQuotesList, setDealQuotesList] = useState<IQuote[]>([]);
+  const [targetCompareQuoteId, setTargetCompareQuoteId] = useState<string>('');
+  const [isComparing, setIsComparing] = useState<boolean>(false);
+
+  // S7-04: Convert to Contract State
   const [isContractModalOpen, setIsContractModalOpen] = useState<boolean>(false);
+  const [contractNumber, setContractNumber] = useState<string>('');
+  const [signingDate, setSigningDate] = useState<string>('');
+  const [effectiveDate, setEffectiveDate] = useState<string>('');
+  const [expiryDate, setExpiryDate] = useState<string>('');
+  const [contractPaymentTerms, setContractPaymentTerms] = useState<string>('');
+  const [isConvertingContract, setIsConvertingContract] = useState<boolean>(false);
 
-
+  // S7-06: Customer Portal Share State
+  const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
+  const [isCopied, setIsCopied] = useState<boolean>(false);
 
   if (isLoading) {
     return (
@@ -141,22 +150,114 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
     }
   };
 
-  const handleCreateNewVersionSubmit = async () => {
-    if (!newVersionReason.trim()) return;
-    setIsCreatingNewVersion(true);
+  const handlePrint = () => {
+    window.print();
+  };
+
+  // S7-03: Compare versions
+  const handleOpenCompare = async () => {
+    if (!quote) return;
+    setIsCompareModalOpen(true);
+    setIsComparing(true);
     try {
-      const created = await createNewVersion(newVersionReason.trim());
-      if (created) {
-        setIsNewVersionModalOpen(false);
-        setNewVersionReason('');
+      const allQuotes = await quoteService.getQuotesAsync({ dealId: quote.dealId });
+      setDealQuotesList(allQuotes);
+      const candidates = allQuotes.filter((q) => q.id !== quote.id);
+      if (candidates.length > 0) {
+        const targetId = candidates[0].id;
+        setTargetCompareQuoteId(targetId);
+        const res = await quoteService.compareVersionsAsync(quote.id, targetId);
+        setCompareData(res);
       }
+    } catch (err: unknown) {
+      console.error(err);
+      showGlobalToast('Không thể tải dữ liệu so sánh phiên bản.', 'error');
     } finally {
-      setIsCreatingNewVersion(false);
+      setIsComparing(false);
     }
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handleSelectCompareTarget = async (targetId: string) => {
+    if (!quote) return;
+    setTargetCompareQuoteId(targetId);
+    setIsComparing(true);
+    try {
+      const res = await quoteService.compareVersionsAsync(quote.id, targetId);
+      setCompareData(res);
+    } catch (err: unknown) {
+      console.error(err);
+      showGlobalToast('Lỗi khi so sánh phiên bản.', 'error');
+    } finally {
+      setIsComparing(false);
+    }
+  };
+
+  // S7-04: Convert to Contract
+  const handleOpenContractModal = () => {
+    if (!quote) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const nextYear = new Date();
+    nextYear.setFullYear(nextYear.getFullYear() + 1);
+    const expiryStr = nextYear.toISOString().slice(0, 10);
+
+    setContractNumber(`HD-${new Date().getFullYear()}-${quote.quoteNumber.replace('BG-', '')}`);
+    setSigningDate(today);
+    setEffectiveDate(today);
+    setExpiryDate(expiryStr);
+    setContractPaymentTerms(quote.paymentTerms || 'Thanh toán 100% trong vòng 15 ngày');
+    setIsContractModalOpen(true);
+  };
+
+  const handleConvertToContract = async () => {
+    if (!quote) return;
+    if (!contractNumber.trim() || !signingDate || !effectiveDate || !expiryDate) {
+      showGlobalToast('Vui lòng nhập đầy đủ số hợp đồng và thời hạn hiệu lực.', 'warning');
+      return;
+    }
+    setIsConvertingContract(true);
+    try {
+      const createdContract = await quoteService.convertQuoteToContractAsync(quote.id, {
+        quotationId: quote.id,
+        contractNumber: contractNumber.trim(),
+        signingDate,
+        effectiveDate,
+        expiryDate,
+        paymentTerms: contractPaymentTerms || quote.paymentTerms,
+        deliveryTerms: quote.deliveryTerms,
+        notes: quote.notes,
+      });
+      showGlobalToast(
+        `Đã chuyển đổi thành công Hợp đồng ${createdContract.contractNumber}! Cơ hội bán hàng đã được cập nhật thành Thắng (Won).`,
+        'success'
+      );
+      setIsContractModalOpen(false);
+      navigate('/contracts');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Có lỗi khi chuyển đổi thành hợp đồng.';
+      showGlobalToast(msg, 'error');
+    } finally {
+      setIsConvertingContract(false);
+    }
+  };
+
+  // S7-05: PDF Export
+  const handleOpenPdf = () => {
+    if (!quote) return;
+    const url = quoteService.getPdfUrl(quote.id);
+    window.open(url, '_blank');
+  };
+
+  // S7-06: Share Link
+  const portalUrl = quote
+    ? `${window.location.origin}/portal/quotes/${quote.accessToken || quote.id}`
+    : '';
+
+  const handleCopyLink = () => {
+    if (!portalUrl) return;
+    void navigator.clipboard.writeText(portalUrl);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2500);
+    showGlobalToast('Đã sao chép liên kết xem báo giá cho Khách hàng!', 'success');
   };
 
   return (
@@ -211,45 +312,6 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
                 <span>Mã báo giá:</span>
                 <span className={styles.quoteNumberBadge}>{quote.quoteNumber}</span>
                 <span>·</span>
-
-                {/* S7-03: Dropdown chọn version báo giá */}
-                <div className={styles.versionDropdownWrap}>
-                  <span>Phiên bản:</span>
-                  <select
-                    className={styles.versionSelectHeader}
-                    value={quote.id}
-                    onChange={(e) => {
-                      const selected = versions.find((v) => v.id === e.target.value);
-                      if (selected) switchVersion(selected);
-                    }}
-                    title="Chọn phiên bản báo giá để xem hoặc soạn thảo"
-                    aria-label="Dropdown chọn version báo giá"
-                  >
-                    {versions.map((ver) => (
-                      <option key={ver.id} value={ver.id}>
-                        v{ver.version} ({ver.versionLabel || `Bản v${ver.version}`}) —{' '}
-                        {ver.status === 'draft'
-                          ? 'Bản nháp'
-                          : ver.status === 'sent'
-                          ? 'Đã gửi'
-                          : ver.status === 'approved'
-                          ? 'Đã duyệt'
-                          : 'Lưu trữ'}
-                        {ver.isEffective ? ' ★ Đang hiệu lực' : ''}
-                      </option>
-                    ))}
-                  </select>
-                  {quote.isEffective && (
-                    <span
-                      className={styles.versionEffectiveBadge}
-                      title="Chỉ một phiên bản ở trạng thái đang hiệu lực tại một thời điểm: Đây là phiên bản đang có hiệu lực pháp lý"
-                    >
-                      <Check size={12} /> Đang hiệu lực
-                    </span>
-                  )}
-                </div>
-
-                <span>·</span>
                 <span>Khởi tạo từ Cơ hội: <strong>{quote.dealTitle}</strong></span>
                 <span>·</span>
                 <Badge
@@ -280,11 +342,6 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
                     ? 'Đã chấp nhận'
                     : 'Bị từ chối'}
                 </Badge>
-                {quote.contractNumber && (
-                  <Badge tone="success" size="sm">
-                    HĐ: {quote.contractNumber}
-                  </Badge>
-                )}
                 {hasUnsavedChanges && (
                   <span style={{ color: '#D97706', fontSize: '0.8125rem', fontWeight: 600 }}>
                     ● Có thay đổi chưa lưu
@@ -294,63 +351,27 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-            {/* S7-04: Nút Chuyển Báo giá thành Hợp đồng (ConvertToContractModal) */}
-            {(quote.status === 'approved' || quote.status === 'sent' || quote.status === 'accepted') && (
-              <Button
-                type="button"
-                variant={quote.contractNumber ? 'secondary' : 'primary'}
-                size="sm"
-                leftIcon={<FileCheck2 size={15} />}
-                onClick={() => setIsContractModalOpen(true)}
-                disabled={Boolean(quote.contractId || quote.contractNumber)}
-                title={quote.contractId || quote.contractNumber
-                  ? 'Báo giá này đã được chuyển thành hợp đồng.'
-                  : 'Chuyển báo giá được duyệt/phát hành thành hợp đồng kinh tế và tự động đóng thắng Deal (S7-04)'}
-              >
-                {quote.contractNumber ? `Hợp đồng: ${quote.contractNumber}` : 'Chuyển thành Hợp đồng'}
-              </Button>
-            )}
-
-            {/* Nút Đặt làm hiệu lực nếu phiên bản này chưa là hiệu lực và đã gửi/duyệt */}
-            {!quote.isEffective && (quote.status === 'approved' || quote.status === 'sent') && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                leftIcon={<CheckCircle2 size={15} />}
-                onClick={() => setEffectiveVersion(quote.id)}
-                title="Chỉ một phiên bản ở trạng thái đang hiệu lực tại một thời điểm: Bấm để đặt phiên bản này làm hiệu lực duy nhất"
-              >
-                Đặt làm hiệu lực
-              </Button>
-            )}
-
-            {/* S7-03: Nút mở giao diện QuoteDiffViewer so sánh 2 phiên bản cạnh nhau */}
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <Button
               type="button"
               variant="secondary"
               size="sm"
-              leftIcon={<ArrowLeftRight size={15} />}
-              onClick={() => setIsDiffModalOpen(true)}
-              title="Mở giao diện QuoteDiffViewer.tsx để so sánh 2 phiên bản cạnh nhau"
+              leftIcon={<GitCompare size={15} />}
+              onClick={() => void handleOpenCompare()}
+              title="So sánh trực quan hai phiên bản của báo giá này"
             >
-              So sánh phiên bản ({versions.length})
+              So sánh phiên bản
             </Button>
 
-            {/* S7-03: Nút Tạo phiên bản mới khi muốn sửa sau khi đã gửi */}
             <Button
               type="button"
-              variant={isReadOnly ? 'primary' : 'secondary'}
+              variant="secondary"
               size="sm"
-              leftIcon={<GitBranch size={15} />}
-              onClick={() => {
-                setNewVersionReason('');
-                setIsNewVersionModalOpen(true);
-              }}
-              title="Mỗi lần sửa sau khi đã gửi sẽ tạo phiên bản mới, phiên bản cũ được giữ nguyên 100%"
+              leftIcon={<Share2 size={15} />}
+              onClick={() => setIsShareModalOpen(true)}
+              title="Lấy đường dẫn riêng biệt cho khách hàng phê duyệt trực tuyến"
             >
-              + Tạo phiên bản mới (v{versions.length + 1})
+              Liên kết Khách hàng
             </Button>
 
             <Button
@@ -358,18 +379,29 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
               variant="secondary"
               size="sm"
               leftIcon={<Printer size={15} />}
-              onClick={() => setIsPreviewModalOpen(true)}
-              title="Xem trước định dạng in hoặc xuất PDF bản báo giá"
+              onClick={handleOpenPdf}
+              title="Xuất file PDF hoặc bản in theo mẫu doanh nghiệp cấu hình"
             >
-              Xem trước / In báo giá
+              Xuất PDF Doanh nghiệp
             </Button>
-          </div>
 
+            {quote.status === 'accepted' && (
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                leftIcon={<FileCheck2 size={15} />}
+                onClick={handleOpenContractModal}
+                title="Chuyển đổi báo giá đã chấp nhận sang hợp đồng chính thức"
+              >
+                Chuyển thành Hợp đồng
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Thông tin khách hàng & bối cảnh cơ hội kế thừa */}
         <div className={styles.contextGrid}>
-
           <div className={styles.contextCol}>
             <div className={styles.contextRow}>
               <span className={styles.contextLabel}>
@@ -411,44 +443,6 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
           </div>
         </div>
       </header>
-
-      {/* S7-03: Cảnh báo trạng thái khóa phiên bản cũ khi đã phát hành/gửi */}
-      {isReadOnly && (
-        <div className={styles.readOnlyNoticeBanner} role="status">
-          <div className={styles.readOnlyNoticeText}>
-            <ShieldAlert size={22} style={{ flexShrink: 0 }} />
-            <span>
-              Bạn đang xem lại <strong>Phiên bản v{quote.version}</strong> (Trạng thái:{' '}
-              <strong>
-                {quote.status === 'sent'
-                  ? 'Đã phát hành gửi khách hàng'
-                  : quote.status === 'approved'
-                  ? 'Đã được duyệt'
-                  : quote.status === 'accepted'
-                  ? 'Đã được khách chấp nhận'
-                  : 'Bản lưu trữ'}
-              </strong>
-              {quote.isEffective ? ' · Đang hiệu lực' : ''}). Phiên bản này được khóa để bảo toàn cam kết với khách hàng ở lần gửi trước.
-            </span>
-          </div>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              leftIcon={<GitBranch size={15} />}
-              onClick={() => {
-                setNewVersionReason('');
-                setIsNewVersionModalOpen(true);
-              }}
-              title="Mỗi lần sửa sau khi đã gửi sẽ tạo phiên bản mới, phiên bản cũ được giữ nguyên 100%"
-            >
-              Tạo phiên bản mới (v{versions.length + 1})
-            </Button>
-          </div>
-        </div>
-      )}
-
 
       {/* ====================================================================
           2. Trạng thái phê duyệt và cảnh báo ngưỡng
@@ -903,23 +897,6 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
               {isSaving ? 'Đang lưu...' : 'Lưu nháp báo giá'}
             </Button>
 
-            {isReadOnly && (
-              <Button
-                type="button"
-                variant="primary"
-                size="md"
-                leftIcon={<GitBranch size={16} />}
-                onClick={() => {
-                  setNewVersionReason('');
-                  setIsNewVersionModalOpen(true);
-                }}
-                title="Mỗi lần sửa sau khi đã gửi sẽ tạo phiên bản mới, phiên bản cũ được giữ nguyên 100%"
-              >
-                + Tạo phiên bản mới (v{versions.length + 1})
-              </Button>
-            )}
-
-
             <Button
               type="button"
               variant="primary"
@@ -961,27 +938,9 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
                           ? 'Gửi Trưởng nhóm duyệt'
                           : 'Kiểm tra & duyệt báo giá'}
             </Button>
-
-            {/* S7-04: Nút Chuyển Báo giá thành Hợp đồng ở Sticky Action Bar */}
-            {(quote.status === 'approved' || quote.status === 'sent' || quote.status === 'accepted') && (
-              <Button
-                type="button"
-                variant={quote.contractNumber ? 'secondary' : 'primary'}
-                size="md"
-                leftIcon={<FileCheck2 size={16} />}
-                onClick={() => setIsContractModalOpen(true)}
-                disabled={Boolean(quote.contractId || quote.contractNumber)}
-                title={quote.contractId || quote.contractNumber
-                  ? 'Báo giá này đã được chuyển thành hợp đồng.'
-                  : 'Chuyển báo giá này thành hợp đồng kinh tế và tự động đóng thắng Deal (S7-04)'}
-              >
-                {quote.contractNumber ? `Hợp đồng: ${quote.contractNumber}` : 'Chuyển thành Hợp đồng'}
-              </Button>
-            )}
           </div>
         </div>
       </section>
-
 
       {/* ====================================================================
           7. Modal Chọn Sản Phẩm Từ Danh Mục (Product Catalog Modal)
@@ -1181,116 +1140,279 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
       </Modal>
 
       {/* ====================================================================
-          9. S7-03: Modal Giao Diện QuoteDiffViewer So Sánh 2 Phiên Bản Cạnh Nhau
+          9. Modal So Sánh Trực Quan Giữa Các Phiên Bản
           ==================================================================== */}
       <Modal
-        isOpen={isDiffModalOpen}
-        onClose={() => setIsDiffModalOpen(false)}
-        title="Đối Chiếu &amp; So Sánh Phiên Bản Báo Giá (QuoteDiffViewer)"
-        subtitle={`Mã báo giá: ${quote.quoteNumber} · Khách hàng: ${quote.customerCompany || quote.customerName}`}
+        isOpen={isCompareModalOpen}
+        onClose={() => setIsCompareModalOpen(false)}
+        title="So Sánh Phiên Bản Báo Giá"
+        subtitle={`Phiên bản hiện tại: v${quote.version} (${quote.quoteNumber})`}
         maxWidth="lg"
       >
-        <QuoteDiffViewer
-          dealId={quote.dealId}
-          initialBaseVersionId={versions.length > 1 ? versions[versions.length - 2].id : versions[0]?.id}
-          initialTargetVersionId={quote.id}
-          onClose={() => setIsDiffModalOpen(false)}
-          onSelectVersion={(v) => {
-            switchVersion(v);
-            setIsDiffModalOpen(false);
-          }}
-        />
-      </Modal>
-
-      {/* ====================================================================
-          10. S7-03: Modal Tạo Phiên Bản Báo Giá Mới (Fork Revision)
-          ==================================================================== */}
-      <Modal
-        isOpen={isNewVersionModalOpen}
-        onClose={() => setIsNewVersionModalOpen(false)}
-        title="Tạo Phiên Bản Báo Giá Mới"
-        subtitle={`Kế thừa từ Phiên bản v${quote.version} (${quote.quoteNumber})`}
-        maxWidth="md"
-        footer={
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setIsNewVersionModalOpen(false)}
-              title="Hủy bỏ không tạo phiên bản mới"
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {/* Target Version Selector */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#F8FAFC', padding: '12px 16px', borderRadius: 8, border: '1px solid #E2E8F0' }}>
+            <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#475569' }}>
+              Chọn phiên bản để so sánh cùng:
+            </span>
+            <select
+              style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #CBD5E1', fontSize: '0.875rem', fontWeight: 600 }}
+              value={targetCompareQuoteId}
+              onChange={(e) => void handleSelectCompareTarget(e.target.value)}
             >
-              Hủy
-            </Button>
-            <Button
-              type="button"
-              variant="primary"
-              leftIcon={<GitBranch size={15} />}
-              disabled={!newVersionReason.trim() || isCreatingNewVersion}
-              isLoading={isCreatingNewVersion}
-              onClick={handleCreateNewVersionSubmit}
-              title="Xác nhận tạo phiên bản mới; phiên bản cũ giữ nguyên 100%"
-            >
-              Tạo phiên bản v{versions.length + 1}
-            </Button>
-          </div>
-        }
-      >
-        <div className={styles.newVersionModalForm}>
-          <div className={styles.newVersionModalNote}>
-            <strong>Quy tắc cam kết:</strong> Mỗi lần sửa sau khi đã gửi sẽ tạo phiên bản mới (v
-            {versions.length + 1}) dạng bản nháp để bạn chỉnh sửa. Phiên bản cũ (v{quote.version})
-            cùng toàn bộ dữ liệu giá và cam kết với khách hàng ở lần gửi trước sẽ được{' '}
-            <strong>giữ nguyên 100%</strong>.
+              {dealQuotesList
+                .filter((q) => q.id !== quote.id)
+                .map((q) => (
+                  <option key={q.id} value={q.id}>
+                    Phiên bản v{q.version} - {q.quoteNumber} ({formatVndCurrency(q.grandTotal)} - {q.status})
+                  </option>
+                ))}
+            </select>
           </div>
 
-          <div>
-            <label
-              htmlFor="new-version-reason"
-              style={{
-                display: 'block',
-                fontSize: '0.875rem',
-                fontWeight: 700,
-                color: '#334155',
-                marginBottom: 8,
-              }}
-            >
-              Lý do sửa đổi / Tạo phiên bản mới <span style={{ color: '#DC2626' }}>*</span>
-            </label>
-            <textarea
-              id="new-version-reason"
-              className={styles.newVersionTextarea}
-              rows={4}
-              value={newVersionReason}
-              onChange={(e) => setNewVersionReason(e.target.value)}
-              placeholder="Ví dụ: Khách hàng yêu cầu tăng số lượng user, giảm giá thêm 3% và đổi điều khoản thanh toán sang 30 ngày..."
-              autoFocus
-              title="Nhập lý do tạo phiên bản mới"
-            />
+          {isComparing ? (
+            <div style={{ padding: 40, textAlign: 'center' }}>
+              <LoadingSkeleton height={120} />
+            </div>
+          ) : !compareData ? (
+            <div style={{ padding: 40, textAlign: 'center', color: '#64748B' }}>
+              <GitCompare size={36} color="#94A3B8" style={{ margin: '0 auto 8px' }} />
+              <p>Chưa có phiên bản khác của báo giá này để thực hiện so sánh.</p>
+            </div>
+          ) : (
+            <>
+              {/* Summary Metrics */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
+                <div style={{ background: '#EFF6FF', padding: 14, borderRadius: 8, border: '1px solid #BFDBFE' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#1E40AF', textTransform: 'uppercase', fontWeight: 700 }}>
+                    Chênh lệch tổng giá trị:
+                  </div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: compareData.priceDifference > 0 ? '#DC2626' : compareData.priceDifference < 0 ? '#16A34A' : '#1E293B', marginTop: 4 }}>
+                    {compareData.priceDifference > 0 ? `+ ${formatVndCurrency(compareData.priceDifference)}` : compareData.priceDifference < 0 ? `- ${formatVndCurrency(Math.abs(compareData.priceDifference))}` : '0 đ (Không đổi)'}
+                  </div>
+                </div>
+
+                <div style={{ background: '#F8FAFC', padding: 14, borderRadius: 8, border: '1px solid #E2E8F0' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#475569', textTransform: 'uppercase', fontWeight: 700 }}>
+                    Biến động chiết khấu:
+                  </div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', marginTop: 4 }}>
+                    {compareData.discountDifference > 0 ? `+${compareData.discountDifference.toFixed(1)}%` : `${compareData.discountDifference.toFixed(1)}%`}
+                  </div>
+                </div>
+
+                <div style={{ background: '#F8FAFC', padding: 14, borderRadius: 8, border: '1px solid #E2E8F0' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#475569', textTransform: 'uppercase', fontWeight: 700 }}>
+                    Thay đổi dòng sản phẩm:
+                  </div>
+                  <div style={{ fontSize: '1rem', fontWeight: 700, color: compareData.itemsModified ? '#D97706' : '#16A34A', marginTop: 6 }}>
+                    {compareData.itemsModified ? '● Có chỉnh sửa' : '○ Giữ nguyên'}
+                  </div>
+                </div>
+
+                <div style={{ background: '#F8FAFC', padding: 14, borderRadius: 8, border: '1px solid #E2E8F0' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#475569', textTransform: 'uppercase', fontWeight: 700 }}>
+                    Điều khoản thương mại:
+                  </div>
+                  <div style={{ fontSize: '1rem', fontWeight: 700, color: compareData.termsModified ? '#D97706' : '#16A34A', marginTop: 6 }}>
+                    {compareData.termsModified ? '● Đã sửa đổi' : '○ Không đổi'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Side-by-side Table Comparison */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                {/* Version A */}
+                <div style={{ border: '1.5px solid #2563EB', borderRadius: 8, padding: 16, background: '#FFFFFF' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, borderBottom: '1px solid #E2E8F0', paddingBottom: 8 }}>
+                    <h4 style={{ margin: 0, color: '#2563EB' }}>
+                      Phiên bản A (v{compareData.versionA.version}) {compareData.versionA.id === quote.id ? '· [Hiện tại]' : ''}
+                    </h4>
+                    <Badge tone={compareData.versionA.isEffective ? 'success' : 'neutral'} size="sm">
+                      {compareData.versionA.isEffective ? 'Đang hiệu lực' : 'Lưu trữ'}
+                    </Badge>
+                  </div>
+                  <div style={{ fontSize: '0.875rem', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div>Mã số: <strong>{compareData.versionA.quoteNumber}</strong></div>
+                    <div>Tổng thanh toán: <strong style={{ color: '#2563EB', fontSize: '1rem' }}>{formatVndCurrency(compareData.versionA.grandTotal)}</strong></div>
+                    <div>Mức chiết khấu: <strong>{compareData.versionA.totalDiscountPercent}%</strong> (-{formatVndCurrency(compareData.versionA.totalDiscountAmount)})</div>
+                    <div>Số lượng dòng sản phẩm: <strong>{compareData.versionA.items.length}</strong></div>
+                    <div>Điều khoản thanh toán: <em>{compareData.versionA.paymentTerms || '—'}</em></div>
+                  </div>
+                </div>
+
+                {/* Version B */}
+                <div style={{ border: '1.5px solid #CBD5E1', borderRadius: 8, padding: 16, background: '#FFFFFF' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, borderBottom: '1px solid #E2E8F0', paddingBottom: 8 }}>
+                    <h4 style={{ margin: 0, color: '#475569' }}>
+                      Phiên bản B (v{compareData.versionB.version}) {compareData.versionB.id === quote.id ? '· [Hiện tại]' : ''}
+                    </h4>
+                    <Badge tone={compareData.versionB.isEffective ? 'success' : 'neutral'} size="sm">
+                      {compareData.versionB.isEffective ? 'Đang hiệu lực' : 'Lưu trữ'}
+                    </Badge>
+                  </div>
+                  <div style={{ fontSize: '0.875rem', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div>Mã số: <strong>{compareData.versionB.quoteNumber}</strong></div>
+                    <div>Tổng thanh toán: <strong style={{ color: '#0F172A', fontSize: '1rem' }}>{formatVndCurrency(compareData.versionB.grandTotal)}</strong></div>
+                    <div>Mức chiết khấu: <strong>{compareData.versionB.totalDiscountPercent}%</strong> (-{formatVndCurrency(compareData.versionB.totalDiscountAmount)})</div>
+                    <div>Số lượng dòng sản phẩm: <strong>{compareData.versionB.items.length}</strong></div>
+                    <div>Điều khoản thanh toán: <em>{compareData.versionB.paymentTerms || '—'}</em></div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
+            <Button type="button" variant="secondary" onClick={() => setIsCompareModalOpen(false)}>
+              Đóng So Sánh
+            </Button>
           </div>
         </div>
       </Modal>
 
       {/* ====================================================================
-          11. S7-04: Modal Chuyển Báo Giá Thành Hợp Đồng (ConvertToContractModal)
+          10. Modal Chuyển Đổi Sang Hợp Đồng
           ==================================================================== */}
-      <ConvertToContractModal
+      <Modal
         isOpen={isContractModalOpen}
         onClose={() => setIsContractModalOpen(false)}
-        quote={quote}
-        onSuccess={(contract) => {
-          if (quote.dealId) {
-            reload(quote.dealId);
-          }
-          if (onSuccess) {
-            onSuccess({
-              ...quote,
-              status: 'accepted',
-              contractId: contract.id,
-              contractNumber: contract.contractNumber,
-            });
-          }
-        }}
-      />
+        title="Chuyển Báo Giá Sang Hợp Đồng"
+        subtitle="Kế thừa toàn bộ dòng hàng và giá thỏa thuận, tự động đánh dấu Cơ hội thành Thắng (Won)"
+        maxWidth="lg"
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', padding: '12px 16px', borderRadius: 8, fontSize: '0.875rem', color: '#1E40AF' }}>
+            Báo giá <strong>{quote.quoteNumber}</strong> với tổng giá trị <strong>{formatVndCurrency(quote.grandTotal)}</strong> ({quote.items.length} dòng sản phẩm) sẽ được kế thừa nguyên trạng vào Hợp đồng.
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontWeight: 600, fontSize: '0.875rem', marginBottom: 6 }}>
+              Số hợp đồng (Duy nhất toàn hệ thống): <span style={{ color: '#DC2626' }}>*</span>
+            </label>
+            <input
+              type="text"
+              style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: '0.9375rem', boxSizing: 'border-box' }}
+              value={contractNumber}
+              onChange={(e) => setContractNumber(e.target.value)}
+              placeholder="VD: HD-2026-089"
+            />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.8125rem', marginBottom: 4 }}>
+                Ngày ký: <span style={{ color: '#DC2626' }}>*</span>
+              </label>
+              <input
+                type="date"
+                style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #CBD5E1' }}
+                value={signingDate}
+                onChange={(e) => setSigningDate(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.8125rem', marginBottom: 4 }}>
+                Ngày bắt đầu hiệu lực: <span style={{ color: '#DC2626' }}>*</span>
+              </label>
+              <input
+                type="date"
+                style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #CBD5E1' }}
+                value={effectiveDate}
+                onChange={(e) => setEffectiveDate(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.8125rem', marginBottom: 4 }}>
+                Ngày hết hạn: <span style={{ color: '#DC2626' }}>*</span>
+              </label>
+              <input
+                type="date"
+                style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #CBD5E1' }}
+                value={expiryDate}
+                onChange={(e) => setExpiryDate(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontWeight: 600, fontSize: '0.875rem', marginBottom: 6 }}>
+              Điều khoản thanh toán hợp đồng:
+            </label>
+            <input
+              type="text"
+              style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: '0.875rem', boxSizing: 'border-box' }}
+              value={contractPaymentTerms}
+              onChange={(e) => setContractPaymentTerms(e.target.value)}
+            />
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 12 }}>
+            <Button type="button" variant="secondary" onClick={() => setIsContractModalOpen(false)} disabled={isConvertingContract}>
+              Hủy
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              leftIcon={<FileCheck2 size={16} />}
+              onClick={() => void handleConvertToContract()}
+              disabled={isConvertingContract}
+            >
+              {isConvertingContract ? 'Đang tạo Hợp đồng...' : 'Xác Nhận Tạo Hợp Đồng & Đóng Thắng (Won)'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ====================================================================
+          11. Modal Chia Sẻ Liên Kết Cho Khách Hàng
+          ==================================================================== */}
+      <Modal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        title="Liên Kết Duyệt Báo Giá Trực Tuyến"
+        subtitle="Khách hàng có thể truy cập để xem chi tiết và Chấp thuận hoặc Từ chối trực tiếp"
+        maxWidth="md"
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <p style={{ margin: 0, fontSize: '0.875rem', color: '#475569' }}>
+            Đường dẫn truy cập an toàn độc quyền dành cho khách hàng <strong>{quote.customerCompany || quote.customerName}</strong>:
+          </p>
+
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input
+              type="text"
+              readOnly
+              style={{ flex: 1, padding: '10px 14px', borderRadius: 8, border: '1px solid #CBD5E1', background: '#F8FAFC', fontSize: '0.875rem' }}
+              value={portalUrl}
+            />
+            <Button
+              type="button"
+              variant={isCopied ? 'secondary' : 'primary'}
+              leftIcon={isCopied ? <Check size={16} color="#16A34A" /> : <Copy size={16} />}
+              onClick={handleCopyLink}
+            >
+              {isCopied ? 'Đã sao chép' : 'Sao chép'}
+            </Button>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
+            <Button
+              type="button"
+              variant="secondary"
+              leftIcon={<ExternalLink size={15} />}
+              onClick={() => window.open(portalUrl, '_blank')}
+            >
+              Mở Trang Cổng Khách Hàng
+            </Button>
+            <Button type="button" variant="primary" onClick={() => setIsShareModalOpen(false)}>
+              Xong
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

@@ -1,67 +1,74 @@
 /**
- * S7-04: Chuyển Báo giá thành Hợp đồng (Convert Quote to Contract)
- * Quy chuẩn: Naming PascalCase, tiền tố I cho Interface, hậu tố Type cho Type
- * Tuyệt đối 0% kiểu any.
+ * S7-04 & S7-07: Hợp đồng & Cảnh báo Tái ký Interfaces.
+ * Quy chuẩn: Naming PascalCase, tiền tố I cho Interface. Tuyệt đối 0% kiểu any.
  */
 
-import { IQuoteLineItem } from './quote.interface';
+export type ContractStatusType =
+  | 'active'
+  | 'expiring_soon'
+  | 'expired'
+  | 'renewed'
+  | 'terminated';
 
-export type ContractStatusType = 'draft' | 'active' | 'expired' | 'terminated';
+export interface IContractItem {
+  id?: string;
+  productId?: string;
+  productName: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+  discountAmount: number;
+  lineTotal: number;
+}
 
 export interface IContract {
   id: string;
-  contractNumber: string; // Số hợp đồng duy nhất trong hệ thống, vd: HD-2026-089
-  title: string; // Tiêu đề hợp đồng
-  quoteId: string; // ID báo giá nguồn
-  quoteNumber: string;
-  quoteVersion: number;
-  dealId: string; // Cơ hội liên kết
-  dealTitle: string;
+  contractNumber: string;
+  title: string;
+  quotationId: string;
+  quotationNumber?: string;
+  dealId: string;
+  dealTitle?: string;
   customerId: string;
-  customerName: string;
+  customerName?: string;
   customerCompany?: string;
-  customerEmail?: string;
-  customerPhone?: string;
-  customerAddress?: string;
   customerTaxCode?: string;
-
-  // Dòng sản phẩm kế thừa toàn bộ từ báo giá đã chốt, không phải gõ lại
-  items: IQuoteLineItem[];
-  subtotal: number;
-  totalDiscountAmount: number;
-  totalDiscountPercent: number;
-  totalVatAmount: number;
-  grandTotal: number; // Giá trị hợp đồng (cơ hội chuyển sang Đóng thắng với giá trị đúng bằng giá trị này)
-
-  // Khai báo thời hạn & điều khoản
-  signingDate: string; // Ngày ký (YYYY-MM-DD)
-  startDate: string; // Ngày hiệu lực (YYYY-MM-DD)
-  endDate: string; // Ngày hết hạn (YYYY-MM-DD)
-  paymentTerms: string; // Điều khoản thanh toán
-  deliveryTerms?: string; // Điều khoản giao hàng & triển khai
-  notes?: string; // Ghi chú nội bộ hợp đồng
-
-  // Đại diện ký bên A & bên B
-  signatoryPartyA?: string; // Người đại diện khách hàng ký
-  signatoryPartyB?: string; // Người đại diện công ty ký
+  ownerId: string;
+  ownerName?: string;
+  totalValue: number;
+  totalInWords?: string;
+  signingDate: string;
+  effectiveDate: string;
+  expiryDate: string;
+  remainingDays: number;
+  isExpiringSoon: boolean;
+  isExpired: boolean;
+  paymentTerms?: string;
+  deliveryTerms?: string;
   status: ContractStatusType;
-
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
-  creatorRole: string;
+  templateId?: string;
+  items: IContractItem[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export interface ICreateContractFromQuoteDTO {
-  quoteId: string;
-  contractNumber: string; // Bắt buộc & duy nhất
-  title: string;
+export interface ICreateContractDTO {
+  quotationId: string;
+  contractNumber: string;
+  title?: string;
   signingDate: string;
-  startDate: string;
-  endDate: string;
-  paymentTerms: string;
+  effectiveDate: string;
+  expiryDate: string;
+  paymentTerms?: string;
   deliveryTerms?: string;
+  templateId?: string;
   notes?: string;
-  signatoryPartyA?: string;
-  signatoryPartyB?: string;
+}
+
+export interface IContractRenewalDTO {
+  title?: string;
+  expectedCloseDate?: string;
+  expectedValue?: number;
+  renewalProbability?: number;
+  notes?: string;
 }

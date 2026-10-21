@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useAuth } from './useAuth';
 
 export type PermissionKey =
@@ -186,19 +186,19 @@ export const useAuthorization = (): IAuthorizationResult => {
     );
   }, [isDirector, normalizedRole]);
 
-  const hasPermission = (perm: PermissionKey): boolean => {
+  const hasPermission = useCallback((perm: PermissionKey): boolean => {
     return permissions.includes(perm);
-  };
+  }, [permissions]);
 
-  const hasAnyPermission = (perms: PermissionKey[]): boolean => {
+  const hasAnyPermission = useCallback((perms: PermissionKey[]): boolean => {
     return perms.some((p) => permissions.includes(p));
-  };
+  }, [permissions]);
 
-  const hasAllPermissions = (perms: PermissionKey[]): boolean => {
+  const hasAllPermissions = useCallback((perms: PermissionKey[]): boolean => {
     return perms.every((p) => permissions.includes(p));
-  };
+  }, [permissions]);
 
-  const canAccessRoute = (path: string): boolean => {
+  const canAccessRoute = useCallback((path: string): boolean => {
     if (path.startsWith('/quotes/approvals')) {
       return hasPermission('approve_quotes');
     }
@@ -218,7 +218,7 @@ export const useAuthorization = (): IAuthorizationResult => {
       return hasPermission('manage_products');
     }
     return true;
-  };
+  }, [hasPermission]);
 
   return {
     role,

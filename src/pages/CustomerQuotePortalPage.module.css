@@ -1,0 +1,218 @@
+.portalContainer {
+  min-height: 100vh;
+  background-color: #F8FAFC;
+  display: flex;
+  flex-direction: column;
+  color: #1E293B;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.portalTopNav {
+  background-color: #FFFFFF;
+  border-bottom: 1px solid #E2E8F0;
+  padding: 16px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.brandWrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brandLogo {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #2563EB, #1D4ED8);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.brandTitle {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: -0.02em;
+}
+
+.portalContent {
+  flex: 1;
+  max-width: 960px;
+  margin: 32px auto;
+  width: 100%;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+.quoteCard {
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.cardHeader {
+  padding: 28px 32px;
+  border-bottom: 1px solid #E2E8F0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 20px;
+  background: linear-gradient(to bottom, #FFFFFF, #F8FAFC);
+}
+
+.cardBody {
+  padding: 32px;
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  background-color: #F8FAFC;
+  padding: 20px 24px;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+  margin-bottom: 28px;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  margin-bottom: 28px;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+}
+
+.portalTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.portalTable th {
+  background-color: #F1F5F9;
+  color: #475569;
+  font-weight: 600;
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.portalTable td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #E2E8F0;
+  vertical-align: top;
+}
+
+.portalTable tr:last-child td {
+  border-bottom: none;
+}
+
+.totalsGrid {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 24px;
+}
+
+.totalsBox {
+  width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.9375rem;
+}
+
+.totalsRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.grandTotalRow {
+  display: flex;
+  justify-content: space-between;
+  border-top: 2px solid #2563EB;
+  padding-top: 10px;
+  margin-top: 4px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #1D4ED8;
+}
+
+.wordsBox {
+  background-color: #EFF6FF;
+  border-left: 4px solid #2563EB;
+  padding: 14px 18px;
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+  color: #1E3A8A;
+  margin-bottom: 28px;
+}
+
+.termsBox {
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 32px;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.actionsBar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+  padding-top: 24px;
+  border-top: 1px solid #E2E8F0;
+  flex-wrap: wrap;
+}
+
+.expiredBanner {
+  background-color: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #991B1B;
+  padding: 16px 20px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  font-weight: 600;
+}
+
+.acceptedBanner {
+  background-color: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  color: #166534;
+  padding: 16px 20px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  font-weight: 600;
+}
+
+.rejectedBanner {
+  background-color: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  color: #475569;
+  padding: 16px 20px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}

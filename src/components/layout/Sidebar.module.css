@@ -127,19 +127,122 @@
   overflow-y: auto;
 }
 
+.sidebar__sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px 10px;
+}
+
 .sidebar__sectionLabel {
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: #64748B;
-  padding: 4px 10px 8px;
+  margin: 0;
 }
 
-.sidebar__list {
+.sidebar__toggleAllBtn {
+  background: transparent;
+  border: none;
+  font-size: 0.65rem;
+  color: #94A3B8;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.sidebar__toggleAllBtn:hover {
+  color: #FFFFFF;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.sidebar__group {
+  margin-bottom: 8px;
+}
+
+.sidebar__group:last-child {
+  margin-bottom: 4px;
+}
+
+.sidebar__groupHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-xs, 4px);
+  transition: all 0.15s ease;
+  user-select: none;
+  margin-bottom: 2px;
+}
+
+.sidebar__groupHeader:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar__groupTitle {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #94A3B8;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sidebar__groupMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sidebar__groupBadge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #94A3B8;
+}
+
+.sidebar__groupChevron {
+  color: #64748B;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sidebar__groupChevron--collapsed {
+  transform: rotate(-90deg);
+}
+
+.sidebar__groupCollapse {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.18s ease;
+  overflow: hidden;
+  opacity: 1;
+}
+
+.sidebar__groupCollapse--collapsed {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sidebar__groupList {
+  min-height: 0;
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
 }
 
 .sidebar__link {

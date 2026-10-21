@@ -140,7 +140,7 @@ export const ActivitiesPage: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <Badge tone="primary" dot>
-              SPRINT 6 · NHẬT KÝ HOẠT ĐỘNG &amp; KIỂM TOÁN
+              NHẬT KÝ HOẠT ĐỘNG &amp; KIỂM TOÁN
             </Badge>
             <h1 className={styles.title}>Nhật ký Hoạt động &amp; Kiểm toán Hệ thống</h1>
             <p className={styles.subtitle}>
@@ -356,7 +356,7 @@ export const ActivitiesPage: React.FC = () => {
         <Modal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          title="Ghi nhận Hoạt động cá nhân mới (S6-05)"
+          title="Ghi nhận Hoạt động cá nhân mới"
           maxWidth="md"
         >
           <form onSubmit={handleCreateActivity} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -395,7 +395,7 @@ export const ActivitiesPage: React.FC = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: 4 }}>
-                  Khách hàng liên quan (S6-05)
+                  Khách hàng liên quan
                 </label>
                 <select
                   value={newActivityForm.customerId}
@@ -413,7 +413,7 @@ export const ActivitiesPage: React.FC = () => {
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: 4 }}>
-                  Cơ hội bán hàng liên quan (S6-05)
+                  Cơ hội bán hàng liên quan
                 </label>
                 <select
                   value={newActivityForm.dealId}
@@ -432,7 +432,7 @@ export const ActivitiesPage: React.FC = () => {
 
             <div>
               <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: 4 }}>
-                Mô tả chi tiết nội dung (S6-05)
+                Mô tả chi tiết nội dung
               </label>
               <textarea
                 rows={3}
@@ -445,7 +445,7 @@ export const ActivitiesPage: React.FC = () => {
 
             <div>
               <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: 4 }}>
-                Ghi chú nội bộ (S6-05)
+                Ghi chú nội bộ
               </label>
               <textarea
                 rows={2}

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowUpRight,
@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { useCRMData } from '../../context/CRMDataContext';
 import { useAuth } from '../../hooks/useAuth';
+import { notificationService } from '../../services/notificationService';
+import { INotificationItem } from '../../interfaces/dashboard.interface';
 import { Avatar, SearchBar } from '../common';
 import styles from './TopBar.module.css';
 
@@ -31,7 +33,7 @@ export const TopBar: React.FC<ITopBarProps> = ({
 }) => {
   const { user, logout, triggerMockTokenRefresh, lastTokenRefresh } = useAuth();
   const {
-    notifications,
+    notifications: contextNotifications,
     markAllNotificationsRead,
     appearance,
     updateAppearance,
@@ -41,10 +43,29 @@ export const TopBar: React.FC<ITopBarProps> = ({
   const [globalQuery, setGlobalQuery] = useState<string>('');
   const [isNotifOpen, setIsNotifOpen] = useState<boolean>(false);
   const [isRefreshingToken, setIsRefreshingToken] = useState<boolean>(false);
+  const [apiNotifications, setApiNotifications] = useState<INotificationItem[]>([]);
   const notifRef = useRef<HTMLDivElement | null>(null);
   const searchWrapRef = useRef<HTMLDivElement | null>(null);
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  // Load notifications from backend (S7-08)
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const res = await notificationService.getNotifications();
+      if (res && res.items && res.items.length > 0) {
+        setApiNotifications(res.items);
+      }
+    } catch {
+      // Fallback to context
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchNotifications();
+  }, [fetchNotifications, isNotifOpen]);
+
+  const displayNotifications =
+    apiNotifications.length > 0 ? apiNotifications : contextNotifications;
+  const unreadCount = displayNotifications.filter((n) => !n.isRead).length;
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent): void => {
@@ -79,6 +100,35 @@ export const TopBar: React.FC<ITopBarProps> = ({
     const q = globalQuery.trim();
     setGlobalQuery('');
     navigate(`/users?search=${encodeURIComponent(q)}`);
+  };
+
+  const handleNotifClick = async (item: INotificationItem): Promise<void> => {
+    if (!item.isRead) {
+      void notificationService.markAsRead(item.id);
+      setApiNotifications((prev) =>
+        prev.map((n) => (n.id === item.id ? { ...n, isRead: true } : n))
+      );
+    }
+    setIsNotifOpen(false);
+    if (item.linkUrl) {
+      navigate(item.linkUrl);
+    } else if (item.targetType === 'deal') {
+      navigate('/deals');
+    } else if (item.targetType === 'quotation') {
+      navigate('/quotes/approvals');
+    } else if (item.targetType === 'task') {
+      navigate('/tasks');
+    } else if (item.targetType === 'lead') {
+      navigate('/leads');
+    } else if (item.targetType === 'contract') {
+      navigate('/contracts');
+    }
+  };
+
+  const handleMarkAllRead = async (): Promise<void> => {
+    void notificationService.markAllRead();
+    setApiNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    markAllNotificationsRead();
   };
 
   return (
@@ -204,7 +254,7 @@ export const TopBar: React.FC<ITopBarProps> = ({
                 <strong>Trung tâm thông báo</strong>
                 <button
                   type="button"
-                  onClick={markAllNotificationsRead}
+                  onClick={() => void handleMarkAllRead()}
                   className={styles.topbar__markReadBtn}
                 >
                   <CheckCheck size={14} />
@@ -212,12 +262,14 @@ export const TopBar: React.FC<ITopBarProps> = ({
                 </button>
               </div>
               <div className={styles.topbar__notifList}>
-                {notifications.map((item) => (
+                {displayNotifications.map((item) => (
                   <div
                     key={item.id}
                     className={`${styles.topbar__notifItem} ${
                       !item.isRead ? styles['topbar__notifItem--unread'] : ''
                     }`}
+                    onClick={() => void handleNotifClick(item)}
+                    title="Nhấn để mở màn hình liên quan"
                   >
                     <div className={styles.topbar__notifDot} />
                     <div className={styles.topbar__notifBody}>

@@ -34,5 +34,11 @@ export interface INotificationItem {
   description: string;
   timeAgo: string;
   isRead: boolean;
-  category: 'deal' | 'security' | 'mention' | 'system';
+  category?: 'deal' | 'security' | 'mention' | 'system' | 'quote' | 'lead' | 'task';
+  type?: string;
+  targetType?: string;
+  targetId?: string;
+  linkUrl?: string;
+  createdAt?: string;
 }
+

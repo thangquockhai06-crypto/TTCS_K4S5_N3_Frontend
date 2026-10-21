@@ -1,0 +1,250 @@
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.headerTitleWrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.headerIconBadge {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background-color: #EFF6FF;
+  color: #2563EB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.12);
+}
+
+.pageTitle {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0;
+}
+
+.pageSubtitle {
+  font-size: 0.875rem;
+  color: #64748B;
+  margin: 4px 0 0;
+}
+
+.tabsRow {
+  display: flex;
+  gap: 12px;
+  border-bottom: 1px solid #E2E8F0;
+  padding-bottom: 4px;
+}
+
+.tabItem {
+  padding: 8px 16px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #64748B;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  background: transparent;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tabItem:hover {
+  color: #1E293B;
+}
+
+.tabItemActive {
+  color: #2563EB;
+  border-bottom-color: #2563EB;
+}
+
+.cardContainer {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.ruleList {
+  display: flex;
+  flex-direction: column;
+}
+
+.ruleCard {
+  padding: 20px 24px;
+  border-bottom: 1px solid #E2E8F0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  transition: background-color 0.15s ease;
+}
+
+.ruleCard:last-child {
+  border-bottom: none;
+}
+
+.ruleCard:hover {
+  background-color: #F8FAFC;
+}
+
+.ruleInfo {
+  flex: 1;
+}
+
+.ruleTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.ruleName {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+}
+
+.ruleDesc {
+  font-size: 0.875rem;
+  color: #64748B;
+  margin: 0 0 12px;
+}
+
+.ifThenBlock {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.8125rem;
+}
+
+.ifBadge {
+  background-color: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1D4ED8;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.thenBadge {
+  background-color: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  color: #15803D;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.toggleSwitch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.toggleSwitch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #CBD5E1;
+  transition: .3s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+}
+
+.toggleSwitch input:checked + .slider {
+  background-color: #2563EB;
+}
+
+.toggleSwitch input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.logsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.logsTable th {
+  background-color: #F8FAFC;
+  color: #475569;
+  font-weight: 600;
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #E2E8F0;
+  white-space: nowrap;
+}
+
+.logsTable td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #E2E8F0;
+  vertical-align: middle;
+}
+
+.logsTable tr:hover {
+  background-color: #F8FAFC;
+}
+
+.statusSuccess {
+  color: #16A34A;
+  font-weight: 600;
+}
+
+.statusFailed {
+  color: #DC2626;
+  font-weight: 600;
+}
+
+.statusSkipped {
+  color: #64748B;
+  font-style: italic;
+}

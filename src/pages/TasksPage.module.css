@@ -257,3 +257,22 @@
   background: #f1f5f9;
   color: #475569;
 }
+
+/* Task Pagination */
+.taskPagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.taskPaginationText {
+  font-size: 0.8125rem;
+  color: #475569;
+}

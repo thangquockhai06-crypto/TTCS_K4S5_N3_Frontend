@@ -24,7 +24,7 @@ import { taskService } from '../services/taskService';
 import { userService } from '../services/userService';
 import { customerService } from '../services/customerService';
 import { dealService } from '../services/dealService';
-import { Badge, Button, Card, Modal, SearchBar } from '../components/common';
+import { Badge, Button, Card, Modal, SearchBar, SearchableSelect } from '../components/common';
 import { showGlobalToast } from '../context/ToastContext';
 import styles from './TasksPage.module.css';
 
@@ -43,6 +43,10 @@ export const TasksPage: React.FC = () => {
   const [dueDateTo, setDueDateTo] = useState<string>('');
   const [overdueOnly, setOverdueOnly] = useState<boolean>(false);
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
+
+  // Task pagination
+  const [taskPage, setTaskPage] = useState<number>(1);
+  const [taskLimit, setTaskLimit] = useState<number>(10);
 
   // Catalogs
   const [usersList, setUsersList] = useState<any[]>([]);
@@ -118,6 +122,7 @@ export const TasksPage: React.FC = () => {
 
   useEffect(() => {
     fetchData();
+    setTaskPage(1);
   }, [fetchData]);
 
   // Handle Quick Toggle Completion (S6-06)
@@ -236,9 +241,6 @@ export const TasksPage: React.FC = () => {
       {/* Header */}
       <header className={styles.header}>
         <div>
-          <Badge tone="primary" dot>
-            SPRINT 6 · S6-06, S6-07, S6-09
-          </Badge>
           <h1 className={styles.header__title}>Quản trị &amp; Tiến độ Công việc (Tasks Management)</h1>
           <p className={styles.header__subtitle}>
             Theo dõi, phân công và kiểm soát tiến độ công việc đội ngũ, tình trạng đến hạn/quá hạn và tải công việc nhóm.
@@ -246,7 +248,7 @@ export const TasksPage: React.FC = () => {
         </div>
 
         <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
-          <Plus size={16} /> Tạo Công việc mới (S6-06)
+          <Plus size={16} /> Tạo Công việc mới
         </Button>
       </header>
 
@@ -392,30 +394,33 @@ export const TasksPage: React.FC = () => {
             />
           </div>
 
-          {/* Filter by Assignee (S6-07) */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <User size={15} style={{ color: '#64748b' }} />
-            <select
-              className={styles.selectInput}
+          {/* Filter by Assignee (S6-07) with Search & Pagination */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 220 }}>
+            <SearchableSelect
               value={assigneeFilter}
-              onChange={(e) => setAssigneeFilter(e.target.value)}
-              title="Lọc theo người được phân công (S6-07)"
-            >
-              <option value="all">👥 Tất cả người phụ trách</option>
-              {usersList.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.fullName || u.full_name || u.email}
-                </option>
-              ))}
-            </select>
+              onChange={setAssigneeFilter}
+              options={usersList.map((u) => ({
+                value: u.id,
+                label: u.fullName || u.full_name || u.email,
+                subLabel: u.email && (u.fullName || u.full_name) ? u.email : undefined,
+              }))}
+              allowAll={true}
+              allLabel="Tất cả người phụ trách"
+              allValue="all"
+              placeholder="👥 Tất cả người phụ trách"
+              searchPlaceholder="Tìm kiếm người phụ trách..."
+              pageSize={6}
+              icon={<User size={14} style={{ color: '#64748b' }} />}
+              title="Lọc theo người được phân công"
+            />
           </div>
 
-          {/* Filter by Status (S6-07) */}
+          {/* Filter by Status */}
           <select
             className={styles.selectInput}
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            title="Lọc theo trạng thái công việc (S6-07)"
+            title="Lọc theo trạng thái công việc"
           >
             <option value="all">⚡ Tất cả trạng thái</option>
             <option value="pending">⏳ Chờ xử lý</option>
@@ -450,7 +455,7 @@ export const TasksPage: React.FC = () => {
               className={styles.dateInput}
               value={dueDateFrom}
               onChange={(e) => setDueDateFrom(e.target.value)}
-              title="Hạn xử lý từ ngày (S6-07)"
+              title="Hạn xử lý từ ngày"
             />
             <span style={{ fontSize: '0.8125rem', color: '#64748b' }}>đến:</span>
             <input
@@ -458,17 +463,17 @@ export const TasksPage: React.FC = () => {
               className={styles.dateInput}
               value={dueDateTo}
               onChange={(e) => setDueDateTo(e.target.value)}
-              title="Hạn xử lý đến ngày (S6-07)"
+              title="Hạn xử lý đến ngày"
             />
 
-            {/* Overdue filter checkbox (S6-07) */}
+            {/* Overdue filter checkbox */}
             <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8125rem', fontWeight: 600, color: '#dc2626', cursor: 'pointer', marginLeft: 8 }}>
               <input
                 type="checkbox"
                 checked={overdueOnly}
                 onChange={(e) => setOverdueOnly(e.target.checked)}
               />
-              Chỉ hiện công việc Quá hạn (S6-07)
+              Chỉ hiện công việc Quá hạn
             </label>
           </div>
 
@@ -499,8 +504,11 @@ export const TasksPage: React.FC = () => {
             </div>
           </Card>
         ) : (
-          <div className={styles.taskList}>
-            {tasks.map((task) => {
+          <>
+            <div className={styles.taskList}>
+              {tasks
+                .slice((taskPage - 1) * taskLimit, taskPage * taskLimit)
+                .map((task) => {
               const priorityClass =
                 task.priority === 'urgent'
                   ? styles.priorityUrgent
@@ -615,7 +623,7 @@ export const TasksPage: React.FC = () => {
                       type="button"
                       onClick={() => openEditModal(task)}
                       style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b', padding: 4 }}
-                      title="Sửa công việc (S6-06)"
+                      title="Sửa công việc"
                     >
                       <Edit2 size={15} />
                     </button>
@@ -623,7 +631,7 @@ export const TasksPage: React.FC = () => {
                       type="button"
                       onClick={() => handleDeleteTask(task.id)}
                       style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#ef4444', padding: 4 }}
-                      title="Xóa công việc (S6-06)"
+                      title="Xóa công việc"
                     >
                       <Trash2 size={15} />
                     </button>
@@ -632,7 +640,51 @@ export const TasksPage: React.FC = () => {
               );
             })}
           </div>
-        )}
+
+          {/* Task Pagination */}
+          {tasks.length > 0 && (
+            <div className={styles.taskPagination}>
+              <span className={styles.taskPaginationText}>
+                Hiển thị <strong>{(taskPage - 1) * taskLimit + 1} - {Math.min(taskPage * taskLimit, tasks.length)}</strong> / <strong>{tasks.length}</strong> công việc (Trang {taskPage}/{Math.max(1, Math.ceil(tasks.length / taskLimit))})
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <select
+                  value={taskLimit}
+                  onChange={(e) => {
+                    setTaskLimit(Number(e.target.value));
+                    setTaskPage(1);
+                  }}
+                  className={styles.selectInput}
+                  title="Số lượng công việc hiển thị mỗi trang"
+                >
+                  <option value={5}>5 / trang</option>
+                  <option value={10}>10 / trang</option>
+                  <option value={20}>20 / trang</option>
+                </select>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={taskPage <= 1}
+                  onClick={() => setTaskPage((p) => Math.max(1, p - 1))}
+                >
+                  Trước
+                </Button>
+                <span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                  {taskPage} / {Math.max(1, Math.ceil(tasks.length / taskLimit))}
+                </span>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={taskPage >= Math.max(1, Math.ceil(tasks.length / taskLimit))}
+                  onClick={() => setTaskPage((p) => Math.min(Math.max(1, Math.ceil(tasks.length / taskLimit)), p + 1))}
+                >
+                  Sau
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
       </section>
 
       {/* Modal: Create Task (S6-06) */}
@@ -640,7 +692,7 @@ export const TasksPage: React.FC = () => {
         <Modal
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
-          title="Tạo Công việc mới (S6-06)"
+          title="Tạo Công việc mới"
           maxWidth="md"
         >
           <form onSubmit={handleCreateTask} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -692,18 +744,21 @@ export const TasksPage: React.FC = () => {
                 <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: 4 }}>
                   Người phụ trách
                 </label>
-                <select
-                  value={createForm.assigneeId}
-                  onChange={(e) => setCreateForm({ ...createForm, assigneeId: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #cbd5e1' }}
-                >
-                  <option value="">— Gán cho tôi —</option>
-                  {usersList.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.fullName || u.full_name || u.email}
-                    </option>
-                  ))}
-                </select>
+                <SearchableSelect
+                  value={createForm.assigneeId || ''}
+                  onChange={(val) => setCreateForm({ ...createForm, assigneeId: val })}
+                  options={usersList.map((u) => ({
+                    value: u.id,
+                    label: u.fullName || u.full_name || u.email,
+                    subLabel: u.email && (u.fullName || u.full_name) ? u.email : undefined,
+                  }))}
+                  allowAll={true}
+                  allLabel="— Gán cho tôi / Chưa gán —"
+                  allValue=""
+                  placeholder="— Gán cho tôi —"
+                  searchPlaceholder="Tìm người phụ trách..."
+                  pageSize={6}
+                />
               </div>
             </div>
 
@@ -769,12 +824,12 @@ export const TasksPage: React.FC = () => {
         </Modal>
       )}
 
-      {/* Modal: Edit Task (S6-06) */}
+      {/* Modal: Edit Task */}
       {isEditModalOpen && selectedTask && (
         <Modal
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
-          title="Cập nhật Thông tin Công việc (S6-06)"
+          title="Cập nhật Thông tin Công việc"
           maxWidth="md"
         >
           <form onSubmit={handleUpdateTask} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -842,18 +897,21 @@ export const TasksPage: React.FC = () => {
                 <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: 4 }}>
                   Người phụ trách
                 </label>
-                <select
-                  value={editForm.assigneeId}
-                  onChange={(e) => setEditForm({ ...editForm, assigneeId: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #cbd5e1' }}
-                >
-                  <option value="">— Chưa phân công —</option>
-                  {usersList.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.fullName || u.full_name || u.email}
-                    </option>
-                  ))}
-                </select>
+                <SearchableSelect
+                  value={editForm.assigneeId || ''}
+                  onChange={(val) => setEditForm({ ...editForm, assigneeId: val })}
+                  options={usersList.map((u) => ({
+                    value: u.id,
+                    label: u.fullName || u.full_name || u.email,
+                    subLabel: u.email && (u.fullName || u.full_name) ? u.email : undefined,
+                  }))}
+                  allowAll={true}
+                  allLabel="— Chưa phân công —"
+                  allValue=""
+                  placeholder="— Chọn người phụ trách —"
+                  searchPlaceholder="Tìm người phụ trách..."
+                  pageSize={6}
+                />
               </div>
 
               <div>

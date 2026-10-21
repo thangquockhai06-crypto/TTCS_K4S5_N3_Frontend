@@ -44,6 +44,9 @@ import { QuoteComparePage } from '../pages/QuoteComparePage';
 import { TasksPage } from '../pages/TasksPage';
 
 import { ActivitiesPage } from '../pages/ActivitiesPage';
+import { ContractsPage } from '../pages/ContractsPage';
+import { AutomationRulesPage } from '../pages/AutomationRulesPage';
+import { CustomerQuotePortalPage } from '../pages/CustomerQuotePortalPage';
 
 interface IProtectedRouteProps {
   children: React.ReactElement;
@@ -65,6 +68,8 @@ export const AppRoutes: React.FC = () => {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ForgotPasswordPage />} />
+      {/* S7-06: Khách hàng truy cập Báo giá qua liên kết riêng biệt (Public Portal) */}
+      <Route path="/portal/quotes/:token" element={<CustomerQuotePortalPage />} />
 
       {/* Authenticated Workspace */}
       <Route
@@ -115,6 +120,12 @@ export const AppRoutes: React.FC = () => {
         {/* S7-03: Quản lý phiên bản Báo giá & So sánh Diff */}
         <Route path="deals/:id/quotes/compare" element={<QuoteComparePage />} />
         <Route path="quotes/compare" element={<QuoteComparePage />} />
+
+        {/* S7-04 & S7-07: Hợp đồng & Tái ký */}
+        <Route path="contracts" element={<ContractsPage />} />
+
+        {/* S7-09: Tự động hóa IF–THEN */}
+        <Route path="automation" element={<AutomationRulesPage />} />
 
         {/* EP-06: Task Management & Activity History (S6-05, S6-06, S6-07, S6-09) */}
         <Route path="tasks" element={<TasksPage />} />

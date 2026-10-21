@@ -1,0 +1,215 @@
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.headerTitleWrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.headerIconBadge {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background-color: #EFF6FF;
+  color: #2563EB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.12);
+}
+
+.pageTitle {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0;
+}
+
+.pageSubtitle {
+  font-size: 0.875rem;
+  color: #64748B;
+  margin: 4px 0 0;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.statCard {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.statIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.statNumber {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0;
+}
+
+.statLabel {
+  font-size: 0.8125rem;
+  color: #64748B;
+  margin: 2px 0 0;
+}
+
+.cardContainer {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.filterBar {
+  padding: 18px 20px;
+  border-bottom: 1px solid #E2E8F0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.tabList {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.tabButton {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748B;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.tabButton:hover {
+  background: #F1F5F9;
+  color: #1E293B;
+}
+
+.tabButtonActive {
+  background: #EFF6FF;
+  color: #2563EB;
+  border-color: #BFDBFE;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.contractsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.contractsTable th {
+  background-color: #F8FAFC;
+  color: #475569;
+  font-weight: 600;
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #E2E8F0;
+  white-space: nowrap;
+}
+
+.contractsTable td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #E2E8F0;
+  vertical-align: middle;
+}
+
+.contractsTable tr:hover {
+  background-color: #F8FAFC;
+}
+
+.contractNumberLink {
+  color: #2563EB;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.contractNumberLink:hover {
+  text-decoration: underline;
+}
+
+.emptyState {
+  padding: 60px 20px;
+  text-align: center;
+  color: #64748B;
+}
+
+.remainingBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.remainingSuccess {
+  background-color: #F0FDF4;
+  color: #166534;
+  border: 1px solid #BBF7D0;
+}
+
+.remainingWarning {
+  background-color: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FDE68A;
+}
+
+.remainingDanger {
+  background-color: #FEF2F2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
+}
+
+.actionsCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

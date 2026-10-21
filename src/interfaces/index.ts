@@ -13,4 +13,5 @@ export * from './timeline.interface';
 export * from './quote.interface';
 export * from './task.interface';
 export * from './contract.interface';
+export * from './automation.interface';
 
