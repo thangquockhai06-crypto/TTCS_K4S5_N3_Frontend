@@ -123,8 +123,17 @@ export const StagnantCustomerList: React.FC = () => {
           <div style={{ fontSize: '0.8125rem', color: '#64748B', fontWeight: 500 }}>
             Tổng số khách hàng cần chăm sóc
           </div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', marginTop: 4 }}>
-            {loadError ? 'Doanh Nghiệp' : `${stagnantList.length} Doanh Nghiệp`}
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', marginTop: 4, display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            {loadError ? (
+              <span style={{ fontSize: '1.125rem', fontWeight: 600 }}>Doanh Nghiệp</span>
+            ) : (
+              <>
+                <span>{stagnantList.length}</span>
+                <span style={{ fontSize: '0.95rem', fontWeight: 600, color: '#64748B' }}>
+                  Doanh Nghiệp
+                </span>
+              </>
+            )}
           </div>
         </Card>
 
