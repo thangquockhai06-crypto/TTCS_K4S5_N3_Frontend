@@ -59,6 +59,7 @@ export const SupportTicketModal: React.FC<ISupportTicketModalProps> = ({
 }) => {
   const [tickets, setTickets] = useState<ISupportTicket[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [ticketLoadError, setTicketLoadError] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -79,11 +80,13 @@ export const SupportTicketModal: React.FC<ISupportTicketModalProps> = ({
 
   const loadTickets = async () => {
     setIsLoading(true);
+    setTicketLoadError(null);
     try {
       const data = await customerService.getSupportTickets(customerId);
       setTickets(data);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Lỗi tải danh sách yêu cầu hỗ trợ:', err);
+      setTicketLoadError('Không thể tải danh sách phiếu hỗ trợ. Vui lòng thử lại.');
     } finally {
       setIsLoading(false);
     }
@@ -373,6 +376,26 @@ export const SupportTicketModal: React.FC<ISupportTicketModalProps> = ({
           <div style={{ textAlign: 'center', padding: 24, color: '#64748B' }}>
             <Loader2 size={24} className="animate-spin" style={{ margin: '0 auto 6px' }} />
             Đang tải danh sách yêu cầu...
+          </div>
+        ) : ticketLoadError ? (
+          <div
+            role="alert"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+              padding: 16,
+              color: '#991B1B',
+              backgroundColor: '#FEF2F2',
+              border: '1px solid #FECACA',
+              borderRadius: 8,
+            }}
+          >
+            <span>{ticketLoadError}</span>
+            <Button variant="secondary" size="sm" onClick={() => void loadTickets()}>
+              Thử lại
+            </Button>
           </div>
         ) : tickets.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 32, color: '#94A3B8', fontStyle: 'italic' }}>
