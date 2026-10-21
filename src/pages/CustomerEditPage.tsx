@@ -58,11 +58,13 @@ export const CustomerEditPage: React.FC = () => {
       return;
     }
 
+    let isMounted = true;
     const loadData = async () => {
       setIsLoading(true);
       setLoadError(null);
       try {
         const cust: ICustomer = await customerService.getCustomerById(id);
+        if (!isMounted) return;
         if (!cust) {
           setLoadError(`Không tìm thấy hồ sơ khách hàng với mã: "${id}".`);
           return;
@@ -82,14 +84,18 @@ export const CustomerEditPage: React.FC = () => {
         setLocation(cust.location || '');
         setSummary(cust.notesSummary || cust.summary || '');
       } catch (err: any) {
+        if (!isMounted) return;
         const msg = err.response?.data?.detail || err.message || 'Lỗi khi tải thông tin khách hàng.';
         setLoadError(msg);
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
 
     loadData();
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
 
   const validateMST = (mst: string): string | undefined => {
