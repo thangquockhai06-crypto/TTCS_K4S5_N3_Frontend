@@ -19,6 +19,25 @@ import { Button, Modal } from '../common';
 import { RiskBadge } from './RiskBadge';
 import { showGlobalToast } from '../../context/ToastContext';
 
+const toLocalDateValue = (date: Date): string =>
+  [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+  ].join('-');
+
+const getTicketDateValue = (value: string): string => {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : toLocalDateValue(date);
+};
+
+const getDefaultDueDate = (): string => {
+  const date = new Date();
+  date.setDate(date.getDate() + 2);
+  return toLocalDateValue(date);
+};
+
 export interface ISupportTicketModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -49,9 +68,7 @@ export const SupportTicketModal: React.FC<ISupportTicketModalProps> = ({
   const [formTitle, setFormTitle] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formPriority, setFormPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('high');
-  const [formDueDate, setFormDueDate] = useState(
-    new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  );
+  const [formDueDate, setFormDueDate] = useState(getDefaultDueDate);
   const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -88,7 +105,9 @@ export const SupportTicketModal: React.FC<ISupportTicketModalProps> = ({
         title: formTitle.trim(),
         description: formDescription.trim(),
         priority: formPriority,
-        dueDate: formDueDate ? new Date(formDueDate).toISOString() : undefined,
+        dueDate: formDueDate
+          ? new Date(`${formDueDate}T23:59:59`).toISOString()
+          : undefined,
       };
 
       await customerService.createSupportTicket(customerId, payload);
@@ -151,7 +170,8 @@ export const SupportTicketModal: React.FC<ISupportTicketModalProps> = ({
     if (!ticket.dueDate || ticket.status === 'resolved' || ticket.status === 'closed') {
       return false;
     }
-    return new Date(ticket.dueDate) < new Date();
+    const dueDateValue = getTicketDateValue(ticket.dueDate);
+    return Boolean(dueDateValue) && dueDateValue < toLocalDateValue(new Date());
   };
 
   return (
