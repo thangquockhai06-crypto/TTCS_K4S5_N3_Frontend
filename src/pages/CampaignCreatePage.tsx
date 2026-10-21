@@ -13,7 +13,11 @@ import {
 } from 'lucide-react';
 import { campaignService } from '../services/campaignService';
 import { showGlobalToast } from '../context/ToastContext';
-import { formatNumberWithCommas, parseNumberFromCommas } from '../utils/formatters';
+import {
+  formatNumberWithCommas,
+  parseNumberFromCommas,
+  toLocalDateInputValue,
+} from '../utils/formatters';
 import styles from './CampaignCreatePage.module.css';
 
 export const CampaignCreatePage: React.FC = () => {
@@ -26,7 +30,7 @@ export const CampaignCreatePage: React.FC = () => {
     status: 'ACTIVE',
     budget: 20000000,
     expected_revenue: 100000000,
-    start_date: new Date().toISOString().split('T')[0],
+    start_date: toLocalDateInputValue(),
     end_date: '',
     description: '',
   });
