@@ -9,11 +9,11 @@ const VN_PHONE_REGEX = /^(03|05|07|08|09)\d{8}$/;
 export const ProfilePage: React.FC = () => {
   const { user, updateUserProfile } = useAuth();
 
-  const [fullName, setFullName] = useState(user?.fullName || 'Quản Trị Viên Hệ Thống');
-  const [phone, setPhone] = useState(user?.phone || '0912345678');
-  const [title, setTitle] = useState(user?.title || 'Giám đốc Điều hành');
-  const [department, setDepartment] = useState(user?.department || 'Ban Quản trị & Vận hành Doanh thu');
-  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || '');
+  const [fullName, setFullName] = useState(user?.fullName ?? '');
+  const [phone, setPhone] = useState(user?.phone ?? '');
+  const [title, setTitle] = useState(user?.title ?? '');
+  const [department, setDepartment] = useState(user?.department ?? '');
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? '');
 
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
