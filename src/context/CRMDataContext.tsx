@@ -16,7 +16,7 @@ import {
 import { MOCK_CUSTOMERS } from '../mock/customers';
 import { INITIAL_NOTIFICATIONS } from '../mock/dashboard.mock';
 import { INITIAL_DEALS } from '../mock/deals';
-import { createAvatarSvgDataUri } from '../utils/formatters';
+import { createAvatarSvgDataUri, toLocalDateInputValue } from '../utils/formatters';
 import { showGlobalToast } from './ToastContext';
 
 const DEALS_OVERRIDE_STORAGE_KEY = 'nexus_deals_override';
@@ -183,7 +183,7 @@ export const CRMDataProvider: React.FC<ICRMDataProviderProps> = ({ children }) =
         avatarUrl: createAvatarSvgDataUri(ownerName, 0),
         email: 'admin@nexuscrm.vn',
       },
-      createdAt: new Date().toISOString().slice(0, 10),
+      createdAt: toLocalDateInputValue(),
       lastContactedAt: 'Vừa xong',
       nextFollowUp: '15/10/2026',
       summary:
