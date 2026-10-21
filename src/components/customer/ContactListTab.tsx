@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   UserCheck,
   Plus,
@@ -35,6 +35,7 @@ export const ContactListTab: React.FC<IContactListTabProps> = ({
   const [contacts, setContacts] = useState<ICustomerContact[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const contactRequestId = useRef(0);
 
   // Add / Edit Modal state
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
@@ -59,20 +60,28 @@ export const ContactListTab: React.FC<IContactListTabProps> = ({
   const [transferError, setTransferError] = useState<string | null>(null);
 
   const fetchContacts = async () => {
+    const requestId = ++contactRequestId.current;
     setIsLoading(true);
+    setError(null);
     try {
       const data = await customerService.getContacts(customerId);
+      if (requestId !== contactRequestId.current) return;
       setContacts(data);
-      setError(null);
     } catch (err: any) {
+      if (requestId !== contactRequestId.current) return;
+      console.error('Lỗi khi tải danh sách người liên hệ:', err);
+      setContacts([]);
       setError('Không thể tải danh sách người liên hệ.');
     } finally {
-      setIsLoading(false);
+      if (requestId === contactRequestId.current) setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchContacts();
+    void fetchContacts();
+    return () => {
+      contactRequestId.current += 1;
+    };
   }, [customerId]);
 
   const handleOpenCreate = () => {
