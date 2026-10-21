@@ -18,6 +18,15 @@ import { formatDate } from '../../utils/formatters';
 import { Button, Modal } from '../common';
 import { RiskBadge } from './RiskBadge';
 
+const toLocalDateInputValue = (date: Date): string =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+const localDateInputToIso = (value: string): string | undefined => {
+  if (!value) return undefined;
+  const [year, month, day] = value.split('-').map(Number);
+  return new Date(year, month - 1, day).toISOString();
+};
+
 export interface ISupportTicketModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -48,9 +57,11 @@ export const SupportTicketModal: React.FC<ISupportTicketModalProps> = ({
   const [formTitle, setFormTitle] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formPriority, setFormPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('high');
-  const [formDueDate, setFormDueDate] = useState(
-    new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  );
+  const [formDueDate, setFormDueDate] = useState(() => {
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + 2);
+    return toLocalDateInputValue(dueDate);
+  });
   const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -86,7 +97,7 @@ export const SupportTicketModal: React.FC<ISupportTicketModalProps> = ({
         title: formTitle.trim(),
         description: formDescription.trim(),
         priority: formPriority,
-        dueDate: formDueDate ? new Date(formDueDate).toISOString() : undefined,
+        dueDate: localDateInputToIso(formDueDate),
       };
 
       await customerService.createSupportTicket(customerId, payload);
