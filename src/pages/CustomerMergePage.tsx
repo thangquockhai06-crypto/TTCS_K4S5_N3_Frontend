@@ -34,54 +34,86 @@ export const CustomerMergePage: React.FC = () => {
 
   // Fetch all candidate customers
   useEffect(() => {
+    let isCurrentRequest = true;
     const fetchCandidates = async () => {
       try {
         const res = await customerService.getCustomers({
           search: searchQuery.trim() || undefined,
           limit: 100,
         });
-        setCandidateCustomers(res);
+        if (isCurrentRequest) setCandidateCustomers(res);
       } catch (err: any) {
-        console.error('Lỗi tải danh sách khách hàng:', err);
+        if (isCurrentRequest) {
+          console.error('Lỗi tải danh sách khách hàng:', err);
+        }
       }
     };
 
     const timer = setTimeout(fetchCandidates, 300);
-    return () => clearTimeout(timer);
+    return () => {
+      isCurrentRequest = false;
+      clearTimeout(timer);
+    };
   }, [searchQuery]);
 
   // Load primary customer if ID is given
   useEffect(() => {
+    let isCurrentRequest = true;
     if (!selectedPrimaryId) {
       setPrimaryCustomer(null);
-      return;
+      return () => {
+        isCurrentRequest = false;
+      };
     }
     const found = candidateCustomers.find((c) => c.id === selectedPrimaryId);
     if (found) {
       setPrimaryCustomer(found);
     } else {
+      setPrimaryCustomer(null);
       customerService
         .getCustomerById(selectedPrimaryId)
-        .then((res) => setPrimaryCustomer(res))
-        .catch((err) => console.error('Lỗi tải thông tin khách hàng chính:', err));
+        .then((res) => {
+          if (isCurrentRequest) setPrimaryCustomer(res);
+        })
+        .catch((err) => {
+          if (isCurrentRequest) {
+            console.error('Lỗi tải thông tin khách hàng chính:', err);
+          }
+        });
     }
+    return () => {
+      isCurrentRequest = false;
+    };
   }, [selectedPrimaryId, candidateCustomers]);
 
   // Load secondary customer
   useEffect(() => {
+    let isCurrentRequest = true;
     if (!selectedSecondaryId) {
       setSecondaryCustomer(null);
-      return;
+      return () => {
+        isCurrentRequest = false;
+      };
     }
     const found = candidateCustomers.find((c) => c.id === selectedSecondaryId);
     if (found) {
       setSecondaryCustomer(found);
     } else {
+      setSecondaryCustomer(null);
       customerService
         .getCustomerById(selectedSecondaryId)
-        .then((res) => setSecondaryCustomer(res))
-        .catch((err) => console.error('Lỗi tải thông tin khách hàng phụ:', err));
+        .then((res) => {
+          if (isCurrentRequest) setSecondaryCustomer(res);
+        })
+        .catch((err) => {
+          if (isCurrentRequest) {
+            console.error('Lỗi tải thông tin khách hàng phụ:', err);
+          }
+        });
     }
+    return () => {
+      isCurrentRequest = false;
+    };
   }, [selectedSecondaryId, candidateCustomers]);
 
   const masterCustomer = masterSide === 'primary' ? primaryCustomer : secondaryCustomer;
