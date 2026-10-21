@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Search, Eye, RefreshCw, AlertCircle } from 'lucide-react';
 import { IAuditLogItem } from '../../interfaces';
 import { sprint2Service } from '../../services/sprint2Service';
@@ -16,11 +16,13 @@ export const AuditLogViewer: React.FC = () => {
   // Filters
   const [performedBy, setPerformedBy] = useState('');
   const [targetType, setTargetType] = useState('all');
+  const requestId = useRef(0);
 
   // Selected for diff modal
   const [selectedLog, setSelectedLog] = useState<IAuditLogItem | null>(null);
 
   const fetchLogs = useCallback(async () => {
+    const currentRequestId = ++requestId.current;
     setIsLoading(true);
     setErrorMsg(null);
     try {
@@ -30,19 +32,24 @@ export const AuditLogViewer: React.FC = () => {
         page,
         limit,
       });
+      if (currentRequestId !== requestId.current) return;
       const logList = data.items || (data as any).data || [];
       setLogs(Array.isArray(logList) ? logList : []);
       setTotal(data.total || (Array.isArray(logList) ? logList.length : 0));
       setTotalPages(data.pages || Math.ceil((data.total || 1) / limit) || 1);
     } catch (err: any) {
+      if (currentRequestId !== requestId.current) return;
       setErrorMsg(err.response?.data?.detail || err.message || 'Lỗi khi tải nhật ký kiểm toán.');
     } finally {
-      setIsLoading(false);
+      if (currentRequestId === requestId.current) setIsLoading(false);
     }
   }, [performedBy, targetType, page, limit]);
 
   useEffect(() => {
-    fetchLogs();
+    void fetchLogs();
+    return () => {
+      requestId.current += 1;
+    };
   }, [fetchLogs]);
 
   const formatDateTime = (ts?: string) => {
