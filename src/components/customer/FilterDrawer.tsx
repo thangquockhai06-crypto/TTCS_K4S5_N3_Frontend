@@ -71,6 +71,10 @@ export const FilterDrawer: React.FC<IFilterDrawerProps> = ({
   const [isSavingPreset, setIsSavingPreset] = useState(false);
   const [presetNameInput, setPresetNameInput] = useState('');
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
+  const hasInvalidValueRange =
+    localFilters.min_value !== undefined &&
+    localFilters.max_value !== undefined &&
+    localFilters.min_value > localFilters.max_value;
 
   useEffect(() => {
     if (isOpen) {
@@ -141,6 +145,7 @@ export const FilterDrawer: React.FC<IFilterDrawerProps> = ({
   };
 
   const handleApply = () => {
+    if (hasInvalidValueRange) return;
     onApplyFilters(localFilters);
     onClose();
   };
@@ -400,6 +405,8 @@ export const FilterDrawer: React.FC<IFilterDrawerProps> = ({
               type="number"
               placeholder="Từ (Tối thiểu)"
               value={localFilters.min_value ?? ''}
+              aria-invalid={hasInvalidValueRange}
+              aria-describedby={hasInvalidValueRange ? 'customer-value-range-error' : undefined}
               onChange={(e) =>
                 setLocalFilters({
                   ...localFilters,
@@ -417,6 +424,8 @@ export const FilterDrawer: React.FC<IFilterDrawerProps> = ({
               type="number"
               placeholder="Đến (Tối đa)"
               value={localFilters.max_value ?? ''}
+              aria-invalid={hasInvalidValueRange}
+              aria-describedby={hasInvalidValueRange ? 'customer-value-range-error' : undefined}
               onChange={(e) =>
                 setLocalFilters({
                   ...localFilters,
@@ -431,6 +440,15 @@ export const FilterDrawer: React.FC<IFilterDrawerProps> = ({
               }}
             />
           </div>
+          {hasInvalidValueRange && (
+            <p
+              id="customer-value-range-error"
+              role="alert"
+              style={{ margin: '6px 0 0', color: '#B91C1C', fontSize: '0.75rem' }}
+            >
+              Giá trị tối đa phải lớn hơn hoặc bằng giá trị tối thiểu.
+            </p>
+          )}
         </div>
 
         {/* Actions Button */}
@@ -438,7 +456,13 @@ export const FilterDrawer: React.FC<IFilterDrawerProps> = ({
           <Button variant="secondary" onClick={handleReset} leftIcon={<RotateCcw size={15} />} style={{ flex: 1 }}>
             Đặt lại
           </Button>
-          <Button variant="primary" onClick={handleApply} leftIcon={<Check size={15} />} style={{ flex: 2 }}>
+          <Button
+            variant="primary"
+            onClick={handleApply}
+            disabled={hasInvalidValueRange}
+            leftIcon={<Check size={15} />}
+            style={{ flex: 2 }}
+          >
             Áp dụng bộ lọc
           </Button>
         </div>
