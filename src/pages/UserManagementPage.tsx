@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AlertCircle,
@@ -76,6 +76,7 @@ export const UserManagementPage: React.FC = () => {
     type: 'success' | 'error';
     message: string;
   } | null>(null);
+  const toastTimerRef = useRef<number | null>(null);
 
   // Stats
   const [stats, setStats] = useState({
@@ -85,9 +86,24 @@ export const UserManagementPage: React.FC = () => {
     pending: 0,
   });
 
+  useEffect(
+    () => () => {
+      if (toastTimerRef.current !== null) {
+        window.clearTimeout(toastTimerRef.current);
+      }
+    },
+    []
+  );
+
   const showToast = (type: 'success' | 'error', message: string): void => {
     setToast({ type, message });
-    window.setTimeout(() => setToast(null), 4000);
+    if (toastTimerRef.current !== null) {
+      window.clearTimeout(toastTimerRef.current);
+    }
+    toastTimerRef.current = window.setTimeout(() => {
+      toastTimerRef.current = null;
+      setToast(null);
+    }, 4000);
   };
 
   const fetchUsers = useCallback(async (): Promise<void> => {
