@@ -323,6 +323,7 @@ export const CampaignCreatePage: React.FC = () => {
                     type="date"
                     className={`${styles.input} ${errors.end_date ? styles.inputError : ''}`}
                     value={formData.end_date}
+                    min={formData.start_date || undefined}
                     onChange={(e) => handleInputChange('end_date', e.target.value)}
                     disabled={isSubmitting}
                   />
