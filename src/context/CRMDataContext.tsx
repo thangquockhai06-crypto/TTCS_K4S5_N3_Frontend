@@ -1,4 +1,12 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   CreateCustomerDTO,
   DealStageType,
@@ -7,17 +15,20 @@ import {
   ICustomerActivity,
   ICustomerNote,
   IDeal,
-  INotificationItem,
 } from '../interfaces';
 import { MOCK_CUSTOMERS } from '../mock/customers';
-import { INITIAL_NOTIFICATIONS } from '../mock/dashboard.mock';
 import { INITIAL_DEALS } from '../mock/deals';
 import { createAvatarSvgDataUri } from '../utils/formatters';
+import { INotificationItem } from '../interfaces/documents.interface';
+import { documentService } from '../services/documentService';
+import { useAuth } from '../hooks/useAuth';
 
 export interface ICRMDataContext {
   customers: ICustomer[];
   deals: IDeal[];
   notifications: INotificationItem[];
+  unreadNotificationCount: number;
+  notificationsError: string | null;
   appearance: IAppearanceSettings;
   addCustomer: (dto: CreateCustomerDTO) => ICustomer;
   updateCustomerStatus: (customerId: string, status: ICustomer['status']) => void;
@@ -31,7 +42,9 @@ export interface ICRMDataContext {
   ) => void;
   moveDealStage: (dealId: string, newStage: DealStageType) => void;
   addDeal: (newDeal: Omit<IDeal, 'id' | 'companyAvatar' | 'ownerAvatar' | 'daysInStage'>) => void;
-  markAllNotificationsRead: () => void;
+  markAllNotificationsRead: () => Promise<void>;
+  markNotificationRead: (notificationId: string) => Promise<void>;
+  refreshNotifications: () => Promise<void>;
   updateAppearance: (partial: Partial<IAppearanceSettings>) => void;
 }
 
@@ -42,11 +55,13 @@ interface ICRMDataProviderProps {
 }
 
 export const CRMDataProvider: React.FC<ICRMDataProviderProps> = ({ children }) => {
+  const { isAuthenticated } = useAuth();
   const [customers, setCustomers] = useState<ICustomer[]>(() => MOCK_CUSTOMERS);
   const [deals, setDeals] = useState<IDeal[]>(() => INITIAL_DEALS);
-  const [notifications, setNotifications] = useState<INotificationItem[]>(
-    () => [...INITIAL_NOTIFICATIONS]
-  );
+  const [notifications, setNotifications] = useState<INotificationItem[]>([]);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  const [notificationsError, setNotificationsError] = useState<string | null>(null);
+  const notificationRequestId = useRef(0);
   const [appearance, setAppearance] = useState<IAppearanceSettings>({
     theme: 'light',
     density: 'comfortable',
@@ -59,6 +74,47 @@ export const CRMDataProvider: React.FC<ICRMDataProviderProps> = ({ children }) =
     document.documentElement.setAttribute('data-density', appearance.density);
     document.documentElement.style.setProperty('--color-primary', appearance.accentColor);
   }, [appearance]);
+
+  const refreshNotifications = useCallback(async (): Promise<void> => {
+    if (!isAuthenticated) {
+      setNotifications([]);
+      setUnreadNotificationCount(0);
+      setNotificationsError(null);
+      return;
+    }
+
+    const requestId = ++notificationRequestId.current;
+    try {
+      const response = await documentService.getNotifications();
+      if (requestId !== notificationRequestId.current) return;
+      setNotifications(response.items);
+      setUnreadNotificationCount(response.unreadCount);
+      setNotificationsError(null);
+    } catch (error) {
+      if (requestId !== notificationRequestId.current) return;
+      console.error('Không thể tải thông báo từ máy chủ.', error);
+      setNotificationsError('Không thể tải thông báo. Vui lòng thử lại.');
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      notificationRequestId.current += 1;
+      setNotifications([]);
+      setUnreadNotificationCount(0);
+      setNotificationsError(null);
+      return;
+    }
+
+    void refreshNotifications();
+    const intervalId = window.setInterval(() => {
+      void refreshNotifications();
+    }, 30_000);
+    return () => {
+      window.clearInterval(intervalId);
+      notificationRequestId.current += 1;
+    };
+  }, [isAuthenticated, refreshNotifications]);
 
   const addCustomer = useCallback((dto: CreateCustomerDTO): ICustomer => {
     const newId = `cust-${String(Date.now()).slice(-4)}`;
@@ -222,9 +278,33 @@ export const CRMDataProvider: React.FC<ICRMDataProviderProps> = ({ children }) =
     []
   );
 
-  const markAllNotificationsRead = useCallback((): void => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+  const markAllNotificationsRead = useCallback(async (): Promise<void> => {
+    try {
+      await documentService.markAllNotificationsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      setUnreadNotificationCount(0);
+      setNotificationsError(null);
+    } catch (error) {
+      console.error('Không thể đánh dấu thông báo đã đọc.', error);
+      setNotificationsError('Không thể cập nhật trạng thái thông báo. Vui lòng thử lại.');
+    }
   }, []);
+
+  const markNotificationRead = useCallback(async (notificationId: string): Promise<void> => {
+    try {
+      const updated = await documentService.markNotificationRead(notificationId);
+      setNotifications((prev) =>
+        prev.map((item) => (item.id === updated.id ? { ...item, isRead: true } : item))
+      );
+      if (notifications.some((item) => item.id === updated.id && !item.isRead)) {
+        setUnreadNotificationCount((count) => Math.max(0, count - 1));
+      }
+      setNotificationsError(null);
+    } catch (error) {
+      console.error('Không thể đánh dấu thông báo đã đọc.', error);
+      setNotificationsError('Không thể cập nhật trạng thái thông báo. Vui lòng thử lại.');
+    }
+  }, [notifications]);
 
   const updateAppearance = useCallback((partial: Partial<IAppearanceSettings>): void => {
     setAppearance((prev) => ({ ...prev, ...partial }));
@@ -235,6 +315,8 @@ export const CRMDataProvider: React.FC<ICRMDataProviderProps> = ({ children }) =
       customers,
       deals,
       notifications,
+      unreadNotificationCount,
+      notificationsError,
       appearance,
       addCustomer,
       updateCustomerStatus,
@@ -243,12 +325,16 @@ export const CRMDataProvider: React.FC<ICRMDataProviderProps> = ({ children }) =
       moveDealStage,
       addDeal,
       markAllNotificationsRead,
+      markNotificationRead,
+      refreshNotifications,
       updateAppearance,
     }),
     [
       customers,
       deals,
       notifications,
+      unreadNotificationCount,
+      notificationsError,
       appearance,
       addCustomer,
       updateCustomerStatus,
@@ -257,6 +343,8 @@ export const CRMDataProvider: React.FC<ICRMDataProviderProps> = ({ children }) =
       moveDealStage,
       addDeal,
       markAllNotificationsRead,
+      markNotificationRead,
+      refreshNotifications,
       updateAppearance,
     ]
   );

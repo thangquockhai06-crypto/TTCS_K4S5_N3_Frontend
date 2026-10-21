@@ -14,6 +14,7 @@ import {
   Sliders,
   GitCommit,
   Trophy,
+  FileText,
 } from 'lucide-react';
 import { Badge, Button, Card } from '../components/common';
 import { UserManagementPanel } from '../components/users/UserManagementPanel';
@@ -27,6 +28,7 @@ import { CustomFieldBuilder } from '../components/custom-fields/CustomFieldBuild
 import { PipelineConfigView } from '../components/pipeline/PipelineConfigView';
 import { WinLossConfig } from '../components/win-loss/WinLossConfig';
 import { ProfilePage } from './ProfilePage';
+import { PdfTemplateSettings } from '../features/pdf-template-settings/PdfTemplateSettings';
 import styles from './SettingsPage.module.css';
 
 type SettingsSectionType =
@@ -39,7 +41,8 @@ type SettingsSectionType =
   | 'security'
   | 'users'
   | 'appearance'
-  | 'notification';
+  | 'notification'
+  | 'pdf_templates';
 
 const INITIAL_NOTIF_PREFS: ReadonlyArray<INotificationPreference> = [
   {
@@ -287,6 +290,20 @@ export const SettingsPage: React.FC = () => {
               <span>Email, Slack & Trong ứng dụng</span>
             </div>
           </button>
+
+          <button
+            type="button"
+            className={`${styles.sideNav__btn} ${
+              activeSection === 'pdf_templates' ? styles['sideNav__btn--active'] : ''
+            }`}
+            onClick={() => setActiveSection('pdf_templates')}
+          >
+            <FileText size={17} />
+            <div>
+              <strong>Mẫu PDF</strong>
+              <span>Logo, thông tin công ty & điều khoản</span>
+            </div>
+          </button>
         </nav>
 
         {/* Right Side Content Area */}
@@ -450,6 +467,16 @@ export const SettingsPage: React.FC = () => {
                   ))}
                 </div>
               </Card>
+            </motion.div>
+          )}
+
+          {activeSection === 'pdf_templates' && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={styles.panelStack}
+            >
+              <PdfTemplateSettings />
             </motion.div>
           )}
 
