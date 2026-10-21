@@ -80,7 +80,7 @@ export const CustomerEditPage: React.FC = () => {
         setIndustry(cust.industry || 'Công nghệ thông tin & Viễn thông');
         setTier((cust.tier as CustomerTierType) || 'Enterprise');
         setStatus((cust.status as CustomerStatusType) || 'New Lead');
-        setTotalContractValue(Number(cust.totalContractValue || cust.dealValue || 0));
+        setTotalContractValue(Number(cust.totalContractValue ?? cust.dealValue ?? 0));
         setLocation(cust.location || '');
         setSummary(cust.notesSummary || cust.summary || '');
       } catch (err: any) {
