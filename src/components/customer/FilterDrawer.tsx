@@ -398,7 +398,7 @@ export const FilterDrawer: React.FC<IFilterDrawerProps> = ({
         {/* Filter 7: ARR Range */}
         <div>
           <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: 4 }}>
-            Giá trị hợp đồng (USD):
+            Giá trị hợp đồng (VNĐ):
           </label>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <input
