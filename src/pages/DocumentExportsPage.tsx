@@ -23,24 +23,38 @@ export const DocumentExportsPage: React.FC = () => {
   const [loadingDocumentId, setLoadingDocumentId] = useState<string | null>(null);
   const [printableHtml, setPrintableHtml] = useState<string | null>(null);
   const printFrameRef = useRef<HTMLIFrameElement | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [documentErrors, setDocumentErrors] = useState<
+    Record<DocumentTab, string | null>
+  >({ quotation: null, contract: null });
 
   const loadDocuments = useCallback(async (): Promise<void> => {
     setIsLoading(true);
-    setError(null);
-    try {
-      const [nextQuotations, nextContracts] = await Promise.all([
-        documentService.getQuotations(),
-        documentService.getContracts(),
-      ]);
-      setQuotations(nextQuotations);
-      setContracts(nextContracts);
-    } catch (loadError) {
-      console.error('Không thể tải danh sách báo giá và hợp đồng.', loadError);
-      setError('Không thể tải danh sách tài liệu. Vui lòng thử lại.');
-    } finally {
-      setIsLoading(false);
+    setDocumentErrors({ quotation: null, contract: null });
+    const [quotationResult, contractResult] = await Promise.allSettled([
+      documentService.getQuotations(),
+      documentService.getContracts(),
+    ]);
+
+    if (quotationResult.status === 'fulfilled') {
+      setQuotations(quotationResult.value);
+    } else {
+      console.error('Không thể tải danh sách báo giá.', quotationResult.reason);
+      setDocumentErrors((current) => ({
+        ...current,
+        quotation: 'Không thể tải danh sách báo giá. Vui lòng thử lại.',
+      }));
     }
+
+    if (contractResult.status === 'fulfilled') {
+      setContracts(contractResult.value);
+    } else {
+      console.error('Không thể tải danh sách hợp đồng.', contractResult.reason);
+      setDocumentErrors((current) => ({
+        ...current,
+        contract: 'Không thể tải danh sách hợp đồng. Vui lòng thử lại.',
+      }));
+    }
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -77,14 +91,17 @@ export const DocumentExportsPage: React.FC = () => {
     templateId: string | null
   ): Promise<void> => {
     setLoadingDocumentId(id);
-    setError(null);
+    setDocumentErrors((current) => ({ ...current, [type]: null }));
 
     try {
       const html = await documentService.getPrintableDocument(type, id, templateId ?? undefined);
       setPrintableHtml(html);
     } catch (exportError) {
       console.error('Không thể tạo bản in tài liệu.', exportError);
-      setError('Không thể tạo bản in. Vui lòng thử lại hoặc kiểm tra kết nối máy chủ.');
+      setDocumentErrors((current) => ({
+        ...current,
+        [type]: 'Không thể tạo bản in. Vui lòng thử lại hoặc kiểm tra kết nối máy chủ.',
+      }));
     } finally {
       setLoadingDocumentId(null);
     }
@@ -150,8 +167,18 @@ export const DocumentExportsPage: React.FC = () => {
 
         {isLoading ? (
           <p className={styles.message}>Đang tải danh sách tài liệu...</p>
-        ) : error ? (
-          <p className={styles.error} role="alert">{error}</p>
+        ) : documentErrors[activeTab] ? (
+          <div className={styles.errorState} role="alert">
+            <p className={styles.error}>{documentErrors[activeTab]}</p>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => void loadDocuments()}
+              isLoading={isLoading}
+            >
+              Thử lại
+            </Button>
+          </div>
         ) : activeTab === 'quotation' ? (
           filteredQuotations.length === 0 ? (
             <p className={styles.message}>Không tìm thấy báo giá nào.</p>

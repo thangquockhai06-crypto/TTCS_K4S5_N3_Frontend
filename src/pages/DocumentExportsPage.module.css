@@ -148,6 +148,17 @@
   font-size: 0.84rem;
 }
 
+.errorState {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.errorState .error {
+  margin: 0;
+}
+
 .visuallyHidden {
   position: absolute;
   width: 1px;
