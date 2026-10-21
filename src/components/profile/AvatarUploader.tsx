@@ -20,6 +20,7 @@ export const AvatarUploader: React.FC<IAvatarUploaderProps> = ({
   disabled,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const previewObjectUrlRef = useRef<string | null>(null);
   const { showSuccess, showError } = useToast();
 
   const [previewUrl, setPreviewUrl] = useState<string>(() => {
@@ -33,6 +34,15 @@ export const AvatarUploader: React.FC<IAvatarUploaderProps> = ({
     setPreviewUrl(nextUrl);
     setImageError(false);
   }, [currentAvatarUrl]);
+
+  useEffect(
+    () => () => {
+      if (previewObjectUrlRef.current) {
+        URL.revokeObjectURL(previewObjectUrlRef.current);
+      }
+    },
+    []
+  );
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -55,6 +65,7 @@ export const AvatarUploader: React.FC<IAvatarUploaderProps> = ({
 
     // Instant local preview
     const objectUrl = URL.createObjectURL(file);
+    previewObjectUrlRef.current = objectUrl;
     setPreviewUrl(objectUrl);
     setImageError(false);
     setIsUploading(true);
@@ -79,6 +90,10 @@ export const AvatarUploader: React.FC<IAvatarUploaderProps> = ({
       // Revert to original on error
       setPreviewUrl(resolveAvatarUrl(currentAvatarUrl) || DEFAULT_AVATAR);
     } finally {
+      URL.revokeObjectURL(objectUrl);
+      if (previewObjectUrlRef.current === objectUrl) {
+        previewObjectUrlRef.current = null;
+      }
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
