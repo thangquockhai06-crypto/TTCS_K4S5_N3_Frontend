@@ -33,7 +33,7 @@ import {
 import { leadService } from '../services/leadService';
 import { campaignService } from '../services/campaignService';
 import { showGlobalToast, ToastType } from '../context/ToastContext';
-import { formatNumberWithCommas, parseNumberFromCommas, formatLeadStatus, formatLeadSource } from '../utils/formatters';
+import { formatDate, formatNumberWithCommas, parseNumberFromCommas, formatLeadStatus, formatLeadSource } from '../utils/formatters';
 import { Badge, Button, Modal, SearchBar } from '../components/common';
 import styles from './LeadManagementPage.module.css';
 
@@ -988,7 +988,7 @@ export const LeadManagementPage: React.FC = () => {
                         <code style={{ fontSize: '0.75rem' }}>{match.matched_field}</code>
                       </td>
                       <td style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-                        {new Date(match.created_at).toLocaleDateString('vi-VN')}
+                        {formatDate(match.created_at)}
                       </td>
                     </tr>
                   ))}

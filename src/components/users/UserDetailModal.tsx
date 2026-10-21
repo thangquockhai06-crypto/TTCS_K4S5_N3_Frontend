@@ -5,7 +5,7 @@ import {
   USER_ROLES_CONFIG,
   USER_STATUS_CONFIG,
 } from '../../interfaces/user-management.interface';
-import { createAvatarSvgDataUri } from '../../utils/formatters';
+import { createAvatarSvgDataUri, formatDate } from '../../utils/formatters';
 import styles from './UserDetailModal.module.css';
 
 interface UserDetailModalProps {
@@ -82,7 +82,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 Thời điểm khởi tạo
               </span>
               <span className={styles.detailValue}>
-                {new Date(user.createdAt).toLocaleDateString('vi-VN')}
+                {formatDate(user.createdAt)}
               </span>
             </div>
 
