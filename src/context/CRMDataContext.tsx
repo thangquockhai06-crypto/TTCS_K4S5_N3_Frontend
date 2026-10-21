@@ -279,20 +279,25 @@ export const CRMDataProvider: React.FC<ICRMDataProviderProps> = ({ children }) =
   );
 
   const markAllNotificationsRead = useCallback(async (): Promise<void> => {
+    notificationRequestId.current += 1;
     try {
       await documentService.markAllNotificationsRead();
+      notificationRequestId.current += 1;
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
       setUnreadNotificationCount(0);
       setNotificationsError(null);
     } catch (error) {
+      notificationRequestId.current += 1;
       console.error('Không thể đánh dấu thông báo đã đọc.', error);
       setNotificationsError('Không thể cập nhật trạng thái thông báo. Vui lòng thử lại.');
     }
   }, []);
 
   const markNotificationRead = useCallback(async (notificationId: string): Promise<void> => {
+    notificationRequestId.current += 1;
     try {
       const updated = await documentService.markNotificationRead(notificationId);
+      notificationRequestId.current += 1;
       setNotifications((prev) =>
         prev.map((item) => (item.id === updated.id ? { ...item, isRead: true } : item))
       );
@@ -301,6 +306,7 @@ export const CRMDataProvider: React.FC<ICRMDataProviderProps> = ({ children }) =
       }
       setNotificationsError(null);
     } catch (error) {
+      notificationRequestId.current += 1;
       console.error('Không thể đánh dấu thông báo đã đọc.', error);
       setNotificationsError('Không thể cập nhật trạng thái thông báo. Vui lòng thử lại.');
     }
