@@ -35,7 +35,7 @@ import { sprint2Service } from '../services/sprint2Service';
 import { userService } from '../services/userService';
 import { IUserItem } from '../interfaces/user-management.interface';
 import { useAuthorization } from '../hooks/useAuthorization';
-import { formatCurrency, formatCompactCurrency, formatDate, formatNumberWithCommas, parseNumberFromCommas, formatDealStage } from '../utils/formatters';
+import { formatCurrency, formatCompactCurrency, formatDate, formatNumberWithCommas, parseNumberFromCommas, formatDealStage, toLocalDateInputValue } from '../utils/formatters';
 import { showGlobalToast, ToastType } from '../context/ToastContext';
 import { Badge, Button, Modal, SearchBar, SearchableSelect } from '../components/common';
 import styles from './DealManagementPage.module.css';
@@ -560,7 +560,22 @@ export const DealManagementPage: React.FC = () => {
         noDateVal += val;
         return;
       }
-      const dDate = new Date(d.expectedCloseDate);
+      const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d.expectedCloseDate);
+      const dDate = dateOnlyMatch
+        ? new Date(
+            Number(dateOnlyMatch[1]),
+            Number(dateOnlyMatch[2]) - 1,
+            Number(dateOnlyMatch[3])
+          )
+        : new Date(d.expectedCloseDate);
+      if (
+        Number.isNaN(dDate.getTime()) ||
+        (dateOnlyMatch && toLocalDateInputValue(dDate) !== d.expectedCloseDate)
+      ) {
+        noDateCount++;
+        noDateVal += val;
+        return;
+      }
       dDate.setHours(0, 0, 0, 0);
       if (dDate < today) {
         overdueCount++;
