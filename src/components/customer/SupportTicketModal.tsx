@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -39,6 +39,8 @@ export const SupportTicketModal: React.FC<ISupportTicketModalProps> = ({
 }) => {
   const [tickets, setTickets] = useState<ISupportTicket[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [ticketLoadError, setTicketLoadError] = useState<string | null>(null);
+  const ticketRequestId = useRef(0);
   const [isScanning, setIsScanning] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -55,19 +57,28 @@ export const SupportTicketModal: React.FC<ISupportTicketModalProps> = ({
 
   useEffect(() => {
     if (isOpen && customerId) {
-      loadTickets();
+      void loadTickets();
     }
+    return () => {
+      ticketRequestId.current += 1;
+    };
   }, [isOpen, customerId]);
 
   const loadTickets = async () => {
+    const requestId = ++ticketRequestId.current;
     setIsLoading(true);
+    setTicketLoadError(null);
     try {
       const data = await customerService.getSupportTickets(customerId);
+      if (requestId !== ticketRequestId.current) return;
       setTickets(data);
     } catch (err) {
+      if (requestId !== ticketRequestId.current) return;
       console.error('Lỗi tải danh sách yêu cầu hỗ trợ:', err);
+      setTickets([]);
+      setTicketLoadError('Không thể tải danh sách phiếu hỗ trợ. Vui lòng thử lại.');
     } finally {
-      setIsLoading(false);
+      if (requestId === ticketRequestId.current) setIsLoading(false);
     }
   };
 
@@ -185,7 +196,9 @@ export const SupportTicketModal: React.FC<ISupportTicketModalProps> = ({
                 {riskFlag ? 'CẢNH BÁO: KHÁCH HÀNG ĐANG CÓ CỜ RỦI RO (AT RISK)' : 'Khách hàng an toàn (Không có cờ rủi ro)'}
               </div>
               <div style={{ fontSize: '0.8125rem', color: riskFlag ? '#B91C1C' : '#15803D' }}>
-                {riskReason || (riskFlag ? 'Phát hiện yêu cầu hỗ trợ quá hạn xử lý' : 'Tất cả các phiếu hỗ trợ đều đang được xử lý đúng hạn')}
+                {ticketLoadError
+                  ? 'Không thể xác nhận tình trạng phiếu hỗ trợ lúc này.'
+                  : riskReason || (riskFlag ? 'Phát hiện yêu cầu hỗ trợ quá hạn xử lý' : 'Tất cả các phiếu hỗ trợ đều đang được xử lý đúng hạn')}
               </div>
             </div>
           </div>
@@ -202,7 +215,7 @@ export const SupportTicketModal: React.FC<ISupportTicketModalProps> = ({
         {/* Header action */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#1E293B', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <LifeBuoy size={18} color="#2563EB" /> Danh sách phiếu hỗ trợ ({tickets.length})
+            <LifeBuoy size={18} color="#2563EB" /> Danh sách phiếu hỗ trợ ({ticketLoadError ? '—' : tickets.length})
           </h3>
           <Button
             variant="primary"
@@ -335,6 +348,13 @@ export const SupportTicketModal: React.FC<ISupportTicketModalProps> = ({
           <div style={{ textAlign: 'center', padding: 24, color: '#64748B' }}>
             <Loader2 size={24} className="animate-spin" style={{ margin: '0 auto 6px' }} />
             Đang tải danh sách yêu cầu...
+          </div>
+        ) : ticketLoadError ? (
+          <div style={{ textAlign: 'center', padding: 24, color: '#B91C1C' }} role="alert">
+            <p>{ticketLoadError}</p>
+            <Button variant="secondary" size="sm" onClick={() => void loadTickets()}>
+              Thử lại
+            </Button>
           </div>
         ) : tickets.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 32, color: '#94A3B8', fontStyle: 'italic' }}>
