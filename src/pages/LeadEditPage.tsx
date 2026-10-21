@@ -50,7 +50,11 @@ export const LeadEditPage: React.FC = () => {
 
   // Load Lead & Campaigns
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      setServerError('Không tìm thấy mã Lead.');
+      setIsLoading(false);
+      return;
+    }
 
     let isMounted = true;
     setIsLoading(true);

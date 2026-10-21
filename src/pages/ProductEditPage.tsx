@@ -48,7 +48,11 @@ export const ProductEditPage: React.FC = () => {
   const [serverError, setServerError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      setServerError('Không tìm thấy mã sản phẩm.');
+      setIsLoading(false);
+      return;
+    }
     let isMounted = true;
     setIsLoading(true);
 
