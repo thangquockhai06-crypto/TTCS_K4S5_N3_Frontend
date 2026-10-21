@@ -55,7 +55,7 @@ export const TopBar: React.FC<ITopBarProps> = ({
       setApiNotifications(Array.isArray(res?.items) ? res.items : []);
       setHasLoadedApiNotifications(true);
     } catch {
-      // Fallback to context
+      setHasLoadedApiNotifications(false);
     }
   }, []);
 
