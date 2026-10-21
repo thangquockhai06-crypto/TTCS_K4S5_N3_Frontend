@@ -11,6 +11,7 @@ interface IAvatarUploaderProps {
 }
 
 const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
+const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/jpg', 'image/webp']);
 const DEFAULT_AVATAR =
   'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&crop=faces';
 
@@ -56,7 +57,7 @@ export const AvatarUploader: React.FC<IAvatarUploaderProps> = ({
       return;
     }
 
-    if (!file.type.startsWith('image/')) {
+    if (!ALLOWED_IMAGE_TYPES.has(file.type.toLowerCase())) {
       const msg = 'Chỉ hỗ trợ tệp định dạng hình ảnh (PNG, JPG, WEBP).';
       showError(msg, 'Định dạng không hỗ trợ');
       if (fileInputRef.current) fileInputRef.current.value = '';
