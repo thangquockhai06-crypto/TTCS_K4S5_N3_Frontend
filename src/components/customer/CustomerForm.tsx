@@ -66,8 +66,8 @@ export const CustomerForm: React.FC<ICustomerFormProps> = ({
         location: customerToEdit.location || 'Hà Nội, Việt Nam',
         website: customerToEdit.website || '',
         status: (customerToEdit.status as CustomerStatusType) || 'New Lead',
-        dealValue: customerToEdit.totalContractValue || customerToEdit.dealValue || 0,
-        totalContractValue: customerToEdit.totalContractValue || customerToEdit.dealValue || 0,
+        dealValue: customerToEdit.totalContractValue ?? customerToEdit.dealValue ?? 0,
+        totalContractValue: customerToEdit.totalContractValue ?? customerToEdit.dealValue ?? 0,
         tags: customerToEdit.tags || ['Enterprise'],
         summary: customerToEdit.summary || customerToEdit.notesSummary || '',
       });
@@ -380,7 +380,7 @@ export const CustomerForm: React.FC<ICustomerFormProps> = ({
             <Input
               label="Quy mô hợp đồng (VNĐ)"
               type="number"
-              value={String(formData.totalContractValue || formData.dealValue || 0)}
+              value={String(formData.totalContractValue ?? formData.dealValue ?? 0)}
               onChange={(e) => handleInputChange('totalContractValue', Number(e.target.value))}
               placeholder="VD: 150000000"
               leftIcon={<DollarSign size={16} />}
