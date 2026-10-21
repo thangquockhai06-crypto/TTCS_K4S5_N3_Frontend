@@ -41,15 +41,31 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({ isOpen, onClose
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    const trimmedName = name.trim();
+    const normalizedCode = code.trim().toUpperCase();
+    const parsedMultiplier = Number(multiplier);
+    if (!trimmedName || !normalizedCode) {
+      const errorMsg = 'Tên và mã bảng giá không được để trống.';
+      setStatusMsg({ type: 'error', text: errorMsg });
+      showGlobalToast(errorMsg, 'warning');
+      return;
+    }
+    if (!Number.isFinite(parsedMultiplier) || parsedMultiplier < 0.1 || parsedMultiplier > 5) {
+      const errorMsg = 'Hệ số giá phải nằm trong khoảng từ 0,1 đến 5.';
+      setStatusMsg({ type: 'error', text: errorMsg });
+      showGlobalToast(errorMsg, 'warning');
+      return;
+    }
+
     try {
       await sprint2Service.createPriceList({
-        name,
-        code: code.toUpperCase().trim(),
-        multiplier: parseFloat(multiplier) || 1.0,
+        name: trimmedName,
+        code: normalizedCode,
+        multiplier: parsedMultiplier,
         description,
         is_active: true,
       });
-      const msg = `Tạo bảng giá "${name}" mới thành công!`;
+      const msg = `Tạo bảng giá "${trimmedName}" mới thành công!`;
       setStatusMsg({ type: 'success', text: msg });
       showGlobalToast(msg, 'success');
       setName('');
