@@ -98,6 +98,17 @@ export const PipelineConfigView: React.FC = () => {
       showGlobalToast(msg, 'warning');
       return;
     }
+    if (
+      !editingStage &&
+      stages.some(
+        (stage) => stage.stage_key.trim().toLowerCase() === trimmedStageKey.toLowerCase()
+      )
+    ) {
+      const msg = `Mã khóa "${trimmedStageKey}" đã được sử dụng.`;
+      setStatusMsg({ type: 'error', text: msg });
+      showGlobalToast(msg, 'warning');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
