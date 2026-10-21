@@ -149,12 +149,14 @@ export const ContactListTab: React.FC<IContactListTabProps> = ({
     setTargetCustomerId('');
     setTransferReason('');
     setTransferError(null);
+    setAllCustomers([]);
     try {
       const list = await customerService.getCustomers({ limit: 200 });
       // Loại bỏ chính công ty hiện tại
       setAllCustomers(list.filter((c) => c.id !== customerId));
-    } catch (err) {
-      // ignore
+    } catch (err: unknown) {
+      console.error('Lỗi khi tải danh sách doanh nghiệp nhận liên hệ:', err);
+      setTransferError('Không thể tải danh sách doanh nghiệp. Vui lòng đóng và thử lại.');
     }
   };
 
