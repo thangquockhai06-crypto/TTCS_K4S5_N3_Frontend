@@ -43,10 +43,12 @@ export const CampaignCreatePage: React.FC = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setServerError(null);
 
-    if (errors[field]) {
+    const isCampaignDateField = field === 'start_date' || field === 'end_date';
+    if (errors[field] || (isCampaignDateField && errors.end_date)) {
       setErrors((prev) => {
         const next = { ...prev };
         delete next[field];
+        if (isCampaignDateField) delete next.end_date;
         return next;
       });
     }
