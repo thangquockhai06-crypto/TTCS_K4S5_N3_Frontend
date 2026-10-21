@@ -27,7 +27,7 @@ export const ProfilePage: React.FC = () => {
     setTitle(user?.title || '');
     setDepartment(user?.department || '');
     setAvatarUrl(user?.avatarUrl || '');
-  }, [user?.id]);
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
