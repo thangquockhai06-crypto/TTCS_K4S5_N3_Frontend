@@ -124,7 +124,7 @@ export const StagnantCustomerList: React.FC = () => {
             Tổng số khách hàng cần chăm sóc
           </div>
           <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', marginTop: 4 }}>
-            {loadError ? '—' : stagnantList.length} doanh nghiệp
+            {loadError ? 'Doanh Nghiệp' : `${stagnantList.length} Doanh Nghiệp`}
           </div>
         </Card>
 
