@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Plus,
   Search,
@@ -43,8 +43,10 @@ export const ProductList: React.FC = () => {
   });
 
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const productRequestId = useRef(0);
 
   const fetchProducts = useCallback(async () => {
+    const requestId = ++productRequestId.current;
     setIsLoading(true);
     setStatusMsg(null);
     try {
@@ -52,16 +54,22 @@ export const ProductList: React.FC = () => {
         search: search || undefined,
         category: categoryFilter !== 'all' ? categoryFilter : undefined,
       });
+      if (requestId !== productRequestId.current) return;
       setProducts(data);
-    } catch {
+    } catch (err: unknown) {
+      if (requestId !== productRequestId.current) return;
+      console.error('Lỗi khi tải danh sách sản phẩm:', err);
       setStatusMsg({ type: 'error', text: 'Không thể tải danh sách sản phẩm.' });
     } finally {
-      setIsLoading(false);
+      if (requestId === productRequestId.current) setIsLoading(false);
     }
   }, [search, categoryFilter]);
 
   useEffect(() => {
-    fetchProducts();
+    void fetchProducts();
+    return () => {
+      productRequestId.current += 1;
+    };
   }, [fetchProducts]);
 
   const handleOpenCreate = () => {
