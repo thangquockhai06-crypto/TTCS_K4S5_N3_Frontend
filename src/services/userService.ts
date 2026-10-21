@@ -179,8 +179,12 @@ class UserService {
     try {
       const response = await axiosInstance.get<IBackendUser>(`/users/${userId}`);
       return mapBackendToUserItem(response.data);
-    } catch {
-      return null;
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response?.status === 404) {
+        return null;
+      }
+      console.error('Lỗi khi tải thông tin người dùng từ Backend:', err);
+      throw new Error(extractErrorMessage(err, 'Không thể tải thông tin người dùng từ máy chủ.'));
     }
   }
 
@@ -306,7 +310,10 @@ class UserService {
     }
 
     const current = await this.getUserById(userId);
-    const nextStatus: UserStatusType = current?.status === 'active' ? 'locked' : 'active';
+    if (!current) {
+      throw new Error('Không tìm thấy người dùng cần cập nhật trạng thái.');
+    }
+    const nextStatus: UserStatusType = current.status === 'active' ? 'locked' : 'active';
     return this.updateUser(userId, { status: nextStatus }, currentUserId, currentUserEmail);
   }
 
@@ -317,10 +324,13 @@ class UserService {
     userId: string
   ): Promise<{ message: string; tempPassword: string }> {
     const user = await this.getUserById(userId);
+    if (!user) {
+      throw new Error('Không tìm thấy người dùng cần gửi lại email kích hoạt.');
+    }
     const tempPassword = generateTemporaryPassword();
     return {
       tempPassword,
-      message: `Đã gửi lại email kích hoạt kèm mật khẩu tạm (${tempPassword}) đến '${user?.email || 'người dùng'}'.`,
+      message: `Đã gửi lại email kích hoạt kèm mật khẩu tạm (${tempPassword}) đến '${user.email}'.`,
     };
   }
 }
