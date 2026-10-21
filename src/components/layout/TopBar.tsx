@@ -44,6 +44,7 @@ export const TopBar: React.FC<ITopBarProps> = ({
   const [isNotifOpen, setIsNotifOpen] = useState<boolean>(false);
   const [isRefreshingToken, setIsRefreshingToken] = useState<boolean>(false);
   const [apiNotifications, setApiNotifications] = useState<INotificationItem[]>([]);
+  const [hasLoadedApiNotifications, setHasLoadedApiNotifications] = useState(false);
   const notifRef = useRef<HTMLDivElement | null>(null);
   const searchWrapRef = useRef<HTMLDivElement | null>(null);
 
@@ -51,9 +52,8 @@ export const TopBar: React.FC<ITopBarProps> = ({
   const fetchNotifications = useCallback(async () => {
     try {
       const res = await notificationService.getNotifications();
-      if (res && res.items && res.items.length > 0) {
-        setApiNotifications(res.items);
-      }
+      setApiNotifications(Array.isArray(res?.items) ? res.items : []);
+      setHasLoadedApiNotifications(true);
     } catch {
       // Fallback to context
     }
@@ -63,8 +63,9 @@ export const TopBar: React.FC<ITopBarProps> = ({
     void fetchNotifications();
   }, [fetchNotifications, isNotifOpen]);
 
-  const displayNotifications =
-    apiNotifications.length > 0 ? apiNotifications : contextNotifications;
+  const displayNotifications = hasLoadedApiNotifications
+    ? apiNotifications
+    : contextNotifications;
   const unreadCount = displayNotifications.filter((n) => !n.isRead).length;
 
   useEffect(() => {
