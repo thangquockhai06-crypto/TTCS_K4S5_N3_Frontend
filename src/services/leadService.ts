@@ -252,7 +252,7 @@ class LeadService {
           criteria_value: r.criteria_value || r.criterionValue,
           assigned_user_id: r.assigned_user_id || r.targetUserId,
           assigned_user_name: r.assigned_user_name || r.targetUserName,
-          priority: r.priority || 1,
+          priority: r.priority ?? 1,
           is_active: r.is_active ?? r.isActive ?? true,
         }))
       : [];
@@ -264,7 +264,7 @@ class LeadService {
       ruleType: payload.rule_type,
       criterionValue: payload.criteria_value,
       targetUserId: payload.assigned_user_id,
-      priority: payload.priority || 1,
+      priority: payload.priority ?? 1,
       isActive: payload.is_active ?? true,
     };
     const response = await axiosInstance.post<any>('/leads/routing-rules', body);
