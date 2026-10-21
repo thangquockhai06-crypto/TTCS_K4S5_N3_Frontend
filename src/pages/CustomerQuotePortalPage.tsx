@@ -136,7 +136,9 @@ export const CustomerQuotePortalPage: React.FC = () => {
   }
 
   const isExpired = Boolean(
-    quote.validUntil && quote.validUntil < toLocalDateInputValue()
+    quote.status !== 'accepted' &&
+      quote.validUntil &&
+      quote.validUntil < toLocalDateInputValue()
   );
   const canRespond =
     (quote.status === 'sent' || quote.status === 'approved') && !isExpired;
