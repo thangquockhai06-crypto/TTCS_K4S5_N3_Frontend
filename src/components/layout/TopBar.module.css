@@ -278,16 +278,58 @@
   color: var(--color-primary);
 }
 
+.topbar__markReadBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .topbar__notifList {
   max-height: 320px;
   overflow-y: auto;
 }
 
 .topbar__notifItem {
+  width: 100%;
   display: flex;
   gap: 10px;
   padding: 12px 16px;
+  border: 0;
   border-bottom: 1px solid var(--color-border-subtle);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.14s ease;
+}
+
+.topbar__notifItem:hover {
+  background-color: var(--color-bg-hover);
+}
+
+.topbar__notifBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.topbar__notifError {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 16px;
+  color: var(--color-danger);
+  font-size: 0.76rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.topbar__notifEmpty {
+  padding: 20px 16px;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  text-align: center;
 }
 
 .topbar__notifItem--unread {
