@@ -29,10 +29,9 @@ export const AvatarUploader: React.FC<IAvatarUploaderProps> = ({
   const [imageError, setImageError] = useState<boolean>(false);
 
   useEffect(() => {
-    if (currentAvatarUrl) {
-      setPreviewUrl(resolveAvatarUrl(currentAvatarUrl) || DEFAULT_AVATAR);
-      setImageError(false);
-    }
+    const nextUrl = resolveAvatarUrl(currentAvatarUrl) || DEFAULT_AVATAR;
+    setPreviewUrl(nextUrl);
+    setImageError(false);
   }, [currentAvatarUrl]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,7 +87,7 @@ export const AvatarUploader: React.FC<IAvatarUploaderProps> = ({
   const handleRemove = () => {
     setPreviewUrl(DEFAULT_AVATAR);
     setImageError(false);
-    onAvatarChange(DEFAULT_AVATAR);
+    onAvatarChange('');
     showSuccess('Đã gỡ ảnh đại diện và trở về ảnh mặc định.');
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
