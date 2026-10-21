@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -60,6 +60,7 @@ export const CustomerListPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const customerRequestId = useRef(0);
 
   // Filters & View
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -79,6 +80,7 @@ export const CustomerListPage: React.FC = () => {
 
   // Load customers from API with data scope enforced on backend
   const fetchCustomers = useCallback(async () => {
+    const requestId = ++customerRequestId.current;
     setIsLoading(true);
     setError(null);
     try {
@@ -91,15 +93,17 @@ export const CustomerListPage: React.FC = () => {
       };
 
       const res = await customerService.getCustomers(criteria);
+      if (requestId !== customerRequestId.current) return;
       setCustomers(res || []);
     } catch (err: unknown) {
+      if (requestId !== customerRequestId.current) return;
       console.error('Lỗi khi tải danh sách khách hàng:', err);
       const errorMsg =
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
         'Không thể tải danh sách khách hàng từ máy chủ.';
       setError(errorMsg);
     } finally {
-      setIsLoading(false);
+      if (requestId === customerRequestId.current) setIsLoading(false);
     }
   }, [page, limit, searchQuery, selectedStatus, advancedFilters]);
 
@@ -107,7 +111,10 @@ export const CustomerListPage: React.FC = () => {
     const timer = setTimeout(() => {
       fetchCustomers();
     }, 250);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      customerRequestId.current += 1;
+    };
   }, [fetchCustomers]);
 
   const handleDeleteCustomer = async () => {
