@@ -96,3 +96,10 @@ TTCS_K4S5_N3/
 Trang Lead được tích hợp tại `/leads`, dùng route/layout và quyền `manage_customers` hiện có. Mã feature nằm trong `src/features/lead-management/`; giao diện sử dụng CSS Modules và design tokens toàn ứng dụng nên tự đồng bộ light/dark mode.
 
 Hiện danh sách Lead và bộ lọc đã lưu chạy qua `leadManagementService` dạng mock trong bộ nhớ. Preset không tồn tại sau khi tải lại trang; thay adapter này bằng API Lead và API preset khi backend cung cấp hợp đồng tương ứng. Bộ lọc ngày áp dụng cho ngày tạo theo UTC, bao gồm cả hai ngày đầu/cuối. SLA chỉ dựa trên `slaDueAt` từ dữ liệu; ngày đến hạn thiếu hoặc không hợp lệ được hiển thị riêng là chưa có dữ liệu, không suy diễn chính sách SLA.
+
+## V. Thông báo và tài liệu bán hàng
+
+- Trung tâm thông báo tải dữ liệu từ API, làm mới định kỳ mỗi 30 giây, hỗ trợ đánh dấu đã đọc và điều hướng báo giá/hợp đồng/lead/cơ hội theo loại sự kiện.
+- Trang **Báo giá & Hợp đồng** dùng API danh sách tài liệu; nút **In / PDF** mở bản in do backend dựng theo mẫu đã chọn. Chọn **Lưu dưới dạng PDF** trong hộp thoại in của trình duyệt để lưu tệp.
+- Cấu hình mẫu báo giá/hợp đồng nằm trong **Cài đặt → Mẫu PDF** và được lưu qua API, gồm logo, thông tin doanh nghiệp, điều khoản và mẫu mặc định.
+- Giới hạn hiện tại: API backend đang ghi thông báo đồng bộ trong một số luồng nghiệp vụ. Polling phía frontend không làm chặn thao tác, nhưng cần thay đổi backend riêng để bảo đảm việc tạo thông báo cũng hoàn toàn chạy nền.
