@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AlertCircle,
@@ -60,6 +60,7 @@ export const UserManagementPage: React.FC = () => {
   const [totalFiltered, setTotalFiltered] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const usersRequestId = useRef(0);
 
   // Modals state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -91,9 +92,11 @@ export const UserManagementPage: React.FC = () => {
   };
 
   const fetchUsers = useCallback(async (): Promise<void> => {
+    const requestId = ++usersRequestId.current;
     setIsLoading(true);
     try {
       const result = await userService.getUsers(filter);
+      if (requestId !== usersRequestId.current) return;
       setUsers(result.data);
       setTotalFiltered(result.total);
       setTotalPages(result.totalPages);
@@ -106,14 +109,18 @@ export const UserManagementPage: React.FC = () => {
         pending: result.data.filter((u) => u.status === 'pending_activation' || u.status === 'locked').length,
       });
     } catch (err: any) {
+      if (requestId !== usersRequestId.current) return;
       showToast('error', err.message || 'Không thể tải danh sách người dùng.');
     } finally {
-      setIsLoading(false);
+      if (requestId === usersRequestId.current) setIsLoading(false);
     }
   }, [filter]);
 
   useEffect(() => {
-    fetchUsers();
+    void fetchUsers();
+    return () => {
+      usersRequestId.current += 1;
+    };
   }, [fetchUsers]);
 
   const handleFilterChange = (newFilter: Partial<IUserFilterState>): void => {
