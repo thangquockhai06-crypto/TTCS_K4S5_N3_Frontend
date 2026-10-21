@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   CheckCircle2,
@@ -21,20 +21,31 @@ export const StagnantCustomerList: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [touchingId, setTouchingId] = useState<string | null>(null);
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const requestId = useRef(0);
 
   useEffect(() => {
-    loadStagnantCustomers();
+    void loadStagnantCustomers();
+    return () => {
+      requestId.current += 1;
+    };
   }, [daysThreshold]);
 
   const loadStagnantCustomers = async () => {
+    const currentRequestId = ++requestId.current;
     setIsLoading(true);
+    setLoadError(null);
     try {
       const data = await customerService.getStagnantCustomers(daysThreshold);
+      if (currentRequestId !== requestId.current) return;
       setStagnantList(data);
     } catch (err) {
+      if (currentRequestId !== requestId.current) return;
       console.error('Lỗi khi tải danh sách khách hàng cần chăm sóc:', err);
+      setStagnantList([]);
+      setLoadError('Không thể tải danh sách khách hàng cần chăm sóc. Vui lòng thử lại.');
     } finally {
-      setIsLoading(false);
+      if (currentRequestId === requestId.current) setIsLoading(false);
     }
   };
 
@@ -113,7 +124,7 @@ export const StagnantCustomerList: React.FC = () => {
             Tổng số khách hàng cần chăm sóc
           </div>
           <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', marginTop: 4 }}>
-            {stagnantList.length} doanh nghiệp
+            {loadError ? '—' : stagnantList.length} doanh nghiệp
           </div>
         </Card>
 
@@ -122,7 +133,7 @@ export const StagnantCustomerList: React.FC = () => {
             Tổng giá trị hợp đồng có rủi ro
           </div>
           <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#DC2626', marginTop: 4 }}>
-            {formatCurrency(totalValueAtRisk)}
+            {loadError ? '—' : formatCurrency(totalValueAtRisk)}
           </div>
         </Card>
 
@@ -131,7 +142,7 @@ export const StagnantCustomerList: React.FC = () => {
             Số khách hàng đang bị cắm Cờ Rủi ro
           </div>
           <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#D97706', marginTop: 4 }}>
-            {stagnantList.filter((c) => c.riskFlag).length}
+            {loadError ? '—' : stagnantList.filter((c) => c.riskFlag).length}
           </div>
         </Card>
       </div>
@@ -162,6 +173,13 @@ export const StagnantCustomerList: React.FC = () => {
           <div style={{ textAlign: 'center', padding: 48, color: '#64748B' }}>
             <Loader2 size={32} className="animate-spin" style={{ margin: '0 auto 12px' }} />
             <div>Đang truy vấn danh sách khách hàng tồn đọng...</div>
+          </div>
+        ) : loadError ? (
+          <div style={{ padding: 48, textAlign: 'center', color: '#B91C1C' }}>
+            <p>{loadError}</p>
+            <Button variant="secondary" onClick={() => void loadStagnantCustomers()}>
+              Thử lại
+            </Button>
           </div>
         ) : stagnantList.length === 0 ? (
           <div style={{ padding: 48, textAlign: 'center' }}>
