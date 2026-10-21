@@ -36,6 +36,7 @@ export const ImportProgressMonitor: React.FC<IImportProgressMonitorProps> = ({
         const data = await userImportService.getImportJob(jobId);
         if (isMounted) {
           setJob(data);
+          setErrorMsg(null);
         }
         // Tiếp tục poll nếu job chưa kết thúc
         if (isMounted && (data.status === 'pending' || data.status === 'processing')) {
@@ -44,6 +45,7 @@ export const ImportProgressMonitor: React.FC<IImportProgressMonitorProps> = ({
       } catch (err: any) {
         if (isMounted) {
           setErrorMsg(err.message || 'Không thể cập nhật tiến độ công việc nhập.');
+          pollTimer = window.setTimeout(pollJob, 2000);
         }
       }
     };
