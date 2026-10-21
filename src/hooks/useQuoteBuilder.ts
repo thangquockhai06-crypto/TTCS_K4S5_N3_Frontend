@@ -150,7 +150,7 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
         discountType: 'percent',
         discountValue: 0,
         discountAmount: 0,
-        vatRate: product?.defaultVatRate || 10,
+        vatRate: product?.defaultVatRate ?? 10,
         vatAmount: 0,
         lineTotal: 0,
       };
