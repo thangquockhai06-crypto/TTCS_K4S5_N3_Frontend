@@ -32,6 +32,7 @@ import { useQuoteBuilder } from '../../hooks/useQuoteBuilder';
 import { quoteService } from '../../services/quoteService';
 import {
   formatCurrency,
+  formatDate,
   formatVndCurrency,
   toLocalDateInputValue,
 } from '../../utils/formatters';
@@ -1013,10 +1014,10 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
                 {quote.quoteNumber}
               </div>
               <div style={{ fontSize: '0.875rem', color: '#64748B', marginTop: 4 }}>
-                Ngày lập: {new Date(quote.createdAt).toLocaleDateString('vi-VN')}
+                Ngày lập: {formatDate(quote.createdAt)}
               </div>
               <div style={{ fontSize: '0.875rem', color: '#DC2626', fontWeight: 600, marginTop: 2 }}>
-                Hiệu lực đến: {new Date(quote.validUntil).toLocaleDateString('vi-VN')}
+                Hiệu lực đến: {formatDate(quote.validUntil)}
               </div>
             </div>
           </div>

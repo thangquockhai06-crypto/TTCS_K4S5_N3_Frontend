@@ -26,6 +26,7 @@ import { customerService } from '../services/customerService';
 import { dealService } from '../services/dealService';
 import { Badge, Button, Card, Modal, SearchBar, SearchableSelect } from '../components/common';
 import { showGlobalToast } from '../context/ToastContext';
+import { formatDate } from '../utils/formatters';
 import styles from './TasksPage.module.css';
 
 export const TasksPage: React.FC = () => {
@@ -607,7 +608,7 @@ export const TasksPage: React.FC = () => {
                       }}
                     >
                       <Calendar size={14} />
-                      <span>{task.dueDate ? new Date(task.dueDate).toLocaleDateString('vi-VN') : 'Không có hạn'}</span>
+                      <span>{task.dueDate ? formatDate(task.dueDate) : 'Không có hạn'}</span>
                     </div>
 
                     {/* Status badge */}

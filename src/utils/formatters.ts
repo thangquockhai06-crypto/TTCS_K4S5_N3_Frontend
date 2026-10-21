@@ -82,8 +82,23 @@ export function createAvatarSvgDataUri(name: string, seedIndex = 0): string {
 export function formatDate(dateString?: string | null): string {
   if (!dateString) return '—';
   try {
-    const d = new Date(dateString);
+    const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateString);
+    const d = dateOnlyMatch
+      ? new Date(
+          Number(dateOnlyMatch[1]),
+          Number(dateOnlyMatch[2]) - 1,
+          Number(dateOnlyMatch[3])
+        )
+      : new Date(dateString);
     if (isNaN(d.getTime())) return dateString;
+    if (
+      dateOnlyMatch &&
+      (d.getFullYear() !== Number(dateOnlyMatch[1]) ||
+        d.getMonth() + 1 !== Number(dateOnlyMatch[2]) ||
+        d.getDate() !== Number(dateOnlyMatch[3]))
+    ) {
+      return dateString;
+    }
     return d.toLocaleDateString('vi-VN', {
       year: 'numeric',
       month: '2-digit',

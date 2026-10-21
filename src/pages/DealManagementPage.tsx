@@ -35,7 +35,7 @@ import { sprint2Service } from '../services/sprint2Service';
 import { userService } from '../services/userService';
 import { IUserItem } from '../interfaces/user-management.interface';
 import { useAuthorization } from '../hooks/useAuthorization';
-import { formatCurrency, formatCompactCurrency, formatNumberWithCommas, parseNumberFromCommas, formatDealStage } from '../utils/formatters';
+import { formatCurrency, formatCompactCurrency, formatDate, formatNumberWithCommas, parseNumberFromCommas, formatDealStage } from '../utils/formatters';
 import { showGlobalToast, ToastType } from '../context/ToastContext';
 import { Badge, Button, Modal, SearchBar, SearchableSelect } from '../components/common';
 import styles from './DealManagementPage.module.css';
@@ -1239,7 +1239,7 @@ export const DealManagementPage: React.FC = () => {
                         </span>
                         {deal.expectedCloseDate && (
                           <span className={styles.dealCard__date}>
-                            📅 {new Date(deal.expectedCloseDate).toLocaleDateString('vi-VN')}
+                            📅 {formatDate(deal.expectedCloseDate)}
                           </span>
                         )}
                       </div>
@@ -1469,7 +1469,7 @@ export const DealManagementPage: React.FC = () => {
 
                       <td>
                         {deal.expectedCloseDate
-                          ? new Date(deal.expectedCloseDate).toLocaleDateString('vi-VN')
+                          ? formatDate(deal.expectedCloseDate)
                           : '—'}
                       </td>
 
