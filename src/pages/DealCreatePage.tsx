@@ -116,6 +116,14 @@ export const DealCreatePage: React.FC = () => {
       newErrors.value = 'Giá trị Deal phải lớn hơn hoặc bằng 0';
     }
 
+    if (
+      !Number.isFinite(formData.probability) ||
+      formData.probability < 0 ||
+      formData.probability > 100
+    ) {
+      newErrors.probability = 'Xác suất thành công phải nằm trong khoảng từ 0 đến 100%.';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -133,7 +141,7 @@ export const DealCreatePage: React.FC = () => {
         customerId: formData.customerId,
         value: Number(formData.value) || 0,
         stage: formData.stage,
-        probability: Number(formData.probability) || 20,
+        probability: Number(formData.probability),
         expectedCloseDate: formData.expectedCloseDate || undefined,
         campaignId: formData.campaignId || undefined,
       });
@@ -292,6 +300,9 @@ export const DealCreatePage: React.FC = () => {
                     disabled={isSubmitting}
                   />
                 </div>
+                {errors.probability && (
+                  <span className={styles.fieldError}>{errors.probability}</span>
+                )}
               </div>
             </div>
           </section>
