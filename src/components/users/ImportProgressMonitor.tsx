@@ -29,6 +29,7 @@ export const ImportProgressMonitor: React.FC<IImportProgressMonitorProps> = ({
 
   useEffect(() => {
     let isMounted = true;
+    let pollTimer: number | null = null;
 
     const pollJob = async () => {
       try {
@@ -37,8 +38,8 @@ export const ImportProgressMonitor: React.FC<IImportProgressMonitorProps> = ({
           setJob(data);
         }
         // Tiếp tục poll nếu job chưa kết thúc
-        if (data.status === 'pending' || data.status === 'processing') {
-          setTimeout(pollJob, 1000);
+        if (isMounted && (data.status === 'pending' || data.status === 'processing')) {
+          pollTimer = window.setTimeout(pollJob, 1000);
         }
       } catch (err: any) {
         if (isMounted) {
@@ -51,6 +52,9 @@ export const ImportProgressMonitor: React.FC<IImportProgressMonitorProps> = ({
 
     return () => {
       isMounted = false;
+      if (pollTimer !== null) {
+        window.clearTimeout(pollTimer);
+      }
     };
   }, [jobId]);
 
