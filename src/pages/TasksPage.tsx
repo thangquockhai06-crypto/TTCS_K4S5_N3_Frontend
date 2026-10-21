@@ -455,6 +455,7 @@ export const TasksPage: React.FC = () => {
               type="date"
               className={styles.dateInput}
               value={dueDateFrom}
+              max={dueDateTo || undefined}
               onChange={(e) => setDueDateFrom(e.target.value)}
               title="Hạn xử lý từ ngày"
             />
@@ -463,6 +464,7 @@ export const TasksPage: React.FC = () => {
               type="date"
               className={styles.dateInput}
               value={dueDateTo}
+              min={dueDateFrom || undefined}
               onChange={(e) => setDueDateTo(e.target.value)}
               title="Hạn xử lý đến ngày"
             />
