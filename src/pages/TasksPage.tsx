@@ -120,7 +120,7 @@ export const TasksPage: React.FC = () => {
       {detailError && <p className={styles.error} role="alert">{detailError}</p>}
 
       <Card padding="lg" className={styles.list}>
-        <h2>Tất cả công việc ({tasks.length})</h2>
+        <h2>tất cả công việc ({tasks.length})</h2>
         {isLoading ? (
           <p className={styles.message}>Đang tải công việc...</p>
         ) : error ? (
