@@ -107,6 +107,14 @@ export const CampaignEditPage: React.FC = () => {
       newErrors.expected_revenue = 'Doanh thu kỳ vọng không được nhỏ hơn 0';
     }
 
+    if (
+      formData.start_date &&
+      formData.end_date &&
+      formData.end_date < formData.start_date
+    ) {
+      newErrors.end_date = 'Ngày kết thúc không được trước ngày bắt đầu';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -358,12 +366,15 @@ export const CampaignEditPage: React.FC = () => {
                   <Calendar size={16} className={styles.inputIcon} />
                   <input
                     type="date"
-                    className={styles.input}
+                    className={`${styles.input} ${errors.end_date ? styles.inputError : ''}`}
                     value={formData.end_date}
                     onChange={(e) => handleInputChange('end_date', e.target.value)}
                     disabled={isSubmitting}
                   />
                 </div>
+                {errors.end_date && (
+                  <span className={styles.fieldError}>{errors.end_date}</span>
+                )}
               </div>
             </div>
 
