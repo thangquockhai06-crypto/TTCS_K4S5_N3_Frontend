@@ -32,7 +32,11 @@ export const TopBar: React.FC<ITopBarProps> = ({
   const { user, logout, triggerMockTokenRefresh, lastTokenRefresh } = useAuth();
   const {
     notifications,
+    unreadNotificationCount,
+    notificationsError,
     markAllNotificationsRead,
+    markNotificationRead,
+    refreshNotifications,
     appearance,
     updateAppearance,
   } = useCRMData();
@@ -44,7 +48,7 @@ export const TopBar: React.FC<ITopBarProps> = ({
   const notifRef = useRef<HTMLDivElement | null>(null);
   const searchWrapRef = useRef<HTMLDivElement | null>(null);
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const unreadCount = unreadNotificationCount;
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent): void => {
@@ -79,6 +83,26 @@ export const TopBar: React.FC<ITopBarProps> = ({
     const q = globalQuery.trim();
     setGlobalQuery('');
     navigate(`/users?search=${encodeURIComponent(q)}`);
+  };
+
+  const openNotification = (item: (typeof notifications)[number]): void => {
+    const targetId = item.targetId ? encodeURIComponent(item.targetId) : '';
+    let destination = '/dashboard';
+    if (item.targetType === 'lead') {
+      destination = '/leads';
+    } else if (item.targetType === 'task') {
+      destination = `/tasks${targetId ? `?id=${targetId}` : ''}`;
+    } else if (item.targetType === 'quotation') {
+      destination = `/documents?type=quotation${targetId ? `&id=${targetId}` : ''}`;
+    } else if (item.targetType === 'contract') {
+      destination = `/documents?type=contract${targetId ? `&id=${targetId}` : ''}`;
+    } else if (item.targetType === 'deal') {
+      destination = '/stagnant-deals';
+    }
+
+    if (!item.isRead) void markNotificationRead(item.id);
+    setIsNotifOpen(false);
+    navigate(destination);
   };
 
   return (
@@ -204,29 +228,51 @@ export const TopBar: React.FC<ITopBarProps> = ({
                 <strong>Trung tâm thông báo</strong>
                 <button
                   type="button"
-                  onClick={markAllNotificationsRead}
+                  onClick={() => void markAllNotificationsRead()}
                   className={styles.topbar__markReadBtn}
+                  disabled={unreadCount === 0}
                 >
                   <CheckCheck size={14} />
                   Đánh dấu đã đọc
                 </button>
               </div>
-              <div className={styles.topbar__notifList}>
-                {notifications.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`${styles.topbar__notifItem} ${
-                      !item.isRead ? styles['topbar__notifItem--unread'] : ''
-                    }`}
+              {notificationsError && (
+                <div className={styles.topbar__notifError} role="alert">
+                  <span>{notificationsError}</span>
+                  <button
+                    type="button"
+                    onClick={() => void refreshNotifications()}
+                    className={styles.topbar__markReadBtn}
                   >
-                    <div className={styles.topbar__notifDot} />
-                    <div className={styles.topbar__notifBody}>
-                      <p className={styles.topbar__notifTitle}>{item.title}</p>
-                      <p className={styles.topbar__notifDesc}>{item.description}</p>
-                      <span className={styles.topbar__notifTime}>{item.timeAgo}</span>
-                    </div>
-                  </div>
-                ))}
+                    Thử lại
+                  </button>
+                </div>
+              )}
+              <div className={styles.topbar__notifList}>
+                {notifications.length === 0 ? (
+                  <p className={styles.topbar__notifEmpty}>Chưa có thông báo.</p>
+                ) : (
+                  notifications.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => openNotification(item)}
+                      className={`${styles.topbar__notifItem} ${
+                        !item.isRead ? styles['topbar__notifItem--unread'] : ''
+                      }`}
+                      aria-label={`Mở thông báo: ${item.title}`}
+                    >
+                      <span className={styles.topbar__notifDot} aria-hidden="true" />
+                      <span className={styles.topbar__notifBody}>
+                        <span className={styles.topbar__notifTitle}>{item.title}</span>
+                        <span className={styles.topbar__notifDesc}>{item.description}</span>
+                        <span className={styles.topbar__notifTime}>
+                          {item.timeAgo || 'Vừa xong'}
+                        </span>
+                      </span>
+                    </button>
+                  ))
+                )}
               </div>
             </div>
           )}
