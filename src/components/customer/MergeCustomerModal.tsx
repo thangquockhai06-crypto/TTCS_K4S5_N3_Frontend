@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   AlertTriangle,
   GitMerge,
@@ -30,30 +30,44 @@ export const MergeCustomerModal: React.FC<IMergeCustomerModalProps> = ({
   const [masterSide, setMasterSide] = useState<'primary' | 'secondary'>('primary');
   const [reason, setReason] = useState('Gộp tài khoản trùng lặp dữ liệu');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingCandidates, setIsLoadingCandidates] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const candidateRequestId = useRef(0);
 
   useEffect(() => {
     if (!isOpen) {
       setSelectedSecondaryId('');
       setErrorMessage(null);
-      return;
+      setCandidateCustomers([]);
+      setIsLoadingCandidates(false);
+    } else {
+      const requestId = ++candidateRequestId.current;
+      setSelectedSecondaryId('');
+      setCandidateCustomers([]);
+      setIsLoadingCandidates(true);
+
+      const fetchCandidates = async () => {
+        try {
+          const res = await customerService.getCustomers({
+            search: searchQuery.trim() || undefined,
+            limit: 50,
+          });
+          if (requestId !== candidateRequestId.current) return;
+          setCandidateCustomers(res.filter((c) => c.id !== primaryCustomer?.id));
+        } catch (err: unknown) {
+          if (requestId !== candidateRequestId.current) return;
+          console.error('Lỗi tải danh sách khách hàng gộp:', err);
+        } finally {
+          if (requestId === candidateRequestId.current) setIsLoadingCandidates(false);
+        }
+      };
+
+      const timer = setTimeout(() => void fetchCandidates(), 300);
+      return () => {
+        clearTimeout(timer);
+        if (candidateRequestId.current === requestId) candidateRequestId.current += 1;
+      };
     }
-
-    const fetchCandidates = async () => {
-      try {
-        const res = await customerService.getCustomers({
-          search: searchQuery.trim() || undefined,
-          limit: 50,
-        });
-        const items = res.filter((c) => c.id !== primaryCustomer?.id);
-        setCandidateCustomers(items);
-      } catch (err: any) {
-        console.error('Lỗi tải danh sách khách hàng gộp:', err);
-      }
-    };
-
-    const timer = setTimeout(fetchCandidates, 300);
-    return () => clearTimeout(timer);
   }, [isOpen, searchQuery, primaryCustomer?.id]);
 
   const secondaryCustomer = candidateCustomers.find((c) => c.id === selectedSecondaryId);
@@ -165,6 +179,7 @@ export const MergeCustomerModal: React.FC<IMergeCustomerModalProps> = ({
             <select
               value={selectedSecondaryId}
               onChange={(e) => setSelectedSecondaryId(e.target.value)}
+              disabled={isLoadingCandidates}
               style={{
                 maxWidth: 280,
                 padding: '8px 12px',
@@ -173,7 +188,9 @@ export const MergeCustomerModal: React.FC<IMergeCustomerModalProps> = ({
                 fontSize: '0.875rem',
               }}
             >
-              <option value="">-- Chọn khách hàng --</option>
+              <option value="">
+                {isLoadingCandidates ? 'Đang tải khách hàng...' : '-- Chọn khách hàng --'}
+              </option>
               {candidateCustomers.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.company || c.fullName} {c.taxCode ? `(${c.taxCode})` : ''}
