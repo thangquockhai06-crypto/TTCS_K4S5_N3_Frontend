@@ -141,7 +141,7 @@ export const DocumentExportsPage: React.FC = () => {
               className={activeTab === 'quotation' ? styles.tabActive : styles.tab}
               onClick={() => changeTab('quotation')}
             >
-              Báo giá ({quotations.length})
+              báo giá ({quotations.length})
             </button>
             <button
               type="button"
@@ -150,7 +150,7 @@ export const DocumentExportsPage: React.FC = () => {
               className={activeTab === 'contract' ? styles.tabActive : styles.tab}
               onClick={() => changeTab('contract')}
             >
-              Hợp đồng ({contracts.length})
+              hợp đồng ({contracts.length})
             </button>
           </div>
           <label className={styles.search}>
