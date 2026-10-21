@@ -97,18 +97,21 @@ export const WinLossConfig: React.FC = () => {
       return;
     }
 
-    // Check duplicate on frontend
-    if (!editingReason) {
-      const isDuplicateCode = reasons.some((r) => r.code.toUpperCase() === trimmedCode);
-      if (isDuplicateCode) {
-        setStatusMsg({ type: 'error', text: `Mã lý do "${trimmedCode}" đã tồn tại trong danh sách.` });
-        return;
-      }
-      const isDuplicateText = reasons.some((r) => r.reason.trim().toLowerCase() === trimmedText.toLowerCase());
-      if (isDuplicateText) {
-        setStatusMsg({ type: 'error', text: `Lý do "${trimmedText}" đã tồn tại trong danh sách.` });
-        return;
-      }
+    const isDuplicateCode = !editingReason && reasons.some(
+      (r) => r.code.toUpperCase() === trimmedCode
+    );
+    if (isDuplicateCode) {
+      setStatusMsg({ type: 'error', text: `Mã lý do "${trimmedCode}" đã tồn tại trong danh sách.` });
+      return;
+    }
+    const isDuplicateText = reasons.some(
+      (r) =>
+        r.id !== editingReason?.id &&
+        r.reason.trim().toLowerCase() === trimmedText.toLowerCase()
+    );
+    if (isDuplicateText) {
+      setStatusMsg({ type: 'error', text: `Lý do "${trimmedText}" đã tồn tại trong danh sách.` });
+      return;
     }
 
     setIsSubmitting(true);
@@ -202,7 +205,13 @@ export const WinLossConfig: React.FC = () => {
       return;
     }
 
-    if (!editingCompetitor && competitors.some((c) => c.name.toLowerCase() === trimmedName.toLowerCase())) {
+    if (
+      competitors.some(
+        (c) =>
+          c.id !== editingCompetitor?.id &&
+          c.name.trim().toLowerCase() === trimmedName.toLowerCase()
+      )
+    ) {
       const err = `Đối thủ "${trimmedName}" đã tồn tại trong danh sách.`;
       setStatusMsg({ type: 'error', text: err });
       showGlobalToast(err, 'error');
