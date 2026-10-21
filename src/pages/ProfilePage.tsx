@@ -186,7 +186,7 @@ export const ProfilePage: React.FC = () => {
                   type="email"
                   disabled
                   readOnly
-                  value={user?.email || 'admin@nexus.vn'}
+                  value={user?.email ?? ''}
                   style={{
                     width: '100%',
                     padding: '8px 12px',
@@ -211,7 +211,7 @@ export const ProfilePage: React.FC = () => {
                 type="text"
                 disabled
                 readOnly
-                value={user?.role || 'Admin'}
+                value={user?.role ?? ''}
                 style={{
                   width: '100%',
                   padding: '8px 12px',
