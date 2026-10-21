@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Plus,
   Trash2,
@@ -35,36 +35,50 @@ export const CustomFieldBuilder: React.FC = () => {
   // Interactive dynamic preview values state
   const [previewValues, setPreviewValues] = useState<Record<string, string>>({});
   const [isValueSaving, setIsValueSaving] = useState(false);
+  const [isValuesLoaded, setIsValuesLoaded] = useState(false);
   const [valueMsg, setValueMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const requestId = useRef(0);
 
   const fetchFields = useCallback(async () => {
+    const currentRequestId = ++requestId.current;
     setIsLoading(true);
     setStatusMsg(null);
     setValueMsg(null);
+    setFields([]);
+    setPreviewValues({});
+    setIsValuesLoaded(false);
     try {
       const data = await sprint2Service.getCustomFields(entityType);
+      if (currentRequestId !== requestId.current) return;
       setFields(data);
-      // Load saved values from backend
       try {
         const valRes = await sprint2Service.getCustomFieldValues(entityType);
-        if (valRes && valRes.values) {
-          setPreviewValues(valRes.values);
-        } else {
-          setPreviewValues({});
-        }
-      } catch {
-        // Fallback: initialize empty
+        if (currentRequestId !== requestId.current) return;
+        setPreviewValues(valRes.values || {});
+        setIsValuesLoaded(true);
+      } catch (error: unknown) {
+        if (currentRequestId !== requestId.current) return;
+        console.error('Lỗi khi tải giá trị trường tùy chỉnh:', error);
         setPreviewValues({});
+        setValueMsg({
+          type: 'error',
+          text: 'Không thể tải giá trị đã lưu. Để tránh ghi đè dữ liệu hiện có, hãy thử tải lại trước khi lưu.',
+        });
       }
-    } catch {
+    } catch (error: unknown) {
+      if (currentRequestId !== requestId.current) return;
+      console.error('Lỗi khi tải danh sách trường tùy chỉnh:', error);
       setStatusMsg({ type: 'error', text: 'Không thể tải danh sách trường tùy chỉnh.' });
     } finally {
-      setIsLoading(false);
+      if (currentRequestId === requestId.current) setIsLoading(false);
     }
   }, [entityType]);
 
   useEffect(() => {
-    fetchFields();
+    void fetchFields();
+    return () => {
+      requestId.current += 1;
+    };
   }, [fetchFields]);
 
   const handleOpenCreate = () => {
@@ -160,6 +174,13 @@ export const CustomFieldBuilder: React.FC = () => {
   const handleSaveDynamicValues = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isValueSaving) return;
+    if (!isValuesLoaded) {
+      setValueMsg({
+        type: 'error',
+        text: 'Chưa tải được các giá trị đã lưu. Hãy tải lại trước khi lưu để tránh ghi đè dữ liệu.',
+      });
+      return;
+    }
 
     setValueMsg(null);
 
@@ -482,6 +503,23 @@ export const CustomFieldBuilder: React.FC = () => {
                 <span>{valueMsg.text}</span>
               </div>
             )}
+            {!isValuesLoaded && !isLoading && (
+              <button
+                type="button"
+                onClick={() => void fetchFields()}
+                style={{
+                  alignSelf: 'flex-start',
+                  padding: '6px 10px',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '4px',
+                  backgroundColor: '#ffffff',
+                  color: '#334155',
+                  cursor: 'pointer',
+                }}
+              >
+                Tải lại dữ liệu trường
+              </button>
+            )}
 
             {fields.length === 0 ? (
               <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '0.8rem' }}>
@@ -545,7 +583,7 @@ export const CustomFieldBuilder: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
                 <button
                   type="submit"
-                  disabled={isValueSaving}
+                  disabled={isValueSaving || !isValuesLoaded}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -557,7 +595,7 @@ export const CustomFieldBuilder: React.FC = () => {
                     color: '#ffffff',
                     fontSize: '0.8rem',
                     fontWeight: 600,
-                    cursor: isValueSaving ? 'not-allowed' : 'pointer',
+                    cursor: isValueSaving || !isValuesLoaded ? 'not-allowed' : 'pointer',
                   }}
                 >
                   <Save size={14} />
