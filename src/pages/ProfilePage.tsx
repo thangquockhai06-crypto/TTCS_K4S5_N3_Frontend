@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Save } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { AvatarUploader } from '../components/profile/AvatarUploader';
@@ -12,14 +12,22 @@ export const ProfilePage: React.FC = () => {
   const { user, updateUserProfile } = useAuth();
   const { showSuccess, showError } = useToast();
 
-  const [fullName, setFullName] = useState(user?.fullName || 'Quản Trị Viên Hệ Thống');
-  const [phone, setPhone] = useState(user?.phone || '0912345678');
-  const [title, setTitle] = useState(user?.title || 'Giám đốc Điều hành');
-  const [department, setDepartment] = useState(user?.department || 'Ban Quản trị & Vận hành Doanh thu');
+  const [fullName, setFullName] = useState(user?.fullName || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [title, setTitle] = useState(user?.title || '');
+  const [department, setDepartment] = useState(user?.department || '');
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || '');
 
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    setFullName(user?.fullName || '');
+    setPhone(user?.phone || '');
+    setTitle(user?.title || '');
+    setDepartment(user?.department || '');
+    setAvatarUrl(user?.avatarUrl || '');
+  }, [user?.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,7 +176,7 @@ export const ProfilePage: React.FC = () => {
                   type="email"
                   disabled
                   readOnly
-                  value={user?.email || 'admin@nexus.vn'}
+                  value={user?.email || ''}
                   style={{
                     width: '100%',
                     padding: '8px 12px',
@@ -193,7 +201,7 @@ export const ProfilePage: React.FC = () => {
                 type="text"
                 disabled
                 readOnly
-                value={user?.role || 'Admin'}
+                value={user?.role || ''}
                 style={{
                   width: '100%',
                   padding: '8px 12px',
