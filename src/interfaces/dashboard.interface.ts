@@ -27,12 +27,3 @@ export interface IPipelineVelocityItem {
   conversionRate: number;
   color: string;
 }
-
-export interface INotificationItem {
-  id: string;
-  title: string;
-  description: string;
-  timeAgo: string;
-  isRead: boolean;
-  category: 'deal' | 'security' | 'mention' | 'system';
-}

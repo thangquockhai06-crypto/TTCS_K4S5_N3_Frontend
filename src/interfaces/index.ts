@@ -11,3 +11,4 @@ export * from './sprint2.interface';
 export * from './forecast.interface';
 export * from './stagnant-deal.interface';
 export * from './deal-reassignment.interface';
+export * from './documents.interface';
