@@ -71,6 +71,7 @@ export const FilterDrawer: React.FC<IFilterDrawerProps> = ({
   const [isSavingPreset, setIsSavingPreset] = useState(false);
   const [presetNameInput, setPresetNameInput] = useState('');
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
+  const [valueRangeError, setValueRangeError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -100,6 +101,7 @@ export const FilterDrawer: React.FC<IFilterDrawerProps> = ({
           ...localFilters,
           ...parsed,
         });
+        setValueRangeError(null);
       } catch (e) {
         console.error('Lỗi giải mã cấu hình bộ lọc:', e);
       }
@@ -141,6 +143,21 @@ export const FilterDrawer: React.FC<IFilterDrawerProps> = ({
   };
 
   const handleApply = () => {
+    const minValue = localFilters.min_value;
+    const maxValue = localFilters.max_value;
+    if (
+      (minValue !== undefined && (!Number.isFinite(minValue) || minValue < 0)) ||
+      (maxValue !== undefined && (!Number.isFinite(maxValue) || maxValue < 0))
+    ) {
+      setValueRangeError('Giá trị hợp đồng phải là số không âm.');
+      return;
+    }
+    if (minValue !== undefined && maxValue !== undefined && minValue > maxValue) {
+      setValueRangeError('Giá trị tối thiểu không được lớn hơn giá trị tối đa.');
+      return;
+    }
+
+    setValueRangeError(null);
     onApplyFilters(localFilters);
     onClose();
   };
@@ -148,6 +165,7 @@ export const FilterDrawer: React.FC<IFilterDrawerProps> = ({
   const handleReset = () => {
     setLocalFilters({});
     setSelectedPresetId('');
+    setValueRangeError(null);
     onResetFilters();
     onClose();
   };
@@ -398,14 +416,16 @@ export const FilterDrawer: React.FC<IFilterDrawerProps> = ({
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <input
               type="number"
+              min="0"
               placeholder="Từ (Tối thiểu)"
               value={localFilters.min_value ?? ''}
-              onChange={(e) =>
+              onChange={(e) => {
+                setValueRangeError(null);
                 setLocalFilters({
                   ...localFilters,
                   min_value: e.target.value ? Number(e.target.value) : undefined,
-                })
-              }
+                });
+              }}
               style={{
                 padding: '8px 10px',
                 borderRadius: 6,
@@ -415,14 +435,16 @@ export const FilterDrawer: React.FC<IFilterDrawerProps> = ({
             />
             <input
               type="number"
+              min="0"
               placeholder="Đến (Tối đa)"
               value={localFilters.max_value ?? ''}
-              onChange={(e) =>
+              onChange={(e) => {
+                setValueRangeError(null);
                 setLocalFilters({
                   ...localFilters,
                   max_value: e.target.value ? Number(e.target.value) : undefined,
-                })
-              }
+                });
+              }}
               style={{
                 padding: '8px 10px',
                 borderRadius: 6,
@@ -431,6 +453,11 @@ export const FilterDrawer: React.FC<IFilterDrawerProps> = ({
               }}
             />
           </div>
+          {valueRangeError && (
+            <p role="alert" style={{ margin: '6px 0 0', color: '#DC2626', fontSize: '0.8125rem' }}>
+              {valueRangeError}
+            </p>
+          )}
         </div>
 
         {/* Actions Button */}
