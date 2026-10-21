@@ -72,7 +72,7 @@ class DealService {
       campaignId?: string;
     }
   ): Promise<IDeal> {
-    const response = await axiosInstance.put<IDeal>(`/deals/${id}`, payload);
+    const response = await axiosInstance.patch<IDeal>(`/deals/${id}`, payload);
     return response.data;
   }
 
