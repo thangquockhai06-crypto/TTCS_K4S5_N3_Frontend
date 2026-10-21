@@ -106,7 +106,7 @@ export const UserManagementPage: React.FC = () => {
         total: result.total,
         sales: result.data.filter((u) => (u.roles || []).some((r) => r.toLowerCase().includes('sales'))).length,
         managers: result.data.filter((u) => (u.roles || []).some((r) => r.toLowerCase().includes('manager') || r.toLowerCase().includes('admin') || r.toLowerCase().includes('leader'))).length,
-        pending: result.data.filter((u) => u.status === 'pending_activation' || u.status === 'locked').length,
+        pending: result.data.filter((u) => u.status === 'pending_activation').length,
       });
     } catch (err: any) {
       if (requestId !== usersRequestId.current) return;
