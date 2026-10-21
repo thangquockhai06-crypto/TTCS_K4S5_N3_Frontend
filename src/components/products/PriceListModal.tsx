@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Plus, Check, AlertCircle, Tag } from 'lucide-react';
 import { IPriceList } from '../../interfaces';
 import { sprint2Service } from '../../services/sprint2Service';
@@ -17,25 +17,33 @@ export const PriceListModal: React.FC<IPriceListModalProps> = ({ isOpen, onClose
   const [multiplier, setMultiplier] = useState('1.0');
   const [description, setDescription] = useState('');
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const requestId = useRef(0);
 
   const fetchPriceLists = async () => {
+    const currentRequestId = ++requestId.current;
     setIsLoading(true);
     try {
       const data = await sprint2Service.getPriceLists();
+      if (currentRequestId !== requestId.current) return;
       setPriceLists(data);
-    } catch {
+    } catch (error: unknown) {
+      if (currentRequestId !== requestId.current) return;
+      console.error('Lỗi khi tải danh sách bảng giá:', error);
       setStatusMsg({ type: 'error', text: 'Không thể tải danh sách bảng giá.' });
     } finally {
-      setIsLoading(false);
+      if (currentRequestId === requestId.current) setIsLoading(false);
     }
   };
 
   useEffect(() => {
     if (isOpen) {
-      fetchPriceLists();
+      void fetchPriceLists();
       setShowCreateForm(false);
       setStatusMsg(null);
     }
+    return () => {
+      requestId.current += 1;
+    };
   }, [isOpen]);
 
   const handleCreate = async (e: React.FormEvent) => {
