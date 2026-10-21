@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { IQuote } from '../interfaces/quote.interface';
 import { quoteService } from '../services/quoteService';
-import { formatVndCurrency } from '../utils/formatters';
+import { formatVndCurrency, toLocalDateInputValue } from '../utils/formatters';
 import { Button, Modal, LoadingSkeleton } from '../components/common';
 import { showGlobalToast } from '../context/ToastContext';
 import styles from './CustomerQuotePortalPage.module.css';
@@ -135,8 +135,11 @@ export const CustomerQuotePortalPage: React.FC = () => {
     );
   }
 
-  const isExpired = quote.status === 'rejected' && quote.validUntil && quote.validUntil < new Date().toISOString().slice(0, 10);
-  const canRespond = quote.status === 'sent' || quote.status === 'approved';
+  const isExpired = Boolean(
+    quote.validUntil && quote.validUntil < toLocalDateInputValue()
+  );
+  const canRespond =
+    (quote.status === 'sent' || quote.status === 'approved') && !isExpired;
 
   return (
     <div className={styles.portalContainer}>

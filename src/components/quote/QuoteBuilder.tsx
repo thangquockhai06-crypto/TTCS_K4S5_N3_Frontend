@@ -30,7 +30,11 @@ import { IQuote, IQuoteCompareResult } from '../../interfaces/quote.interface';
 import { IDeal } from '../../interfaces/deal.interface';
 import { useQuoteBuilder } from '../../hooks/useQuoteBuilder';
 import { quoteService } from '../../services/quoteService';
-import { formatCurrency, formatVndCurrency } from '../../utils/formatters';
+import {
+  formatCurrency,
+  formatVndCurrency,
+  toLocalDateInputValue,
+} from '../../utils/formatters';
 import { Button, Modal, LoadingSkeleton, Badge } from '../common';
 import { showGlobalToast } from '../../context/ToastContext';
 import styles from './QuoteBuilder.module.css';
@@ -195,10 +199,10 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
   // S7-04: Convert to Contract
   const handleOpenContractModal = () => {
     if (!quote) return;
-    const today = new Date().toISOString().slice(0, 10);
+    const today = toLocalDateInputValue();
     const nextYear = new Date();
     nextYear.setFullYear(nextYear.getFullYear() + 1);
-    const expiryStr = nextYear.toISOString().slice(0, 10);
+    const expiryStr = toLocalDateInputValue(nextYear);
 
     setContractNumber(`HD-${new Date().getFullYear()}-${quote.quoteNumber.replace('BG-', '')}`);
     setSigningDate(today);
