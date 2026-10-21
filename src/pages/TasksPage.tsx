@@ -20,7 +20,9 @@ export const TasksPage: React.FC = () => {
   const [tasks, setTasks] = useState<ITask[]>([]);
   const [selectedTask, setSelectedTask] = useState<ITask | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [detailError, setDetailError] = useState<string | null>(null);
 
   const loadTasks = useCallback(async (): Promise<void> => {
     setIsLoading(true);
@@ -28,24 +30,57 @@ export const TasksPage: React.FC = () => {
     try {
       const result = await documentService.getTasks();
       setTasks(result);
-      if (selectedId) {
-        const detail = result.find((task) => task.id === selectedId);
-        setSelectedTask(detail ?? (await documentService.getTask(selectedId)));
-      } else {
-        setSelectedTask(null);
-      }
     } catch (loadError) {
       console.error('Không thể tải công việc.', loadError);
       setError('Không thể tải công việc. Vui lòng thử lại hoặc kiểm tra quyền truy cập.');
-      setSelectedTask(null);
     } finally {
       setIsLoading(false);
     }
-  }, [selectedId]);
+  }, []);
 
   useEffect(() => {
     void loadTasks();
   }, [loadTasks]);
+
+  useEffect(() => {
+    if (!selectedId) {
+      setSelectedTask(null);
+      setDetailError(null);
+      setIsDetailLoading(false);
+      return;
+    }
+
+    const taskInList = tasks.find((task) => task.id === selectedId);
+    if (taskInList) {
+      setSelectedTask(taskInList);
+      setDetailError(null);
+      setIsDetailLoading(false);
+      return;
+    }
+
+    if (isLoading) return;
+
+    let isCurrentRequest = true;
+    setSelectedTask(null);
+    setDetailError(null);
+    setIsDetailLoading(true);
+    void documentService.getTask(selectedId).then(
+      (task) => {
+        if (isCurrentRequest) setSelectedTask(task);
+      },
+      (detailLoadError: unknown) => {
+        if (!isCurrentRequest) return;
+        console.error('Không thể tải chi tiết công việc.', detailLoadError);
+        setDetailError('Không thể tải chi tiết công việc. Vui lòng thử lại.');
+      }
+    ).finally(() => {
+      if (isCurrentRequest) setIsDetailLoading(false);
+    });
+
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [isLoading, selectedId, tasks]);
 
   return (
     <section className={styles.page}>
@@ -81,6 +116,8 @@ export const TasksPage: React.FC = () => {
           </Button>
         </Card>
       )}
+      {isDetailLoading && <p className={styles.message}>Đang tải chi tiết công việc...</p>}
+      {detailError && <p className={styles.error} role="alert">{detailError}</p>}
 
       <Card padding="lg" className={styles.list}>
         <h2>Tất cả công việc ({tasks.length})</h2>
