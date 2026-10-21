@@ -509,11 +509,13 @@ export const CustomFieldBuilder: React.FC = () => {
                 onClick={() => void fetchFields()}
                 style={{
                   alignSelf: 'flex-start',
-                  padding: '6px 10px',
+                  padding: '5px 10px',
                   border: '1px solid #cbd5e1',
                   borderRadius: '4px',
                   backgroundColor: '#ffffff',
-                  color: '#334155',
+                  color: '#475569',
+                  fontSize: '0.75rem',
+                  fontWeight: 500,
                   cursor: 'pointer',
                 }}
               >
