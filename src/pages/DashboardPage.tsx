@@ -35,12 +35,12 @@ export const DashboardPage: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalProducts: 0,
-    totalCategories: 0,
-    totalAuditLogs: 0,
+    totalUsers: null as number | null,
+    totalProducts: null as number | null,
+    totalCategories: null as number | null,
+    totalAuditLogs: null as number | null,
   });
-  const [recentLogs, setRecentLogs] = useState<IAuditLogItem[]>([]);
+  const [recentLogs, setRecentLogs] = useState<IAuditLogItem[] | null>([]);
 
   useEffect(() => {
     if (showLoginToast) {
@@ -72,16 +72,16 @@ export const DashboardPage: React.FC = () => {
 
         if (!isMounted) return;
 
-        const totalUsers = usersRes.status === 'fulfilled' ? (usersRes.value?.total ?? 0) : 0;
+        const totalUsers = usersRes.status === 'fulfilled' ? usersRes.value.total : null;
         const totalProducts =
           productsRes.status === 'fulfilled' && Array.isArray(productsRes.value)
             ? productsRes.value.length
-            : 0;
+            : null;
         const totalCategories =
           categoriesRes.status === 'fulfilled' && Array.isArray(categoriesRes.value)
             ? categoriesRes.value.length
-            : 0;
-        const totalAuditLogs = auditRes.status === 'fulfilled' ? (auditRes.value?.total ?? 0) : 0;
+            : null;
+        const totalAuditLogs = auditRes.status === 'fulfilled' ? auditRes.value.total : null;
 
         let logs: IAuditLogItem[] = [];
         if (auditRes.status === 'fulfilled' && auditRes.value) {
@@ -97,7 +97,7 @@ export const DashboardPage: React.FC = () => {
           totalCategories,
           totalAuditLogs,
         });
-        setRecentLogs(logs);
+        setRecentLogs(auditRes.status === 'fulfilled' ? logs : null);
       } catch (err) {
         console.error('Lỗi tải dữ liệu tổng quan:', err);
       } finally {
@@ -239,9 +239,11 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <strong className={styles.realStatValue}>
-            {isLoading ? <RefreshCw size={20} className="spin" /> : stats.totalUsers}
+            {isLoading ? <RefreshCw size={20} className="spin" /> : stats.totalUsers ?? '—'}
           </strong>
-          <span className={styles.realStatDesc}>Tài khoản đã đăng ký trong CSDL</span>
+          <span className={styles.realStatDesc}>
+            {stats.totalUsers === null && !isLoading ? 'Không thể tải dữ liệu' : 'Tài khoản đã đăng ký trong CSDL'}
+          </span>
         </div>
 
         <div className={styles.realStatCard}>
@@ -252,9 +254,11 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <strong className={styles.realStatValue}>
-            {isLoading ? <RefreshCw size={20} className="spin" /> : stats.totalProducts}
+            {isLoading ? <RefreshCw size={20} className="spin" /> : stats.totalProducts ?? '—'}
           </strong>
-          <span className={styles.realStatDesc}>Mặt hàng trong bảng giá</span>
+          <span className={styles.realStatDesc}>
+            {stats.totalProducts === null && !isLoading ? 'Không thể tải dữ liệu' : 'Mặt hàng trong bảng giá'}
+          </span>
         </div>
 
         <div className={styles.realStatCard}>
@@ -265,9 +269,11 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <strong className={styles.realStatValue}>
-            {isLoading ? <RefreshCw size={20} className="spin" /> : stats.totalCategories}
+            {isLoading ? <RefreshCw size={20} className="spin" /> : stats.totalCategories ?? '—'}
           </strong>
-          <span className={styles.realStatDesc}>Danh mục tra cứu chuẩn hóa</span>
+          <span className={styles.realStatDesc}>
+            {stats.totalCategories === null && !isLoading ? 'Không thể tải dữ liệu' : 'Danh mục tra cứu chuẩn hóa'}
+          </span>
         </div>
 
         <div className={styles.realStatCard}>
@@ -278,9 +284,11 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <strong className={styles.realStatValue}>
-            {isLoading ? <RefreshCw size={20} className="spin" /> : stats.totalAuditLogs}
+            {isLoading ? <RefreshCw size={20} className="spin" /> : stats.totalAuditLogs ?? '—'}
           </strong>
-          <span className={styles.realStatDesc}>Lịch sử thao tác được ghi vết</span>
+          <span className={styles.realStatDesc}>
+            {stats.totalAuditLogs === null && !isLoading ? 'Không thể tải dữ liệu' : 'Lịch sử thao tác được ghi vết'}
+          </span>
         </div>
       </section>
 
@@ -350,13 +358,18 @@ export const DashboardPage: React.FC = () => {
                 <RefreshCw size={20} className="spin" />
                 <span>Đang tải nhật ký...</span>
               </div>
-            ) : (!recentLogs || recentLogs.length === 0) ? (
+            ) : recentLogs === null ? (
+              <div className={styles.emptyBox}>
+                <FileText size={32} style={{ color: '#dc2626' }} />
+                <span>Không thể tải nhật ký. Vui lòng thử lại sau.</span>
+              </div>
+            ) : recentLogs.length === 0 ? (
               <div className={styles.emptyBox}>
                 <FileText size={32} style={{ color: '#94a3b8' }} />
                 <span>Chưa có bản ghi nhật ký mới</span>
               </div>
             ) : (
-              (recentLogs || []).map((log) => {
+              recentLogs.map((log) => {
                 const logTime = log.timestamp || log.created_at;
                 return (
                   <div key={log.id} className={styles.auditItem}>
