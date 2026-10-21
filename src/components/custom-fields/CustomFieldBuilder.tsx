@@ -99,6 +99,25 @@ export const CustomFieldBuilder: React.FC = () => {
       return;
     }
 
+    const options = optionsStr
+      .split(',')
+      .map((option) => option.trim())
+      .filter(Boolean);
+    if (fieldType === 'select' && options.length === 0) {
+      setStatusMsg({ type: 'error', text: 'Vui lòng nhập ít nhất một lựa chọn.' });
+      showGlobalToast('Vui lòng nhập ít nhất một lựa chọn.', 'warning');
+      return;
+    }
+    if (
+      fieldType === 'select' &&
+      new Set(options.map((option) => option.toLocaleLowerCase())).size !== options.length
+    ) {
+      setStatusMsg({ type: 'error', text: 'Các lựa chọn không được trùng nhau.' });
+      showGlobalToast('Các lựa chọn không được trùng nhau.', 'warning');
+      return;
+    }
+    const normalizedOptions = options.join(', ');
+
     setIsSubmitting(true);
     setStatusMsg(null);
     try {
@@ -106,7 +125,7 @@ export const CustomFieldBuilder: React.FC = () => {
         await sprint2Service.updateCustomField(editingField.id, {
           field_label: trimmedLabel,
           field_type: fieldType,
-          options: fieldType === 'select' ? optionsStr.trim() : undefined,
+          options: fieldType === 'select' ? normalizedOptions : undefined,
           is_required: isRequired,
         });
         const msg = `Cập nhật trường dữ liệu "${trimmedLabel}" thành công!`;
@@ -122,7 +141,7 @@ export const CustomFieldBuilder: React.FC = () => {
           field_name: generatedName,
           field_label: trimmedLabel,
           field_type: fieldType,
-          options: fieldType === 'select' ? optionsStr.trim() : undefined,
+          options: fieldType === 'select' ? normalizedOptions : undefined,
           is_required: isRequired,
         });
         const msg = `Thêm trường tùy chỉnh "${trimmedLabel}" thành công!`;
