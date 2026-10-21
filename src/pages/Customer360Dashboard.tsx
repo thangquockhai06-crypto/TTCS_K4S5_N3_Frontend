@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -38,6 +38,7 @@ export const Customer360Dashboard: React.FC = () => {
   const [data360, setData360] = useState<ICustomer360 | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const requestId = useRef(0);
 
   // Modals
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -52,21 +53,28 @@ export const Customer360Dashboard: React.FC = () => {
 
   useEffect(() => {
     if (id) {
-      loadCustomer360(id);
+      void loadCustomer360(id);
     }
+    return () => {
+      requestId.current += 1;
+    };
   }, [id]);
 
   const loadCustomer360 = async (customerId: string) => {
+    const currentRequestId = ++requestId.current;
     setIsLoading(true);
     setError(null);
+    setData360(null);
     try {
       const res = await customerService.getCustomer360(customerId);
+      if (currentRequestId !== requestId.current) return;
       setData360(res);
     } catch (err: any) {
+      if (currentRequestId !== requestId.current) return;
       console.error('Lỗi tải dữ liệu Customer 360:', err);
       setError(err.response?.data?.detail || 'Không tìm thấy hồ sơ khách hàng 360 này.');
     } finally {
-      setIsLoading(false);
+      if (currentRequestId === requestId.current) setIsLoading(false);
     }
   };
 
