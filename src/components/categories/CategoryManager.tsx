@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Plus,
   ArrowUp,
@@ -18,6 +18,7 @@ export const CategoryManager: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const requestId = useRef(0);
 
   // Form add/edit
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -26,20 +27,27 @@ export const CategoryManager: React.FC = () => {
   const [code, setCode] = useState('');
 
   const fetchCategories = useCallback(async () => {
+    const currentRequestId = ++requestId.current;
     setIsLoading(true);
     setStatusMsg(null);
     try {
       const data = await sprint2Service.getCategories(activeTab);
+      if (currentRequestId !== requestId.current) return;
       setCategories(data);
-    } catch {
+    } catch (error: unknown) {
+      if (currentRequestId !== requestId.current) return;
+      console.error('Lỗi khi tải danh mục:', error);
       setStatusMsg({ type: 'error', text: 'Không thể tải danh mục.' });
     } finally {
-      setIsLoading(false);
+      if (currentRequestId === requestId.current) setIsLoading(false);
     }
   }, [activeTab]);
 
   useEffect(() => {
-    fetchCategories();
+    void fetchCategories();
+    return () => {
+      requestId.current += 1;
+    };
   }, [fetchCategories]);
 
   const handleOpenCreate = () => {
