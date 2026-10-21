@@ -120,6 +120,14 @@ export const CustomerMergePage: React.FC = () => {
   const duplicateCustomer = masterSide === 'primary' ? secondaryCustomer : primaryCustomer;
 
   const handleMerge = async () => {
+    const trimmedReason = reason.trim();
+    if (!trimmedReason) {
+      const message = 'Vui lòng nhập lý do hợp nhất để lưu vào nhật ký kiểm toán.';
+      setErrorMessage(message);
+      showGlobalToast(message, 'warning');
+      return;
+    }
+
     if (!masterCustomer || !duplicateCustomer) {
       setErrorMessage('Vui lòng chọn đầy đủ 2 khách hàng để tiến hành so sánh và gộp.');
       showGlobalToast('Vui lòng chọn 2 khách hàng để so sánh và gộp', 'warning');
@@ -139,7 +147,7 @@ export const CustomerMergePage: React.FC = () => {
       const mergedResult = await customerService.mergeCustomers(
         masterCustomer.id,
         duplicateCustomer.id,
-        { reason: reason.trim() }
+        { reason: trimmedReason }
       );
 
       setMergeSuccessCustomer(mergedResult);
@@ -653,6 +661,8 @@ export const CustomerMergePage: React.FC = () => {
             </label>
             <input
               type="text"
+              required
+              maxLength={500}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="VD: Hai công ty con cùng MST, nhân viên kinh doanh nhập trùng lặp..."
