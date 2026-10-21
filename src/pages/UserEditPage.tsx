@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Check, AlertCircle, Save, RefreshCw } from 'lucide-react';
 import { userService } from '../services/userService';
@@ -18,6 +18,7 @@ export const UserEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user: currentAuthUser } = useAuth();
+  const redirectTimerRef = useRef<number | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -31,6 +32,15 @@ export const UserEditPage: React.FC = () => {
   const [group, setGroup] = useState('Chưa phân nhóm');
   const [role, setRole] = useState<UserRoleType>('sales');
   const [status, setStatus] = useState<UserStatusType>('active');
+
+  useEffect(
+    () => () => {
+      if (redirectTimerRef.current !== null) {
+        window.clearTimeout(redirectTimerRef.current);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     if (!id) {
@@ -94,7 +104,11 @@ export const UserEditPage: React.FC = () => {
       const msg = result.message || 'Cập nhật tài khoản người dùng thành công.';
       setSuccess(msg);
       showGlobalToast(msg, 'success');
-      window.setTimeout(() => {
+      if (redirectTimerRef.current !== null) {
+        window.clearTimeout(redirectTimerRef.current);
+      }
+      redirectTimerRef.current = window.setTimeout(() => {
+        redirectTimerRef.current = null;
         navigate('/users');
       }, 1200);
     } catch (err: any) {
