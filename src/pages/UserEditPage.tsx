@@ -32,16 +32,24 @@ export const UserEditPage: React.FC = () => {
   const [status, setStatus] = useState<UserStatusType>('active');
 
   useEffect(() => {
+    let isCurrentRequest = true;
+    setTargetUser(null);
+    setError(null);
+    setSuccess(null);
+
     if (!id) {
       setError('Không tìm thấy mã người dùng.');
       setIsLoading(false);
-      return;
+      return () => {
+        isCurrentRequest = false;
+      };
     }
 
     const loadUser = async () => {
       setIsLoading(true);
       try {
         const u = await userService.getUserById(id);
+        if (!isCurrentRequest) return;
         if (!u) {
           setError(`Không tìm thấy người dùng có ID: "${id}".`);
           return;
@@ -54,13 +62,17 @@ export const UserEditPage: React.FC = () => {
         setRole(u.roles[0] || 'sales');
         setStatus(u.status);
       } catch (err: any) {
+        if (!isCurrentRequest) return;
         setError(err.message || 'Lỗi khi tải thông tin người dùng.');
       } finally {
-        setIsLoading(false);
+        if (isCurrentRequest) setIsLoading(false);
       }
     };
 
-    loadUser();
+    void loadUser();
+    return () => {
+      isCurrentRequest = false;
+    };
   }, [id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
