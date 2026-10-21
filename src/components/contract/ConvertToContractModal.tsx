@@ -3,25 +3,22 @@ import {
   FileCheck2,
   Calendar,
   CreditCard,
-  Truck,
   Building,
-  User,
   CheckCircle2,
   AlertCircle,
   RotateCcw,
-  Sparkles,
   Trophy,
   ShieldCheck,
   Package,
 } from 'lucide-react';
 import { IQuote } from '../../interfaces/quote.interface';
-import { IContract, ICreateContractFromQuoteDTO } from '../../interfaces/contract.interface';
+import { IContract, ICreateContractDTO } from '../../interfaces/contract.interface';
 import { contractService } from '../../services/contractService';
+import { quoteService } from '../../services/quoteService';
 import { formatVndCurrency } from '../../utils/formatters';
 import { showGlobalToast } from '../../context/ToastContext';
 import { Button, Modal, Badge } from '../common';
 import { useAuth } from '../../hooks/useAuth';
-import { useAuthorization } from '../../hooks/useAuthorization';
 import styles from './ConvertToContractModal.module.css';
 
 export interface IConvertToContractModalProps {
@@ -38,7 +35,6 @@ export const ConvertToContractModal: React.FC<IConvertToContractModalProps> = ({
   onSuccess,
 }) => {
   const { user } = useAuth();
-  const { role } = useAuthorization();
 
   // State form fields
   const [contractNumber, setContractNumber] = useState<string>('');
@@ -151,38 +147,33 @@ export const ConvertToContractModal: React.FC<IConvertToContractModalProps> = ({
 
     setIsSubmitting(true);
     try {
-      const payload: ICreateContractFromQuoteDTO = {
-        quoteId: quote.id,
+      const payload: ICreateContractDTO = {
+        quotationId: quote.id,
         contractNumber: contractNumber.trim().toUpperCase(),
         title: title.trim(),
         signingDate,
-        startDate,
-        endDate,
+        effectiveDate: startDate,
+        expiryDate: endDate,
         paymentTerms: paymentTerms.trim(),
         deliveryTerms: deliveryTerms.trim(),
-        notes: notes.trim(),
-        signatoryPartyA: signatoryPartyA.trim(),
-        signatoryPartyB: signatoryPartyB.trim(),
+        notes: [
+          notes.trim(),
+          signatoryPartyA.trim() ? `Đại diện khách hàng: ${signatoryPartyA.trim()}` : '',
+          signatoryPartyB.trim() ? `Đại diện công ty: ${signatoryPartyB.trim()}` : '',
+        ].filter(Boolean).join('\n'),
       };
 
-      const result = await contractService.createContractFromQuote(
-        quote,
-        payload,
-        user?.fullName || 'Kế toán viên',
-        role || 'Kế toán'
-      );
+      const contract = await quoteService.convertQuoteToContractAsync(quote.id, payload);
 
       showGlobalToast(
-        result.backendDealUpdated
-          ? `Đã lập Hợp đồng "${result.contract.contractNumber}" thành công! Cơ hội "${quote.dealTitle}" đã được đồng bộ sang [Đóng thắng - Won] với giá trị ${formatVndCurrency(result.contract.grandTotal)}.`
-          : `Hợp đồng "${result.contract.contractNumber}" đã được lưu và đồng bộ trong CRM trên thiết bị này. Chưa thể đồng bộ cơ hội lên máy chủ; hãy kiểm tra kết nối rồi cập nhật lại cơ hội "${quote.dealTitle}".`,
-        result.backendDealUpdated ? 'success' : 'warning',
+        `Đã lập Hợp đồng "${contract.contractNumber}" thành công! Cơ hội "${quote.dealTitle}" đã được đồng bộ sang [Đóng thắng - Won] với giá trị ${formatVndCurrency(contract.totalValue)}.`,
+        'success',
         undefined,
         7000
       );
 
       if (onSuccess) {
-        onSuccess(result.contract);
+        onSuccess(contract);
       }
       onClose();
     } catch (err: unknown) {

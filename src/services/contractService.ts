@@ -46,6 +46,27 @@ class ContractService {
     return `${API_BASE_URL}/contracts/${contractId}/pdf`;
   }
 
+  generateContractNumber(quotationNumber: string): string {
+    const quotationSuffix = quotationNumber.replace(/^BG-/i, '').replace(/[^a-zA-Z0-9-]/g, '');
+    const baseNumber = `HD-${new Date().getFullYear()}-${quotationSuffix || 'NEW'}`;
+    let contractNumber = baseNumber;
+    let suffix = 1;
+
+    while (!this.isContractNumberUnique(contractNumber)) {
+      contractNumber = `${baseNumber}-${suffix}`;
+      suffix += 1;
+    }
+
+    return contractNumber;
+  }
+
+  isContractNumberUnique(contractNumber: string): boolean {
+    const normalizedNumber = contractNumber.trim().toLocaleLowerCase();
+    return !this.getLocalContracts().some(
+      (contract) => contract.contractNumber.trim().toLocaleLowerCase() === normalizedNumber
+    );
+  }
+
   // Local caching fallback
   private getLocalContracts(): IContract[] {
     if (typeof window === 'undefined') return [];

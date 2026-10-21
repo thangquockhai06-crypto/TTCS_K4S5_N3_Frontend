@@ -89,8 +89,13 @@ export interface IQuote {
   status: QuoteStatusType;
   approvalLevel?: QuoteApprovalLevelType;
   approvalHistory?: IQuoteApprovalHistoryEntry[];
+  rejectionReason?: string;
   isEffective?: boolean;
   parentQuoteId?: string;
+  versionLabel?: string;
+  changeSummary?: string;
+  contractId?: string;
+  contractNumber?: string;
   accessToken?: string;
   shareUrl?: string;
   totalInWords?: string;
@@ -109,6 +114,47 @@ export interface IQuoteCompareResult {
   itemsModified: boolean;
   termsModified: boolean;
   summary: string;
+}
+
+export type DiffChangeType = 'added' | 'removed' | 'modified' | 'unchanged';
+
+export interface IQuoteLineItemDiff {
+  id: string;
+  productId?: string;
+  productName: string;
+  unit: string;
+  changeType: DiffChangeType;
+  oldItem?: IQuoteLineItem;
+  newItem?: IQuoteLineItem;
+  lineTotalDiff: number;
+  quantityDiff: number;
+}
+
+export interface IQuoteComparison {
+  lineItemDiffs: IQuoteLineItemDiff[];
+  totalAddedItems: number;
+  totalRemovedItems: number;
+  totalModifiedItems: number;
+  totalUnchangedItems: number;
+  subtotalDiff: number;
+  discountAmountDiff: number;
+  discountPercentDiff: number;
+  vatAmountDiff: number;
+  grandTotalDiff: number;
+  termsDiff: {
+    validUntilChanged: boolean;
+    oldValidUntil: string;
+    newValidUntil: string;
+    paymentTermsChanged: boolean;
+    oldPaymentTerms: string;
+    newPaymentTerms: string;
+    deliveryTermsChanged: boolean;
+    oldDeliveryTerms: string;
+    newDeliveryTerms: string;
+    notesChanged: boolean;
+    oldNotes?: string;
+    newNotes?: string;
+  };
 }
 
 export interface ICreateQuoteDTO {
