@@ -17,6 +17,7 @@ import { showGlobalToast } from '../../context/ToastContext';
 export const PipelineConfigView: React.FC = () => {
   const [stages, setStages] = useState<IPipelineStage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Modal create/edit
@@ -87,10 +88,22 @@ export const PipelineConfigView: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
+    const trimmedName = name.trim();
+    const trimmedStageKey = stageKey.trim();
+    if (!trimmedName || (!editingStage && !trimmedStageKey)) {
+      const msg = 'Vui lòng nhập tên và mã khóa giai đoạn hợp lệ.';
+      setStatusMsg({ type: 'error', text: msg });
+      showGlobalToast(msg, 'warning');
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
       if (editingStage) {
         await sprint2Service.updatePipelineStage(editingStage.id, {
-          name,
+          name: trimmedName,
           probability: Number(probability),
           color,
           exit_rules: JSON.stringify(exitRules),
@@ -100,8 +113,8 @@ export const PipelineConfigView: React.FC = () => {
         showGlobalToast(msg, 'success');
       } else {
         await sprint2Service.createPipelineStage({
-          name,
-          stage_key: stageKey.trim() || name.replace(/\s+/g, ''),
+          name: trimmedName,
+          stage_key: trimmedStageKey,
           probability: Number(probability),
           color,
           exit_rules: JSON.stringify(exitRules),
@@ -117,6 +130,8 @@ export const PipelineConfigView: React.FC = () => {
       const errorMsg = err.response?.data?.detail || 'Lỗi lưu giai đoạn.';
       setStatusMsg({ type: 'error', text: errorMsg });
       showGlobalToast(errorMsg, 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -567,9 +582,10 @@ export const PipelineConfigView: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  style={{ padding: '6px 14px', borderRadius: '4px', border: 'none', backgroundColor: '#2563eb', color: '#ffffff', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
+                  disabled={isSubmitting}
+                  style={{ padding: '6px 14px', borderRadius: '4px', border: 'none', backgroundColor: '#2563eb', color: '#ffffff', fontSize: '0.8rem', fontWeight: 600, cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.7 : 1 }}
                 >
-                  Lưu giai đoạn
+                  {isSubmitting ? 'Đang lưu...' : 'Lưu giai đoạn'}
                 </button>
               </div>
             </form>
