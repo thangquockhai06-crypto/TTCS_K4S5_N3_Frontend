@@ -6,6 +6,7 @@ import {
   ChevronDown,
   ClipboardCheck,
   Clock,
+  FileSpreadsheet,
   FileText,
   FolderTree,
   GitCommit,
@@ -74,6 +75,13 @@ const MENU_GROUPS: ReadonlyArray<IMenuGroup> = [
         label: 'Cơ hội Bán hàng',
         path: '/deals',
         icon: <TrendingUp size={18} />,
+        requiredPermission: 'manage_deals',
+      },
+      {
+        id: 'quotes',
+        label: 'Báo giá & Dự toán',
+        path: '/quotes',
+        icon: <FileSpreadsheet size={18} />,
         requiredPermission: 'manage_deals',
       },
       {

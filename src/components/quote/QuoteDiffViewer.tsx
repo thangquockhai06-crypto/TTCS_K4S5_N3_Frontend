@@ -5,8 +5,6 @@ import {
   ArrowLeft,
   CheckCircle2,
   AlertCircle,
-  TrendingUp,
-  TrendingDown,
   Layers,
   FileText,
   DollarSign,
@@ -18,17 +16,15 @@ import {
   Filter,
   Sparkles,
   Check,
-  Clock,
   History,
 } from 'lucide-react';
 import {
   IQuote,
   IQuoteComparison,
   IQuoteLineItemDiff,
-  DiffChangeType,
 } from '../../interfaces/quote.interface';
 import { useQuoteVersions } from '../../hooks/useQuoteVersions';
-import { formatCurrency, formatVndCurrency } from '../../utils/formatters';
+import { formatVndCurrency } from '../../utils/formatters';
 import { Button, Badge, LoadingSkeleton } from '../common';
 import styles from './QuoteDiffViewer.module.css';
 

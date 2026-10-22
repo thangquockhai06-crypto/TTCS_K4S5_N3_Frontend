@@ -12,10 +12,11 @@ import { showGlobalToast } from '../context/ToastContext';
 
 interface IUseQuoteBuilderOptions {
   dealId?: string;
+  quoteId?: string;
   initialDeal?: IDeal | null;
 }
 
-export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions) {
+export function useQuoteBuilder({ dealId, quoteId, initialDeal }: IUseQuoteBuilderOptions) {
   const [deal, setDeal] = useState<IDeal | null>(initialDeal || null);
   const [quote, setQuote] = useState<IQuote | null>(null);
   const [versions, setVersions] = useState<IQuote[]>([]);
@@ -48,18 +49,26 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
       // khi React StrictMode chạy đồng thời hai lượt khởi tạo.
       let resolvedDeal: IDeal | null = initialDeal?.id === targetDealId ? initialDeal : null;
       if (!resolvedDeal) {
-        try {
-          resolvedDeal = await dealService.getDeal(targetDealId);
-        } catch (apiError: unknown) {
-          const mockDeal = INITIAL_DEALS.find((candidate) => candidate.id === targetDealId);
-          if (!mockDeal) {
-            throw apiError;
-          }
+        // Nếu dealId là ID mock (deal-xxx), ưu tiên dùng dữ liệu mẫu thay vì gọi API
+        const isMockId = targetDealId.startsWith('deal-');
+        const mockDeal = INITIAL_DEALS.find((candidate) => candidate.id === targetDealId);
+
+        if (isMockId && mockDeal) {
           resolvedDeal = mockDeal;
-          showGlobalToast(
-            'Không kết nối được API cơ hội; đang sử dụng dữ liệu mẫu cho cơ hội này.',
-            'warning'
-          );
+        } else {
+          try {
+            resolvedDeal = await dealService.getDeal(targetDealId);
+          } catch (apiError: unknown) {
+            if (mockDeal) {
+              resolvedDeal = mockDeal;
+              showGlobalToast(
+                'Không kết nối được API cơ hội; đang sử dụng dữ liệu mẫu cho cơ hội này.',
+                'warning'
+              );
+            } else {
+              throw apiError;
+            }
+          }
         }
       }
 
@@ -118,6 +127,35 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
   }, [initialDeal]);
 
   useEffect(() => {
+    if (quoteId) {
+      const existingQuote = quoteService.getQuoteById(quoteId);
+      if (existingQuote) {
+        setQuote(existingQuote);
+        const vers = quoteService.getQuoteVersions(existingQuote.dealId);
+        setVersions(vers.length > 0 ? vers : [existingQuote]);
+        const dealCandidate =
+          INITIAL_DEALS.find((d) => d.id === existingQuote.dealId) || {
+            id: existingQuote.dealId,
+            title: existingQuote.dealTitle,
+            customerId: existingQuote.customerId,
+            customerName: existingQuote.customerName,
+            company: existingQuote.customerCompany,
+            stage: 'proposal',
+            value: existingQuote.grandTotal,
+            probability: 60,
+            priority: 'Medium',
+            expectedCloseDate: existingQuote.validUntil,
+            ownerName: existingQuote.createdBy,
+            createdAt: existingQuote.createdAt,
+            updatedAt: existingQuote.updatedAt,
+          };
+        setDeal(dealCandidate as IDeal);
+        setIsLoading(false);
+        setHasUnsavedChanges(false);
+        return;
+      }
+    }
+
     const targetDealId = dealId || initialDeal?.id || INITIAL_DEALS[0]?.id;
     if (targetDealId) {
       void loadDealAndQuote(targetDealId);
@@ -125,7 +163,7 @@ export function useQuoteBuilder({ dealId, initialDeal }: IUseQuoteBuilderOptions
       setIsLoading(false);
       setLoadError('Không có cơ hội bán hàng để tạo báo giá.');
     }
-  }, [dealId, initialDeal, loadDealAndQuote]);
+  }, [quoteId, dealId, initialDeal, loadDealAndQuote]);
 
 
   // Thêm dòng sản phẩm mới vào báo giá (từ danh mục hoặc nhập mới)

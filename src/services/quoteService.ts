@@ -8,6 +8,9 @@ import {
   QuoteApprovalLevelType,
   QuoteStatusType,
   IQuoteCompareResult,
+  IQuoteComparison,
+  IQuoteLineItemDiff,
+  ITermsDiff,
   ICreateQuoteDTO,
   IUpdateQuoteDTO,
 } from '../interfaces/quote.interface';
@@ -88,6 +91,484 @@ const PRODUCT_CATALOG: IProductCatalogItem[] = [
     unitPrice: 30000000,
     description: 'Đồng bộ tự động thông tin khách hàng, đơn hàng, hóa đơn và công nợ',
     defaultVatRate: 10,
+  },
+];
+
+const SAMPLE_QUOTES: IQuote[] = [
+  {
+    id: 'quote-s7-01',
+    quoteNumber: 'BG-2026-0089',
+    version: 2,
+    versionLabel: 'v2.0 (Đàm phán giảm 5% & bổ sung VoIP)',
+    changeSummary: 'Giảm 5% đơn giá phần mềm SaaS và giữ nguyên chi phí triển khai theo thỏa thuận',
+    dealId: 'deal-101',
+    dealTitle: 'Mistral AI — Hạ tầng Đám mây Enterprise',
+    customerId: 'cust-005',
+    customerName: 'Amélie Laurent',
+    customerCompany: 'Mistral AI Labs',
+    customerEmail: 'amelie@mistral.ai',
+    customerPhone: '0908889999',
+    customerAddress: 'Tòa nhà Landmark 81, P. 22, Q. Bình Thạnh, TP. HCM',
+    customerTaxCode: '0108899881',
+    items: [
+      {
+        id: 'item-01-1',
+        productId: 'prod-crm-ent',
+        productCode: 'NEX-CRM-ENT',
+        productName: 'Phần mềm Nexus CRM Doanh Nghiệp (Enterprise Edition)',
+        description: 'Bản quyền phân hệ Khách hàng 360, Quản lý Cơ hội & Pipeline, Tự động hóa CSKH (50 Users)',
+        quantity: 50,
+        unit: 'User/Năm',
+        unitPrice: 3600000,
+        discountType: 'percent',
+        discountValue: 5,
+        discountAmount: 9000000,
+        floorPrice: 2000000,
+        vatRate: 10,
+        vatAmount: 17100000,
+        lineTotal: 188100000,
+      },
+      {
+        id: 'item-01-2',
+        productId: 'prod-voip-cloud',
+        productCode: 'NEX-VOIP-CLD',
+        productName: 'Tổng đài VoIP Cloud tích hợp Click-to-Call & Ghi âm',
+        description: 'Tự động hiển thị popup hồ sơ khách khi có cuộc gọi đến, ghi âm cuộc gọi gắn vào Timeline',
+        quantity: 20,
+        unit: 'Line/Tháng',
+        unitPrice: 350000,
+        discountType: 'percent',
+        discountValue: 0,
+        discountAmount: 0,
+        floorPrice: 200000,
+        vatRate: 10,
+        vatAmount: 700000,
+        lineTotal: 7700000,
+      },
+      {
+        id: 'item-01-3',
+        productId: 'prod-ai-scoring',
+        productCode: 'NEX-AI-SCORE',
+        productName: 'Module AI Lead Scoring & Tự động phân bổ thông minh',
+        description: 'Chấm điểm Lead tự động theo hành vi, phân bổ nhân viên theo chuyên môn',
+        quantity: 1,
+        unit: 'Gói triển khai',
+        unitPrice: 25000000,
+        discountType: 'percent',
+        discountValue: 0,
+        discountAmount: 0,
+        floorPrice: 15000000,
+        vatRate: 10,
+        vatAmount: 2500000,
+        lineTotal: 27500000,
+      },
+    ],
+    subtotal: 212000000,
+    totalDiscountAmount: 9000000,
+    totalDiscountPercent: 4.25,
+    totalVatAmount: 20300000,
+    grandTotal: 223300000,
+    discountThresholdPercent: 15,
+    requiresApproval: false,
+    validUntil: '2026-12-31',
+    paymentTerms: 'Chia làm 2 đợt: Đợt 1 thanh toán 50% sau khi ký hợp đồng, đợt 2 thanh toán 50% sau khi nghiệm thu.',
+    deliveryTerms: 'Kích hoạt tài khoản và triển khai hệ thống trong vòng 24 giờ sau khi ký hợp đồng.',
+    notes: 'Báo giá đã bao gồm gói đào tạo sử dụng hệ thống trực tuyến cho toàn bộ nhân viên.',
+    status: 'accepted',
+    isEffective: true,
+    parentQuoteId: 'quote-s7-01-v1',
+    accessToken: 'token-portal-mistral-2026',
+    shareUrl: '/portal/quotes/token-portal-mistral-2026',
+    totalInWords: 'Hai trăm hai mươi ba triệu ba trăm nghìn đồng chẵn',
+    createdAt: '2026-10-18T08:00:00.000Z',
+    updatedAt: '2026-10-20T10:15:00.000Z',
+    createdBy: 'Trần Văn Hùng',
+    creatorRole: 'Chuyên viên Tư vấn Doanh nghiệp',
+    approvalHistory: [
+      {
+        id: 'appr-01-1',
+        action: 'auto_approved',
+        performedBy: 'Hệ thống NexusCRM',
+        performedByRole: 'Hệ thống',
+        comment: 'Tự động duyệt: Mức chiết khấu 4.25% nằm trong hạn mức cho phép (<= 10%).',
+        createdAt: '2026-10-18T08:30:00.000Z',
+      },
+      {
+        id: 'appr-01-2',
+        action: 'sent',
+        performedBy: 'Trần Văn Hùng',
+        performedByRole: 'Chuyên viên Kinh doanh',
+        comment: 'Đã phát hành báo giá tới Cổng thông tin khách hàng trực tuyến.',
+        createdAt: '2026-10-18T09:00:00.000Z',
+      },
+      {
+        id: 'appr-01-3',
+        action: 'approved',
+        performedBy: 'Amélie Laurent (Khách hàng)',
+        performedByRole: 'Đại diện Khách hàng',
+        comment: 'Khách hàng đã ký duyệt chấp thuận trực tuyến qua Portal.',
+        createdAt: '2026-10-20T10:15:00.000Z',
+      },
+    ],
+  },
+  {
+    id: 'quote-s7-01-v1',
+    quoteNumber: 'BG-2026-0089',
+    version: 1,
+    versionLabel: 'v1.0 (Bản thảo đề xuất ban đầu)',
+    changeSummary: 'Khởi tạo báo giá ban đầu theo giá niêm yết',
+    dealId: 'deal-101',
+    dealTitle: 'Mistral AI — Hạ tầng Đám mây Enterprise',
+    customerId: 'cust-005',
+    customerName: 'Amélie Laurent',
+    customerCompany: 'Mistral AI Labs',
+    customerEmail: 'amelie@mistral.ai',
+    customerPhone: '0908889999',
+    customerAddress: 'Tòa nhà Landmark 81, P. 22, Q. Bình Thạnh, TP. HCM',
+    customerTaxCode: '0108899881',
+    items: [
+      {
+        id: 'item-01v1-1',
+        productId: 'prod-crm-ent',
+        productCode: 'NEX-CRM-ENT',
+        productName: 'Phần mềm Nexus CRM Doanh Nghiệp (Enterprise Edition)',
+        description: 'Bản quyền phân hệ Khách hàng 360, Quản lý Cơ hội & Pipeline, Tự động hóa CSKH (50 Users)',
+        quantity: 50,
+        unit: 'User/Năm',
+        unitPrice: 3600000,
+        discountType: 'percent',
+        discountValue: 0,
+        discountAmount: 0,
+        floorPrice: 2000000,
+        vatRate: 10,
+        vatAmount: 18000000,
+        lineTotal: 198000000,
+      },
+      {
+        id: 'item-01v1-2',
+        productId: 'prod-voip-cloud',
+        productCode: 'NEX-VOIP-CLD',
+        productName: 'Tổng đài VoIP Cloud tích hợp Click-to-Call & Ghi âm',
+        description: 'Tự động hiển thị popup hồ sơ khách khi có cuộc gọi đến, ghi âm cuộc gọi gắn vào Timeline',
+        quantity: 20,
+        unit: 'Line/Tháng',
+        unitPrice: 350000,
+        discountType: 'percent',
+        discountValue: 0,
+        discountAmount: 0,
+        floorPrice: 200000,
+        vatRate: 10,
+        vatAmount: 700000,
+        lineTotal: 7700000,
+      },
+    ],
+    subtotal: 187000000,
+    totalDiscountAmount: 0,
+    totalDiscountPercent: 0,
+    totalVatAmount: 18700000,
+    grandTotal: 205700000,
+    discountThresholdPercent: 15,
+    requiresApproval: false,
+    validUntil: '2026-12-31',
+    paymentTerms: 'Thanh toán 100% trong vòng 15 ngày kể từ ngày nghiệm thu.',
+    deliveryTerms: 'Bàn giao trong vòng 24 giờ.',
+    status: 'draft',
+    isEffective: false,
+    totalInWords: 'Hai trăm linh năm triệu bảy trăm nghìn đồng chẵn',
+    createdAt: '2026-10-15T09:00:00.000Z',
+    updatedAt: '2026-10-15T09:00:00.000Z',
+    createdBy: 'Trần Văn Hùng',
+    creatorRole: 'Chuyên viên Tư vấn Doanh nghiệp',
+  },
+  {
+    id: 'quote-s7-02',
+    quoteNumber: 'BG-2026-0092',
+    version: 1,
+    versionLabel: 'v1.0 (Đề xuất chiết khấu 18% cho FPT Software)',
+    dealId: 'deal-01',
+    dealTitle: 'Triển khai CRM cho Tập đoàn FPT Software',
+    customerId: 'cust-01',
+    customerName: 'Nguyễn Văn An',
+    customerCompany: 'Tập đoàn FPT Software',
+    customerTaxCode: '0101248141',
+    customerEmail: 'annv@fpt.com',
+    customerPhone: '0912345678',
+    customerAddress: 'Tòa nhà FPT Cầu Giấy, Duy Tân, Hà Nội',
+    items: [
+      {
+        id: 'item-02-1',
+        productId: 'prod-ai-scoring',
+        productCode: 'NEX-AI-SCORE',
+        productName: 'Module AI Lead Scoring & Tự động phân bổ thông minh',
+        description: 'Chấm điểm Lead tự động theo hành vi, phân bổ nhân viên theo chuyên môn',
+        quantity: 2,
+        unit: 'Gói triển khai',
+        unitPrice: 25000000,
+        discountType: 'percent',
+        discountValue: 18,
+        discountAmount: 9000000,
+        floorPrice: 15000000,
+        vatRate: 10,
+        vatAmount: 4100000,
+        lineTotal: 45100000,
+      },
+      {
+        id: 'item-02-2',
+        productId: 'prod-zns-gateway',
+        productCode: 'NEX-ZNS-GATE',
+        productName: 'Cổng tích hợp Zalo ZNS & SMS Brandname đa nhà mạng',
+        description: 'Tự động gửi thông báo hóa đơn, nhắc lịch hẹn và chăm sóc khách hàng tự động',
+        quantity: 1,
+        unit: 'Gói tích hợp',
+        unitPrice: 15000000,
+        discountType: 'percent',
+        discountValue: 18,
+        discountAmount: 2700000,
+        floorPrice: 10000000,
+        vatRate: 10,
+        vatAmount: 1230000,
+        lineTotal: 13530000,
+      },
+    ],
+    subtotal: 65000000,
+    totalDiscountAmount: 11700000,
+    totalDiscountPercent: 18,
+    totalVatAmount: 5330000,
+    grandTotal: 58630000,
+    discountThresholdPercent: 10,
+    requiresApproval: true,
+    approvalLevel: 'team_leader',
+    validUntil: '2026-11-30',
+    paymentTerms: 'Thanh toán 100% trong vòng 30 ngày.',
+    deliveryTerms: 'Triển khai trong 14 ngày làm việc.',
+    notes: 'Khách hàng yêu cầu hỗ trợ tích hợp Zalo OA có sẵn của doanh nghiệp.',
+    status: 'pending_approval',
+    isEffective: true,
+    totalInWords: 'Năm mươi tám triệu sáu trăm ba mươi nghìn đồng chẵn',
+    createdAt: '2026-10-21T08:30:00.000Z',
+    updatedAt: '2026-10-21T08:30:00.000Z',
+    createdBy: 'Lê Minh Tuấn',
+    creatorRole: 'Chuyên viên Kinh doanh',
+    approvalHistory: [
+      {
+        id: 'appr-02-1',
+        action: 'sent',
+        performedBy: 'Lê Minh Tuấn',
+        performedByRole: 'Chuyên viên Kinh doanh',
+        comment: 'Trình Trưởng nhóm phê duyệt mức chiết khấu 18% cho khách hàng VIP FPT.',
+        createdAt: '2026-10-21T08:30:00.000Z',
+      },
+    ],
+  },
+  {
+    id: 'quote-s7-03',
+    quoteNumber: 'BG-2026-0095',
+    version: 1,
+    versionLabel: 'v1.0 (Chiết khấu 25% gói Enterprise 100 Users)',
+    dealId: 'deal-103',
+    dealTitle: 'Vingroup Enterprise — Chuyển đổi số Quản trị',
+    customerId: 'cust-003',
+    customerName: 'Phạm Nhật Minh',
+    customerCompany: 'Vingroup Corporation',
+    customerTaxCode: '0101234567',
+    customerEmail: 'minh.pn@vingroup.net',
+    customerPhone: '0988776655',
+    customerAddress: 'Số 7 Đường Bằng Lăng 1, KĐT Vinhomes Riverside, Long Biên, Hà Nội',
+    items: [
+      {
+        id: 'item-03-1',
+        productId: 'prod-crm-ent',
+        productCode: 'NEX-CRM-ENT',
+        productName: 'Phần mềm Nexus CRM Doanh Nghiệp (Enterprise Edition)',
+        description: 'Bản quyền trọn gói 100 Users cho toàn bộ khối kinh doanh Bất động sản và Dịch vụ',
+        quantity: 100,
+        unit: 'User/Năm',
+        unitPrice: 3600000,
+        discountType: 'percent',
+        discountValue: 25,
+        discountAmount: 90000000,
+        floorPrice: 2000000,
+        vatRate: 10,
+        vatAmount: 27000000,
+        lineTotal: 297000000,
+      },
+      {
+        id: 'item-03-2',
+        productId: 'prod-custom-api',
+        productCode: 'NEX-SVC-API',
+        productName: 'Tích hợp hai chiều API với Hệ thống Kế toán (MISA / Fast)',
+        description: 'Đồng bộ tự động thông tin khách hàng, đơn hàng, hóa đơn và công nợ',
+        quantity: 1,
+        unit: 'Cổng tích hợp',
+        unitPrice: 30000000,
+        discountType: 'percent',
+        discountValue: 25,
+        discountAmount: 7500000,
+        floorPrice: 18000000,
+        vatRate: 10,
+        vatAmount: 2250000,
+        lineTotal: 24750000,
+      },
+    ],
+    subtotal: 390000000,
+    totalDiscountAmount: 97500000,
+    totalDiscountPercent: 25,
+    totalVatAmount: 29250000,
+    grandTotal: 321750000,
+    discountThresholdPercent: 20,
+    requiresApproval: true,
+    approvalLevel: 'director',
+    validUntil: '2026-11-25',
+    paymentTerms: 'Thanh toán 100% trong 45 ngày.',
+    deliveryTerms: 'Bàn giao và triển khai toàn diện trong 30 ngày.',
+    notes: 'Chiết khấu 25% vượt thẩm quyền Trưởng nhóm, yêu cầu Giám đốc kinh doanh duyệt.',
+    status: 'pending_approval',
+    isEffective: true,
+    totalInWords: 'Ba trăm hai mươi mốt triệu bảy trăm năm mươi nghìn đồng chẵn',
+    createdAt: '2026-10-21T14:00:00.000Z',
+    updatedAt: '2026-10-21T14:00:00.000Z',
+    createdBy: 'Hoàng Minh Châu',
+    creatorRole: 'Trưởng nhóm Kinh doanh',
+    approvalHistory: [
+      {
+        id: 'appr-03-1',
+        action: 'sent',
+        performedBy: 'Hoàng Minh Châu',
+        performedByRole: 'Trưởng nhóm Kinh doanh',
+        comment: 'Đề xuất Giám đốc phê duyệt mức giảm giá 25% cho hợp đồng dài hạn của Vingroup.',
+        createdAt: '2026-10-21T14:00:00.000Z',
+      },
+    ],
+  },
+  {
+    id: 'quote-s7-04',
+    quoteNumber: 'BG-2026-0078',
+    version: 1,
+    versionLabel: 'v1.0 (Phần mềm chuyên nghiệp & Đào tạo Onboarding)',
+    dealId: 'deal-102',
+    dealTitle: 'Viettel Solutions — Giải pháp CRM Bưu chính',
+    customerId: 'cust-002',
+    customerName: 'Lê Hoàng Nam',
+    customerCompany: 'Viettel Solutions',
+    customerTaxCode: '0100109106',
+    customerEmail: 'namlh@viettel.com.vn',
+    customerPhone: '0981234567',
+    customerAddress: 'Số 1 Giang Văn Minh, Ba Đình, Hà Nội',
+    items: [
+      {
+        id: 'item-04-1',
+        productId: 'prod-crm-pro',
+        productCode: 'NEX-CRM-PRO',
+        productName: 'Phần mềm Nexus CRM Chuyên Nghiệp (Professional)',
+        description: 'Phân hệ Lead, Deal, Quản lý đội ngũ kinh doanh và báo cáo trực quan (20 Users)',
+        quantity: 20,
+        unit: 'User/Năm',
+        unitPrice: 2400000,
+        discountType: 'percent',
+        discountValue: 8,
+        discountAmount: 3840000,
+        floorPrice: 1500000,
+        vatRate: 10,
+        vatAmount: 4416000,
+        lineTotal: 48576000,
+      },
+      {
+        id: 'item-04-2',
+        productId: 'prod-onboarding',
+        productCode: 'NEX-SVC-TRAIN',
+        productName: 'Dịch vụ Onboarding & Đào tạo chuyển giao công nghệ',
+        description: 'Khảo sát quy trình, import dữ liệu từ Excel cũ và đào tạo thực chiến 4 buổi',
+        quantity: 1,
+        unit: 'Gói dịch vụ',
+        unitPrice: 12000000,
+        discountType: 'percent',
+        discountValue: 8,
+        discountAmount: 960000,
+        floorPrice: 8000000,
+        vatRate: 8,
+        vatAmount: 883200,
+        lineTotal: 11923200,
+      },
+    ],
+    subtotal: 60000000,
+    totalDiscountAmount: 4800000,
+    totalDiscountPercent: 8,
+    totalVatAmount: 5299200,
+    grandTotal: 60499200,
+    discountThresholdPercent: 10,
+    requiresApproval: false,
+    approvalLevel: 'team_leader',
+    validUntil: '2026-11-15',
+    paymentTerms: 'Thanh toán 100% trong vòng 15 ngày kể từ ngày nghiệm thu.',
+    deliveryTerms: 'Bàn giao tài khoản trong vòng 24 giờ sau khi ký kết.',
+    status: 'approved',
+    isEffective: true,
+    totalInWords: 'Sáu mươi triệu bốn trăm chín mươi chín nghìn hai trăm đồng',
+    createdAt: '2026-10-17T11:00:00.000Z',
+    updatedAt: '2026-10-17T11:00:00.000Z',
+    createdBy: 'Vũ Quốc Khánh',
+    creatorRole: 'Chuyên viên Tư vấn Doanh nghiệp',
+    approvalHistory: [
+      {
+        id: 'appr-04-1',
+        action: 'auto_approved',
+        performedBy: 'Hệ thống NexusCRM',
+        performedByRole: 'Hệ thống',
+        comment: 'Tự động thông qua: Chiết khấu 8% trong hạn mức cho phép (<= 10%).',
+        createdAt: '2026-10-17T11:00:00.000Z',
+      },
+    ],
+  },
+  {
+    id: 'quote-s7-05',
+    quoteNumber: 'BG-2026-0065',
+    version: 1,
+    versionLabel: 'v1.0 (Bản nháp đang soạn thảo)',
+    dealId: 'deal-104',
+    dealTitle: 'Techcombank — Nâng cấp Core CSKH',
+    customerId: 'cust-004',
+    customerName: 'Trần Thu Thảo',
+    customerCompany: 'Techcombank',
+    customerTaxCode: '0100230800',
+    customerEmail: 'thaott@techcombank.com.vn',
+    customerPhone: '0903456789',
+    customerAddress: 'Số 6 Quang Trung, Hoàn Kiếm, Hà Nội',
+    items: [
+      {
+        id: 'item-05-1',
+        productId: 'prod-onboarding',
+        productCode: 'NEX-SVC-TRAIN',
+        productName: 'Dịch vụ Onboarding & Đào tạo chuyển giao công nghệ',
+        description: 'Khảo sát quy trình, import dữ liệu từ Excel cũ và đào tạo thực chiến 4 buổi',
+        quantity: 2,
+        unit: 'Gói dịch vụ',
+        unitPrice: 12000000,
+        discountType: 'percent',
+        discountValue: 0,
+        discountAmount: 0,
+        floorPrice: 8000000,
+        vatRate: 8,
+        vatAmount: 1920000,
+        lineTotal: 25920000,
+      },
+    ],
+    subtotal: 24000000,
+    totalDiscountAmount: 0,
+    totalDiscountPercent: 0,
+    totalVatAmount: 1920000,
+    grandTotal: 25920000,
+    discountThresholdPercent: 15,
+    requiresApproval: false,
+    validUntil: '2026-12-10',
+    paymentTerms: 'Thanh toán 100% trong 15 ngày.',
+    deliveryTerms: 'Đào tạo onsite tại trụ sở ngân hàng.',
+    status: 'draft',
+    isEffective: true,
+    totalInWords: 'Hai mươi lăm triệu chín trăm hai mươi nghìn đồng chẵn',
+    createdAt: '2026-10-20T16:00:00.000Z',
+    updatedAt: '2026-10-20T16:00:00.000Z',
+    createdBy: 'Phạm Minh Hạnh',
+    creatorRole: 'Chuyên viên Kinh doanh',
   },
 ];
 
@@ -530,22 +1011,347 @@ class QuoteService {
   }
 
   /**
-   * Tải toàn bộ danh sách báo giá đã tạo trong hệ thống
+   * Tải toàn bộ danh sách báo giá đã tạo trong hệ thống (Tự động nạp dữ liệu mẫu ban đầu nếu trống)
    */
   public getAllQuotes(): IQuote[] {
     if (typeof window === 'undefined') return [];
     try {
       const raw = window.localStorage.getItem(QUOTES_STORAGE_KEY);
-      if (!raw) return [];
-      const quotes: unknown = JSON.parse(raw);
-      if (!Array.isArray(quotes) || !quotes.every(isStoredQuote)) {
-        throw new Error('Danh sách báo giá đã lưu không hợp lệ.');
+      if (!raw) {
+        // Nạp tự động 5 bộ Báo giá mẫu chuẩn nghiệp vụ Sprint 7
+        this.seedInitialQuotes();
+        return SAMPLE_QUOTES.map((q) => this.recalculateQuote(q));
       }
-      return quotes.map((quote) => this.recalculateQuote(quote));
+      const quotes: unknown = JSON.parse(raw);
+      if (!Array.isArray(quotes) || quotes.length === 0) {
+        this.seedInitialQuotes();
+        return SAMPLE_QUOTES.map((q) => this.recalculateQuote(q));
+      }
+      return quotes.map((quote) => this.recalculateQuote(quote as IQuote));
     } catch (error: unknown) {
-      console.error('Lỗi khi đọc danh sách báo giá:', error);
-      throw new Error('Không thể đọc danh sách báo giá đã lưu.');
+      console.warn('Khôi phục danh sách báo giá từ bộ nhớ mẫu:', error);
+      this.seedInitialQuotes();
+      return SAMPLE_QUOTES.map((q) => this.recalculateQuote(q));
     }
+  }
+
+  private seedInitialQuotes(): void {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(QUOTES_STORAGE_KEY, JSON.stringify(SAMPLE_QUOTES));
+      // Lưu các draft & versions tương ứng
+      SAMPLE_QUOTES.forEach((q) => {
+        window.localStorage.setItem(`nexus_quote_${q.id}`, JSON.stringify(q));
+      });
+      // Lưu lịch sử phiên bản cho deal-101
+      const deal101Versions = SAMPLE_QUOTES.filter((q) => q.dealId === 'deal-101');
+      window.localStorage.setItem(
+        'nexus_quote_versions_deal-101',
+        JSON.stringify(deal101Versions)
+      );
+    } catch {
+      // ignore
+    }
+  }
+
+  public getQuoteById(id: string): IQuote | null {
+    const quotes = this.getAllQuotes();
+    const found = quotes.find((q) => q.id === id);
+    if (found) return found;
+    try {
+      const raw = window.localStorage.getItem(`nexus_quote_${id}`);
+      if (raw) return this.recalculateQuote(JSON.parse(raw));
+    } catch {
+      // ignore
+    }
+    return null;
+  }
+
+  public getQuoteVersions(dealId: string): IQuote[] {
+    const all = this.getAllQuotes();
+    const versions = all.filter((q) => q.dealId === dealId);
+    if (versions.length > 0) {
+      return versions.sort((a, b) => (a.version || 1) - (b.version || 1));
+    }
+    try {
+      const cached = window.localStorage.getItem(`nexus_quote_versions_${dealId}`);
+      if (cached) {
+        return JSON.parse(cached);
+      }
+    } catch {
+      // ignore
+    }
+    return [];
+  }
+
+  public saveVersion(quote: IQuote): void {
+    const recalculated = this.recalculateQuote(quote);
+    try {
+      const versions = this.getQuoteVersions(recalculated.dealId);
+      const idx = versions.findIndex((v) => v.id === recalculated.id);
+      if (idx >= 0) {
+        versions[idx] = recalculated;
+      } else {
+        versions.push(recalculated);
+      }
+      window.localStorage.setItem(
+        `nexus_quote_versions_${recalculated.dealId}`,
+        JSON.stringify(versions)
+      );
+      this.saveDraft(recalculated);
+    } catch (e) {
+      console.error('Lỗi khi lưu phiên bản báo giá:', e);
+    }
+  }
+
+  public createNewVersion(
+    baseQuoteId: string,
+    summary: string,
+    performedBy: string = 'Chuyên viên Kinh doanh',
+    performedByRole: string = 'Kinh doanh'
+  ): IQuote {
+    const base = this.getQuoteById(baseQuoteId);
+    if (!base) {
+      throw new Error('Không tìm thấy phiên bản báo giá gốc để tạo mới.');
+    }
+
+    const versions = this.getQuoteVersions(base.dealId);
+    const maxVer = Math.max(...versions.map((v) => v.version || 1), base.version || 1);
+    const nextVersionNum = maxVer + 1;
+    const now = new Date().toISOString();
+
+    const newVersion: IQuote = {
+      ...base,
+      id: `quote-${base.dealId}-v${nextVersionNum}-${Date.now()}`,
+      version: nextVersionNum,
+      versionLabel: `v${nextVersionNum}.0 (${summary})`,
+      changeSummary: summary,
+      parentQuoteId: base.id,
+      status: 'draft',
+      isEffective: false,
+      createdAt: now,
+      updatedAt: now,
+      createdBy: performedBy,
+      creatorRole: performedByRole,
+      approvalHistory: [],
+      contractId: undefined,
+      contractNumber: undefined,
+    };
+
+    this.saveVersion(newVersion);
+    return newVersion;
+  }
+
+  public setEffectiveVersion(dealId: string, versionId: string): IQuote {
+    const versions = this.getQuoteVersions(dealId);
+    let updatedEffective: IQuote | null = null;
+
+    const updatedList = versions.map((v) => {
+      if (v.id === versionId) {
+        updatedEffective = { ...v, isEffective: true, updatedAt: new Date().toISOString() };
+        return updatedEffective;
+      }
+      return { ...v, isEffective: false };
+    });
+
+    if (!updatedEffective) {
+      throw new Error('Không tìm thấy phiên bản cần kích hoạt hiệu lực.');
+    }
+
+    window.localStorage.setItem(
+      `nexus_quote_versions_${dealId}`,
+      JSON.stringify(updatedList)
+    );
+
+    this.saveDraft(updatedEffective);
+    return updatedEffective;
+  }
+
+  public compareQuotes(baseQuote: IQuote, targetQuote: IQuote): IQuoteComparison {
+    const lineItemDiffs: IQuoteLineItemDiff[] = [];
+    const baseItems = baseQuote.items || [];
+    const targetItems = targetQuote.items || [];
+
+    const baseMap = new Map<string, IQuoteLineItem>();
+    baseItems.forEach((item) => {
+      const key = (item.productId || item.productCode || item.productName || item.id).trim().toLowerCase();
+      baseMap.set(key, item);
+    });
+
+    const targetMap = new Map<string, IQuoteLineItem>();
+    targetItems.forEach((item) => {
+      const key = (item.productId || item.productCode || item.productName || item.id).trim().toLowerCase();
+      targetMap.set(key, item);
+    });
+
+    let itemsAddedCount = 0;
+    let itemsRemovedCount = 0;
+    let itemsModifiedCount = 0;
+
+    targetItems.forEach((targetItem) => {
+      const key = (targetItem.productId || targetItem.productCode || targetItem.productName || targetItem.id).trim().toLowerCase();
+      const baseItem = baseMap.get(key);
+
+      if (!baseItem) {
+        itemsAddedCount++;
+        lineItemDiffs.push({
+          id: targetItem.id,
+          productId: targetItem.productId || targetItem.productCode,
+          productName: targetItem.productName,
+          unit: targetItem.unit,
+          changeType: 'added',
+          oldItem: undefined,
+          newItem: targetItem,
+          quantityDiff: targetItem.quantity,
+          lineTotalDiff: targetItem.lineTotal,
+        });
+      } else {
+        const isModified =
+          baseItem.quantity !== targetItem.quantity ||
+          baseItem.unitPrice !== targetItem.unitPrice ||
+          baseItem.discountValue !== targetItem.discountValue ||
+          baseItem.vatRate !== targetItem.vatRate ||
+          baseItem.lineTotal !== targetItem.lineTotal;
+
+        if (isModified) {
+          itemsModifiedCount++;
+          lineItemDiffs.push({
+            id: targetItem.id,
+            productId: targetItem.productId || targetItem.productCode,
+            productName: targetItem.productName,
+            unit: targetItem.unit || baseItem.unit,
+            changeType: 'modified',
+            oldItem: baseItem,
+            newItem: targetItem,
+            quantityDiff: targetItem.quantity - baseItem.quantity,
+            lineTotalDiff: targetItem.lineTotal - baseItem.lineTotal,
+          });
+        } else {
+          lineItemDiffs.push({
+            id: targetItem.id,
+            productId: targetItem.productId || targetItem.productCode,
+            productName: targetItem.productName,
+            unit: targetItem.unit || baseItem.unit,
+            changeType: 'unchanged',
+            oldItem: baseItem,
+            newItem: targetItem,
+            quantityDiff: 0,
+            lineTotalDiff: 0,
+          });
+        }
+      }
+    });
+
+    baseItems.forEach((baseItem) => {
+      const key = (baseItem.productId || baseItem.productCode || baseItem.productName || baseItem.id).trim().toLowerCase();
+      if (!targetMap.has(key)) {
+        itemsRemovedCount++;
+        lineItemDiffs.push({
+          id: baseItem.id,
+          productId: baseItem.productId || baseItem.productCode,
+          productName: baseItem.productName,
+          unit: baseItem.unit,
+          changeType: 'removed',
+          oldItem: baseItem,
+          newItem: undefined,
+          quantityDiff: -baseItem.quantity,
+          lineTotalDiff: -baseItem.lineTotal,
+        });
+      }
+    });
+
+    const validUntilChanged = baseQuote.validUntil !== targetQuote.validUntil;
+    const paymentTermsChanged = baseQuote.paymentTerms !== targetQuote.paymentTerms;
+    const deliveryTermsChanged = baseQuote.deliveryTerms !== targetQuote.deliveryTerms;
+    const notesChanged = (baseQuote.notes || '') !== (targetQuote.notes || '');
+    const hasAnyTermsChanged = validUntilChanged || paymentTermsChanged || deliveryTermsChanged || notesChanged;
+
+    const termsDiff: ITermsDiff = {
+      validUntilChanged,
+      oldValidUntil: baseQuote.validUntil || '—',
+      newValidUntil: targetQuote.validUntil || '—',
+      paymentTermsChanged,
+      oldPaymentTerms: baseQuote.paymentTerms || '—',
+      newPaymentTerms: targetQuote.paymentTerms || '—',
+      deliveryTermsChanged,
+      oldDeliveryTerms: baseQuote.deliveryTerms || '—',
+      newDeliveryTerms: targetQuote.deliveryTerms || '—',
+      notesChanged,
+      oldNotes: baseQuote.notes || '—',
+      newNotes: targetQuote.notes || '—',
+      hasAnyTermsChanged,
+    };
+
+    const subtotalDiff = targetQuote.subtotal - baseQuote.subtotal;
+    const discountAmountDiff = targetQuote.totalDiscountAmount - baseQuote.totalDiscountAmount;
+    const discountPercentDiff = targetQuote.totalDiscountPercent - baseQuote.totalDiscountPercent;
+    const vatAmountDiff = targetQuote.totalVatAmount - baseQuote.totalVatAmount;
+    const grandTotalDiff = targetQuote.grandTotal - baseQuote.grandTotal;
+    const totalUnchangedItems = lineItemDiffs.filter((item) => item.changeType === 'unchanged').length;
+
+    return {
+      baseQuote,
+      targetQuote,
+      lineItemDiffs,
+      subtotalDiff,
+      discountAmountDiff,
+      discountPercentDiff,
+      vatAmountDiff,
+      grandTotalDiff,
+      itemsAddedCount,
+      itemsRemovedCount,
+      itemsModifiedCount,
+      totalAddedItems: itemsAddedCount,
+      totalRemovedItems: itemsRemovedCount,
+      totalModifiedItems: itemsModifiedCount,
+      totalUnchangedItems,
+      termsDiff,
+      summary: {
+        itemsAdded: itemsAddedCount,
+        itemsRemoved: itemsRemovedCount,
+        itemsModified: itemsModifiedCount,
+        subtotalDiff,
+        discountDiff: discountAmountDiff,
+        vatDiff: vatAmountDiff,
+        grandTotalDiff,
+        termsModified: hasAnyTermsChanged,
+      },
+    };
+  }
+
+  public deleteQuote(id: string): boolean {
+    if (typeof window === 'undefined') return false;
+    try {
+      const list = this.getAllQuotes().filter((q) => q.id !== id);
+      window.localStorage.setItem(QUOTES_STORAGE_KEY, JSON.stringify(list));
+      window.localStorage.removeItem(`nexus_quote_${id}`);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  public duplicateQuote(id: string): IQuote {
+    const existing = this.getQuoteById(id);
+    if (!existing) throw new Error('Không tìm thấy báo giá để nhân bản.');
+    const now = new Date().toISOString();
+    const cloned: IQuote = {
+      ...existing,
+      id: `quote-${existing.dealId}-${Date.now()}`,
+      quoteNumber: this.generateQuoteNumber(),
+      version: 1,
+      versionLabel: 'v1.0 (Bản sao)',
+      status: 'draft',
+      isEffective: false,
+      contractId: undefined,
+      contractNumber: undefined,
+      accessToken: undefined,
+      shareUrl: undefined,
+      approvalHistory: [],
+      createdAt: now,
+      updatedAt: now,
+    };
+    return this.saveDraft(cloned);
   }
 
   /**
@@ -665,7 +1471,10 @@ class QuoteService {
   }): Promise<IQuote[]> {
     try {
       const response = await axiosInstance.get<IQuote[]>('/quotations', { params });
-      return response.data;
+      if (Array.isArray(response.data) && response.data.length > 0) {
+        return response.data;
+      }
+      return this.getAllQuotes();
     } catch (err: unknown) {
       console.warn('Backend /quotations unavailable, falling back to local storage:', err);
       return this.getAllQuotes();

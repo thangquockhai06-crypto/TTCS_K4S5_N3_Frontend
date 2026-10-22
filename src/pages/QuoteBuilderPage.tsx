@@ -6,12 +6,16 @@ export const QuoteBuilderPage: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
   const [searchParams] = useSearchParams();
   const dealIdFromQuery = searchParams.get('dealId');
+  const quoteIdFromQuery = searchParams.get('quoteId');
 
   const resolvedDealId = id || dealIdFromQuery || 'deal-101';
 
   return (
     <div style={{ maxWidth: 1400, margin: '0 auto', padding: '16px 20px 48px 20px' }}>
-      <QuoteBuilder dealId={resolvedDealId} />
+      <QuoteBuilder
+        dealId={quoteIdFromQuery ? undefined : resolvedDealId}
+        quoteId={quoteIdFromQuery || undefined}
+      />
     </div>
   );
 };

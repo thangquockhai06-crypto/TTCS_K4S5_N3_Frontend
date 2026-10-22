@@ -36,6 +36,7 @@ export interface IContract {
   ownerId: string;
   ownerName?: string;
   totalValue: number;
+  grandTotal?: number;
   totalInWords?: string;
   signingDate: string;
   effectiveDate: string;
@@ -63,6 +64,20 @@ export interface ICreateContractDTO {
   deliveryTerms?: string;
   templateId?: string;
   notes?: string;
+}
+
+export interface ICreateContractFromQuoteDTO {
+  quoteId?: string;
+  contractNumber: string;
+  title: string;
+  signingDate: string;
+  startDate: string;
+  endDate: string;
+  paymentTerms: string;
+  deliveryTerms?: string;
+  notes?: string;
+  signatoryPartyA?: string;
+  signatoryPartyB?: string;
 }
 
 export interface IContractRenewalDTO {

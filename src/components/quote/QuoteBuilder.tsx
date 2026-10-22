@@ -37,6 +37,7 @@ import styles from './QuoteBuilder.module.css';
 
 export interface IQuoteBuilderProps {
   dealId?: string;
+  quoteId?: string;
   initialDeal?: IDeal | null;
   onSuccess?: (quote: IQuote) => void;
   className?: string;
@@ -44,6 +45,7 @@ export interface IQuoteBuilderProps {
 
 export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
   dealId,
+  quoteId,
   initialDeal,
   onSuccess,
   className = '',
@@ -66,7 +68,7 @@ export const QuoteBuilder: React.FC<IQuoteBuilderProps> = ({
     submitQuote,
     sendQuote,
     resetToInitial,
-  } = useQuoteBuilder({ dealId, initialDeal });
+  } = useQuoteBuilder({ dealId, quoteId, initialDeal });
 
   // Modals
   const [isCatalogModalOpen, setIsCatalogModalOpen] = useState<boolean>(false);

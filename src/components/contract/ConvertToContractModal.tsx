@@ -3,13 +3,10 @@ import {
   FileCheck2,
   Calendar,
   CreditCard,
-  Truck,
   Building,
-  User,
   CheckCircle2,
   AlertCircle,
   RotateCcw,
-  Sparkles,
   Trophy,
   ShieldCheck,
   Package,
@@ -174,7 +171,7 @@ export const ConvertToContractModal: React.FC<IConvertToContractModalProps> = ({
 
       showGlobalToast(
         result.backendDealUpdated
-          ? `Đã lập Hợp đồng "${result.contract.contractNumber}" thành công! Cơ hội "${quote.dealTitle}" đã được đồng bộ sang [Đóng thắng - Won] với giá trị ${formatVndCurrency(result.contract.grandTotal)}.`
+          ? `Đã lập Hợp đồng "${result.contract.contractNumber}" thành công! Cơ hội "${quote.dealTitle}" đã được đồng bộ sang [Đóng thắng - Won] với giá trị ${formatVndCurrency(result.contract.grandTotal ?? result.contract.totalValue ?? 0)}.`
           : `Hợp đồng "${result.contract.contractNumber}" đã được lưu và đồng bộ trong CRM trên thiết bị này. Chưa thể đồng bộ cơ hội lên máy chủ; hãy kiểm tra kết nối rồi cập nhật lại cơ hội "${quote.dealTitle}".`,
         result.backendDealUpdated ? 'success' : 'warning',
         undefined,

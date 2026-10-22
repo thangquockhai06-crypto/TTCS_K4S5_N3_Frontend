@@ -7,6 +7,8 @@ import {
   RotateCw,
   Printer,
   Calendar,
+  X,
+  ExternalLink,
 } from 'lucide-react';
 import { IContract, IContractRenewalDTO } from '../interfaces/contract.interface';
 import { contractService } from '../services/contractService';
@@ -32,6 +34,9 @@ export const ContractsPage: React.FC = () => {
   const [renewalCloseDate, setRenewalCloseDate] = useState<string>('');
   const [renewalProbability, setRenewalProbability] = useState<number>(85);
   const [isSubmittingRenewal, setIsSubmittingRenewal] = useState<boolean>(false);
+
+  // Print & PDF Modal
+  const [selectedPrintContract, setSelectedPrintContract] = useState<IContract | null>(null);
 
   const loadContracts = useCallback(async () => {
     setIsLoading(true);
@@ -126,9 +131,8 @@ export const ContractsPage: React.FC = () => {
     }
   };
 
-  const handleOpenPdf = (contractId: string) => {
-    const pdfUrl = contractService.getPdfUrl(contractId);
-    window.open(pdfUrl, '_blank');
+  const handleOpenPdf = (contract: IContract) => {
+    setSelectedPrintContract(contract);
   };
 
   return (
@@ -311,7 +315,7 @@ export const ContractsPage: React.FC = () => {
                   return (
                     <tr key={c.id}>
                       <td>
-                        <span className={styles.contractNumberLink} onClick={() => handleOpenPdf(c.id)}>
+                        <span className={styles.contractNumberLink} onClick={() => handleOpenPdf(c)}>
                           {c.contractNumber}
                         </span>
                       </td>
@@ -386,8 +390,8 @@ export const ContractsPage: React.FC = () => {
                             variant="secondary"
                             size="sm"
                             leftIcon={<Printer size={13} />}
-                            onClick={() => handleOpenPdf(c.id)}
-                            title="Xuất bản in PDF Hợp đồng"
+                            onClick={() => handleOpenPdf(c)}
+                            title="Xem mẫu in & Xuất PDF Hợp đồng (S7-05)"
                           >
                             PDF
                           </Button>
@@ -524,6 +528,225 @@ export const ContractsPage: React.FC = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Contract Print & PDF Preview Modal (S7-05 & S7-07) */}
+      {selectedPrintContract && (
+        <div className={styles.modalBackdrop}>
+          <div className={styles.modalCard}>
+            <div className={styles.modalHeader}>
+              <div className={styles.modalTitleWrap}>
+                <Printer size={20} color="#2563eb" />
+                <h3 className={styles.modalTitle}>
+                  Hợp Đồng Kinh Tế — {selectedPrintContract.contractNumber}
+                </h3>
+              </div>
+              <button
+                type="button"
+                className={styles.modalCloseBtn}
+                onClick={() => setSelectedPrintContract(null)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className={styles.modalBody}>
+              <div className={styles.printPreviewPaper} id="printable-contract-area">
+                {/* Quốc hiệu */}
+                <div style={{ textAlign: 'center', marginBottom: 20 }}>
+                  <div style={{ fontSize: '0.88rem', fontWeight: 800, letterSpacing: '0.05em' }}>
+                    CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
+                  </div>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 700, marginTop: 2 }}>
+                    Độc lập - Tự do - Hạnh phúc
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b' }}>---o0o---</div>
+                </div>
+
+                {/* Header Doanh nghiệp */}
+                <div className={styles.corporateHeader}>
+                  <div>
+                    <div className={styles.corporateBrand}>CÔNG TY CỔ PHẦN CÔNG NGHỆ NEXUS VIỆT NAM</div>
+                    <div style={{ fontSize: '0.8rem', color: '#475569', marginTop: 4 }}>
+                      Địa chỉ: Tòa nhà Nexus Tower, 180 Đường Cầu Giấy, Quận Cầu Giấy, Hà Nội
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#475569' }}>
+                      Hotline: 1900 6868 · Email: contact@nexuscrm.vn · MST: 0108889999
+                    </div>
+                  </div>
+                  <div className={styles.corporateMeta}>
+                    <div style={{ fontSize: '1rem', fontWeight: 800, color: '#1e3a8a' }}>
+                      SỐ HĐ: {selectedPrintContract.contractNumber}
+                    </div>
+                    <div style={{ color: '#64748b', marginTop: 2 }}>
+                      Ngày ký: {selectedPrintContract.signingDate || '—'}
+                    </div>
+                    <div style={{ color: '#059669', fontWeight: 600, marginTop: 2 }}>
+                      Hiệu lực: {selectedPrintContract.effectiveDate || '—'} đến {selectedPrintContract.expiryDate || '—'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tiêu đề Hợp đồng */}
+                <div style={{ textAlign: 'center', margin: '20px 0 16px' }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1e3a8a', textTransform: 'uppercase' }}>
+                    {selectedPrintContract.title || 'HỢP ĐỒNG KINH TẾ'}
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: 2 }}>
+                    (V/v: Cung cấp giải pháp phần mềm Quản lý Bán hàng & Dịch vụ Cloud NexusCRM)
+                  </div>
+                </div>
+
+                {/* Thông tin 2 bên */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
+                  <div style={{ padding: 14, background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: '0.82rem' }}>
+                    <div style={{ fontWeight: 800, color: '#2563eb', textTransform: 'uppercase', marginBottom: 6 }}>
+                      BÊN A (BÊN KHÁCH HÀNG / SỬ DỤNG DỊCH VỤ):
+                    </div>
+                    <div><strong>Đơn vị:</strong> {selectedPrintContract.customerCompany || selectedPrintContract.customerName || '—'}</div>
+                    <div style={{ marginTop: 2 }}><strong>Người đại diện:</strong> {selectedPrintContract.customerName || 'Đại diện Khách hàng'}</div>
+                    <div style={{ marginTop: 2 }}><strong>Mã số thuế:</strong> {selectedPrintContract.customerTaxCode || 'Chưa cập nhật'}</div>
+                    <div style={{ marginTop: 2 }}><strong>Điều khoản thanh toán:</strong> {selectedPrintContract.paymentTerms || 'Theo thỏa thuận hai bên.'}</div>
+                  </div>
+
+                  <div style={{ padding: 14, background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: '0.82rem' }}>
+                    <div style={{ fontWeight: 800, color: '#2563eb', textTransform: 'uppercase', marginBottom: 6 }}>
+                      BÊN B (BÊN CUNG CẤP DỊCH VỤ):
+                    </div>
+                    <div><strong>Đơn vị:</strong> CÔNG TY CỔ PHẦN CÔNG NGHỆ NEXUS VIỆT NAM</div>
+                    <div style={{ marginTop: 2 }}><strong>Người đại diện:</strong> {selectedPrintContract.ownerName || 'Tổng Giám Đốc'}</div>
+                    <div style={{ marginTop: 2 }}><strong>Mã số thuế:</strong> 0108889999</div>
+                    <div style={{ marginTop: 2 }}><strong>Địa chỉ:</strong> Tòa nhà Nexus Tower, Cầu Giấy, Hà Nội</div>
+                  </div>
+                </div>
+
+                {/* Bảng Dòng Sản Phẩm */}
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', marginBottom: 16 }}>
+                  <thead>
+                    <tr style={{ background: '#f1f5f9', borderBottom: '2px solid #cbd5e1' }}>
+                      <th style={{ padding: '8px 10px', textAlign: 'center', width: 36 }}>STT</th>
+                      <th style={{ padding: '8px 10px', textAlign: 'left' }}>Sản phẩm / Dịch vụ</th>
+                      <th style={{ padding: '8px 10px', textAlign: 'center', width: 55 }}>ĐVT</th>
+                      <th style={{ padding: '8px 10px', textAlign: 'center', width: 50 }}>SL</th>
+                      <th style={{ padding: '8px 10px', textAlign: 'right', width: 110 }}>Đơn giá (VNĐ)</th>
+                      <th style={{ padding: '8px 10px', textAlign: 'right', width: 100 }}>Chiết khấu</th>
+                      <th style={{ padding: '8px 10px', textAlign: 'right', width: 120 }}>Thành tiền (VNĐ)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(selectedPrintContract.items || []).map((item, idx) => (
+                      <tr key={item.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                        <td style={{ padding: '8px 10px', textAlign: 'center', color: '#64748b' }}>{idx + 1}</td>
+                        <td style={{ padding: '8px 10px', fontWeight: 600 }}>{item.productName}</td>
+                        <td style={{ padding: '8px 10px', textAlign: 'center' }}>{item.unit}</td>
+                        <td style={{ padding: '8px 10px', textAlign: 'center', fontWeight: 600 }}>{item.quantity}</td>
+                        <td style={{ padding: '8px 10px', textAlign: 'right' }}>{formatVndCurrency(item.unitPrice)}</td>
+                        <td style={{ padding: '8px 10px', textAlign: 'right', color: item.discountAmount > 0 ? '#d97706' : '#64748b' }}>
+                          {item.discountAmount > 0 ? `- ${formatVndCurrency(item.discountAmount)}` : '—'}
+                        </td>
+                        <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 700 }}>
+                          {formatVndCurrency(item.lineTotal)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {/* Tổng cộng & Bằng chữ */}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+                  <div style={{ width: 360, display: 'flex', flexDirection: 'column', gap: 6, fontSize: '0.88rem' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        paddingTop: 8,
+                        borderTop: '2px solid #0f172a',
+                        fontWeight: 800,
+                        fontSize: '1rem',
+                        color: '#0f172a',
+                      }}
+                    >
+                      <span>TỔNG GIÁ TRỊ HỢP ĐỒNG:</span>
+                      <span style={{ color: '#2563eb' }}>{formatVndCurrency(selectedPrintContract.totalValue)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedPrintContract.totalInWords && (
+                  <div
+                    style={{
+                      padding: '10px 14px',
+                      background: '#f8fafc',
+                      borderRadius: 6,
+                      fontSize: '0.84rem',
+                      fontStyle: 'italic',
+                      marginBottom: 20,
+                      border: '1px solid #e2e8f0',
+                    }}
+                  >
+                    <strong>Số tiền viết bằng chữ:</strong> {selectedPrintContract.totalInWords}
+                  </div>
+                )}
+
+                {/* Điều khoản & Cam kết */}
+                <div style={{ fontSize: '0.8rem', color: '#334155', borderTop: '1px dashed #cbd5e1', paddingTop: 12, marginBottom: 28, lineHeight: 1.6 }}>
+                  <div style={{ fontWeight: 700, marginBottom: 4 }}>ĐIỀU KHOẢN VÀ CAM KẾT CHUNG:</div>
+                  <div>1. <strong>Tiến độ bàn giao:</strong> {selectedPrintContract.deliveryTerms || 'Bàn giao tài khoản quản trị và kích hoạt hệ thống trong vòng 24 giờ sau khi ký hợp đồng.'}</div>
+                  <div>2. <strong>Quy chuẩn dịch vụ & Bảo mật:</strong> Bên B cam kết bảo mật tuyệt đối toàn bộ cơ sở dữ liệu khách hàng, duy trì hạ tầng Cloud ổn định với chỉ số cam kết SLA &ge; 99.9%.</div>
+                  <div>3. <strong>Hỗ trợ kỹ thuật:</strong> Đội ngũ kỹ sư hỗ trợ 24/7 trong suốt thời hạn hiệu lực của hợp đồng.</div>
+                </div>
+
+                {/* Chữ ký 2 bên */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', textAlign: 'center', marginTop: 24 }}>
+                  <div>
+                    <div style={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.84rem' }}>
+                      ĐẠI DIỆN BÊN A
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>(Ký, ghi rõ họ tên và đóng dấu)</div>
+                    <div style={{ height: 75 }} />
+                    <div style={{ fontWeight: 600 }}>{selectedPrintContract.customerName || 'Đại diện Khách hàng'}</div>
+                  </div>
+
+                  <div>
+                    <div style={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.84rem' }}>
+                      ĐẠI DIỆN BÊN B
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>(Ký, ghi rõ họ tên và đóng dấu)</div>
+                    <div style={{ height: 75 }} />
+                    <div style={{ fontWeight: 600 }}>{selectedPrintContract.ownerName || 'CÔNG TY CP CÔNG NGHỆ NEXUS'}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.modalFooter}>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setSelectedPrintContract(null)}
+              >
+                Đóng
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                leftIcon={<ExternalLink size={15} />}
+                onClick={() => contractService.openPrintWindow(selectedPrintContract)}
+                title="Mở tài liệu in trên tab mới riêng biệt"
+              >
+                Mở Tab Riêng
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                leftIcon={<Printer size={16} />}
+                onClick={() => window.print()}
+              >
+                In Hợp Đồng / Xuất PDF
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

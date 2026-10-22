@@ -38,6 +38,7 @@ import { CampaignCreatePage } from '../pages/CampaignCreatePage';
 import { CampaignEditPage } from '../pages/CampaignEditPage';
 import { ProductCreatePage } from '../pages/ProductCreatePage';
 import { ProductEditPage } from '../pages/ProductEditPage';
+import { QuotesPage } from '../pages/QuotesPage';
 import { QuoteBuilderPage } from '../pages/QuoteBuilderPage';
 import { QuoteApprovalQueuePage } from '../pages/QuoteApprovalQueuePage';
 import { QuoteComparePage } from '../pages/QuoteComparePage';
@@ -112,6 +113,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="deals/new" element={<Navigate to="/deals/create" replace />} />
         <Route path="deals/:id/edit" element={<DealEditPage />} />
         {/* S7-01: Soạn thảo Báo giá (Quote Builder) */}
+        <Route path="quotes" element={<QuotesPage />} />
         <Route path="deals/:id/quote-builder" element={<QuoteBuilderPage />} />
         <Route path="deals/:id/quotes/new" element={<QuoteBuilderPage />} />
         <Route path="quotes/new" element={<QuoteBuilderPage />} />
